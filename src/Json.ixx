@@ -2,7 +2,7 @@
 // Created by mys_vac on 25-4-18.
 //
 
-export module json;
+export module Json;
 import std;
 
 #ifndef VCT_TOOL_PORT_SIGNAL
@@ -10,6 +10,32 @@ import std;
 #endif
 
 #define WIN_PORT_SIGNAL VCT_TOOL_PORT_SIGNAL
+
+// 前向声明私有模块片段中的静态函数
+namespace Json {
+    /**
+     * @brief 模块私有静态函数，用于转义unicode字符
+     * @exception StructureException 不合法的unicode字符
+     */
+    static void escape_unicode(std::string& res,std::string_view str, std::string_view::const_iterator& it);
+
+    /**
+     * @brief 模块私有静态函数，转义字符串且移动指针
+     * @exception StructureException 各种内容错误导致转义失败
+     */
+    static std::string escape_next(std::string_view str, std::string_view::const_iterator& it);
+
+    /**
+     * @brief 模块私有静态函数，转义字符串
+     * @exception StructureException 各种内容错误导致转义失败
+     */
+    static std::string escape(std::string_view str);
+
+    /**
+     * @brief 模块私有静态函数，反转义字符串
+     */
+    static std::string reverse_escape(std::string_view str) noexcept;
+}
 
 /**
  * @namespace Json
@@ -79,12 +105,12 @@ export namespace Json {
     class Value;
 
     /**
-     * @brief Object类型，本质是 std::map<std::string,Value>
+     * @brief Object类型，本质是 std::map<std::string,Value>。
      */
     using Object = std::map<std::string,Value>;
 
     /**
-     * @brief Array类型，本质是 std::vector<Value>
+     * @brief Array类型，本质是 std::vector< Value >。
      */
     using Array = std::vector<Value>;
 
@@ -634,31 +660,16 @@ export namespace Json {
      */
     WIN_PORT_SIGNAL
     std::string serialize(std::nullptr_t) noexcept;
-    /**
-     *@brief 数组类型序列化函数，普通函数重载
-     */
-    WIN_PORT_SIGNAL
-    std::string serialize(const Array& jsonArray) noexcept;
-    /**
-     *@brief 对象类型序列化函数，普通函数重载
-     */
-    WIN_PORT_SIGNAL
-    std::string serialize(const Object& jsonObject) noexcept;
-    /**
-     *@brief 字符串序列化函数，普通函数重载
-     */
-    WIN_PORT_SIGNAL
-    std::string serialize(const std::string& str) noexcept;
-    /**
-     *@brief 字符串序列化函数，普通函数重载
-     */
-    WIN_PORT_SIGNAL
-    std::string serialize(const char* str) noexcept;
-    /**
-     *@brief 字符串序列化函数，普通函数重载
-     */
-    WIN_PORT_SIGNAL
-    std::string serialize(std::string_view str) noexcept;
+    // /**
+    //  *@brief 数组类型序列化函数，普通函数重载
+    //  */
+    // WIN_PORT_SIGNAL
+    // std::string serialize(const Array& jsonArray) noexcept;
+    // /**
+    //  *@brief 对象类型序列化函数，普通函数重载
+    //  */
+    // WIN_PORT_SIGNAL
+    // std::string serialize(const Object& jsonObject) noexcept;
 
 
     /**
@@ -666,6 +677,46 @@ export namespace Json {
      */
     template <typename T>
     concept Arithmetic = std::integral<T> || std::floating_point<T>;
+
+    /**
+     * @brief 支持了serialize()成员函数的概念
+     */
+    template <typename T>
+    concept Serializable = requires (const T& t){
+        { t.serialize() } -> std::convertible_to<std::string>;
+    };
+
+    /**
+     * @brief 标准库字符串类型的概念
+     */
+    template <typename T>
+    concept StringLike = requires{
+        requires std::convertible_to<T, std::string_view>;
+    };
+
+    /**
+     * @brief 标准库数组类型的概念
+     */
+    template <typename T>
+    concept ArrayLike =std::ranges::range<T> &&
+        requires{ typename T::value_type; }  &&
+        !requires { typename T::key_type; } &&
+        requires (const typename T::value_type& t){
+            typename T::value_type;
+            { serialize(t) }-> std::same_as<Value>;
+        };
+
+    /**
+     * @brief 标准库键值对类型的概念
+     */
+    template <typename T>
+    concept ObjectLike = std::ranges::range<T> && requires (const T& t){
+        typename T::value_type;
+        typename T::key_type;
+        typename T::mapped_type;
+        requires std::convertible_to<typename T::key_type, std::string_view>;
+        { serialize(t) }-> std::same_as<Value>;
+    };
 
     /**
      * @brief 数值类型的序列化
@@ -678,10 +729,53 @@ export namespace Json {
     /**
      * @brief 非数值类型的序列化（要求具有 .serialize() 成员函数）
      */
-    template <typename T>
-    requires requires (const T& t) { { t.serialize() } -> std::convertible_to<std::string>; }
+    template <Serializable T>
     std::string serialize(const T& value) {
         return value.serialize();
+    }
+
+
+    /**
+     * @brief 字符串类型的序列化
+     */
+    template <StringLike T>
+    std::string serialize(const T& str) {
+        return reverse_escape(str);
+    }
+
+    /**
+     * @brief 数组类型的序列化
+     */
+    template <ArrayLike T>
+    std::string serialize(const T& array) {
+        std::string res{ "[" };
+        for (const Value& it : array) {
+            // 递归序列号
+            res += serialize(it);
+            res += ',';
+        }
+        if (*res.rbegin() == ',') *res.rbegin() = ']';
+        else res += ']';
+        return res;
+    }
+
+    /**
+     * @brief 键值对类型的序列化
+     */
+    template <ObjectLike T>
+    std::string serialize(const T& object) {
+        std::string res{ "{" };
+        for (const auto& [fst, snd] : object) {
+            // 键是字符串，需要反转义
+            res += reverse_escape(fst);
+            res += ':';
+            // 递归序列号
+            res += serialize(snd);
+            res += ',';
+        }
+        if (*res.rbegin() == ',') *res.rbegin() = '}';
+        else res += '}';
+        return res;
     }
 
 }
@@ -693,10 +787,8 @@ namespace Json {
     ////////////////////////////////////////////////////////////////////////////////////
     ////// 模块私有函数，静态函数
 
-    /**
-     * @brief 模块私有静态函数，用于转义unicode字符
-     * @exception StructureException 不合法的unicode字符
-     */
+
+    // 模块私有静态函数，用于转义unicode字符
     static void escape_unicode(std::string& res,std::string_view str, std::string_view::const_iterator& it) {
         // 进入时 it 在 \uXXXX 的 u 的位置。
         if (str.end() - it <= 4) throw StructureException{ "Illegal unicode.\n" };
@@ -767,10 +859,7 @@ namespace Json {
         else throw StructureException{ "Illegal unicode.\n" };;
     }
 
-    /**
-     * @brief 内部函数，转义字符串且移动指针
-     * @exception StructureException 各种内容错误导致转义失败
-     */
+    // 内部函数，转义字符串且移动指针
     static std::string escape_next(std::string_view str, std::string_view::const_iterator& it) {
         // 跳过字符串起始的双引号
         ++it;
@@ -834,10 +923,7 @@ namespace Json {
         return res;
     }
 
-    /**
-     * @brief 内部函数，转义字符串
-     * @exception StructureException 各种内容错误导致转义失败
-     */
+    // 内部函数，转义字符串
     static std::string escape(std::string_view str) {
         auto it = str.begin();
         ++it;
@@ -893,11 +979,8 @@ namespace Json {
         return res;
     }
 
-    /**
-     * @brief 内部函数，反转义字符串
-     * @note 参数const是因为CLion提示才加的，其实不用加
-     */
-    static std::string reverse_escape(const std::string_view str) noexcept {
+    // 内部函数，反转义字符串
+    static std::string reverse_escape(std::string_view str) noexcept {
         std::string res;
         // 提前分配空间，减少扩容开销
         if (str.size() > 15) res.reserve(str.size() + (str.size() >> 4));
@@ -966,40 +1049,32 @@ namespace Json {
     std::string serialize(std::nullptr_t) noexcept {
         return "null";
     }
-    std::string serialize(const Array& jsonArray) noexcept {
-        std::string res{ "[" };
-        for (const Value& it : jsonArray) {
-            // 递归序列号
-            res += it.serialize();
-            res += ',';
-        }
-        if (*res.rbegin() == ',') *res.rbegin() = ']';
-        else res += ']';
-        return res;
-    }
-    std::string serialize(const Object& jsonObject) noexcept {
-        std::string res{ "{" };
-        for (const auto& [fst, snd] : jsonObject) {
-            // 键是字符串，需要反转义
-            res += reverse_escape(fst);
-            res += ':';
-            // 递归序列号
-            res += snd.serialize();
-            res += ',';
-        }
-        if (*res.rbegin() == ',') *res.rbegin() = '}';
-        else res += '}';
-        return res;
-    }
-    std::string serialize(const std::string& str) noexcept {
-        return reverse_escape(str);
-    }
-    std::string serialize(const char* str) noexcept {
-        return reverse_escape(str);
-    }
-    std::string serialize(std::string_view str) noexcept {
-        return reverse_escape(str);
-    }
+    // std::string serialize(const Array& jsonArray) noexcept {
+    //     std::string res{ "[" };
+    //     for (const Value& it : jsonArray) {
+    //         // 递归序列号
+    //         res += it.serialize();
+    //         res += ',';
+    //     }
+    //     if (*res.rbegin() == ',') *res.rbegin() = ']';
+    //     else res += ']';
+    //     return res;
+    // }
+    // std::string serialize(const Object& jsonObject) noexcept {
+    //     std::string res{ "{" };
+    //     for (const auto& [fst, snd] : jsonObject) {
+    //         // 键是字符串，需要反转义
+    //         res += reverse_escape(fst);
+    //         res += ':';
+    //         // 递归序列号
+    //         res += snd.serialize();
+    //         res += ',';
+    //     }
+    //     if (*res.rbegin() == ',') *res.rbegin() = '}';
+    //     else res += '}';
+    //     return res;
+    // }
+
 
     ////////////////////////////////////////////////////////////////////////////////////
     ////// 关键类 Value 的成员函数实现

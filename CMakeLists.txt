@@ -11,5 +11,22 @@ set(CMAKE_CXX_MODULE_STD ON)
 add_library(json STATIC)
 
 target_sources(json PUBLIC
-        FILE_SET json_modules TYPE CXX_MODULES FILES json.ixx
+        FILE_SET json_modules TYPE CXX_MODULES FILES src/Json.ixx
 )
+
+
+#if(VCT_ENABLE_TEST_JSON STREQUAL "ON")
+#    enable_testing()
+#    message("Msg: enable google test")
+#    # ctest -R GoogleTest -C DEBUG --verbose
+#
+#    add_executable(test test.cpp)
+#
+#    target_sources(test PUBLIC
+#            FILE_SET test_json_modules TYPE CXX_MODULES FILES src/Json.ixx
+#    )
+#
+#
+#    add_test(NAME Test COMMAND test)
+#
+#endif ()
