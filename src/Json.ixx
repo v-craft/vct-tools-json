@@ -2,7 +2,7 @@
 // Created by mys_vac on 25-4-18.
 //
 
-export module Json;
+export module Vct.Tools.Json;
 import std;
 
 #ifndef VCT_TOOL_PORT_SIGNAL
@@ -11,37 +11,11 @@ import std;
 
 #define WIN_PORT_SIGNAL VCT_TOOL_PORT_SIGNAL
 
-// 前向声明私有模块片段中的静态函数
-namespace Json {
-    /**
-     * @brief 模块私有静态函数，用于转义unicode字符
-     * @exception StructureException 不合法的unicode字符
-     */
-    static void escape_unicode(std::string& res,std::string_view str, std::string_view::const_iterator& it);
-
-    /**
-     * @brief 模块私有静态函数，转义字符串且移动指针
-     * @exception StructureException 各种内容错误导致转义失败
-     */
-    static std::string escape_next(std::string_view str, std::string_view::const_iterator& it);
-
-    /**
-     * @brief 模块私有静态函数，转义字符串
-     * @exception StructureException 各种内容错误导致转义失败
-     */
-    static std::string escape(std::string_view str);
-
-    /**
-     * @brief 模块私有静态函数，反转义字符串
-     */
-    static std::string reverse_escape(std::string_view str) noexcept;
-}
-
 /**
- * @namespace Json
+ * @namespace Vct::Tools::Json
  * @brief 存放Json解析器相关内容
  */
-export namespace Json {
+export namespace Vct::Tools::Json {
 
     /**
      * @enum Type
@@ -132,7 +106,6 @@ export namespace Json {
         /**
          * @brief 存储JSON数据。
          * @details std::variant类型，存储JSON数据，需要C++17。
-         * @note 注意，Map和List存储的也是JsonObject对象，含有嵌套内容。
          */
         JsonVariant content_ { false };
 
@@ -553,6 +526,7 @@ export namespace Json {
          * []访问，必须是ARRAY类型，无越界检查。
          * 如果指向末尾，会创建新元素。
          * @exception TypeException 类型错误异常
+         * @warning 不会进行越界检测，越界会直接结束程序
          */
         Value& operator[](const size_t& index);
         /**
@@ -651,35 +625,47 @@ export namespace Json {
     WIN_PORT_SIGNAL
     std::string serialize(const Value &jsonValue);
     /**
-     * @brief 布尔类型序列化函数
+     * @brief 布尔类型序列化函数，普通函数重载
      */
     WIN_PORT_SIGNAL
     std::string serialize(const bool& bl) noexcept;
     /**
-     * @brief nullptr序列化函数
+     * @brief nullptr序列化函数，普通函数重载
      */
     WIN_PORT_SIGNAL
     std::string serialize(std::nullptr_t) noexcept;
-    // /**
-    //  *@brief 数组类型序列化函数，普通函数重载
-    //  */
-    // WIN_PORT_SIGNAL
-    // std::string serialize(const Array& jsonArray) noexcept;
-    // /**
-    //  *@brief 对象类型序列化函数，普通函数重载
-    //  */
-    // WIN_PORT_SIGNAL
-    // std::string serialize(const Object& jsonObject) noexcept;
+
+
+    /**
+     * @brief 反转义字符串
+     */
+    std::string reverse_escape(std::string_view str) noexcept;
 
 
     /**
      * @brief 数值类型的概念
+     * @details
+     * 要求类型是以下二者之一：
+     * std::integral<T>，
+     * std::floating_point<T>。
      */
     template <typename T>
     concept Arithmetic = std::integral<T> || std::floating_point<T>;
 
     /**
-     * @brief 支持了serialize()成员函数的概念
+     * @brief 数值类型的序列化模板
+     */
+    template <Arithmetic T>
+    std::string serialize(T value) noexcept {
+        return std::to_string(value);
+    }
+
+
+    /**
+     * @brief 可序列化类型的概念
+     * @details
+     * 要求类型提供了serialize()成员函数
+     * 且此函数返回值可转换成std::string
      */
     template <typename T>
     concept Serializable = requires (const T& t){
@@ -687,47 +673,7 @@ export namespace Json {
     };
 
     /**
-     * @brief 标准库字符串类型的概念
-     */
-    template <typename T>
-    concept StringLike = requires{
-        requires std::convertible_to<T, std::string_view>;
-    };
-
-    /**
-     * @brief 标准库数组类型的概念
-     */
-    template <typename T>
-    concept ArrayLike =std::ranges::range<T> &&
-        requires{ typename T::value_type; }  &&
-        !requires { typename T::key_type; } &&
-        requires (const typename T::value_type& t){
-            typename T::value_type;
-            { serialize(t) }-> std::same_as<Value>;
-        };
-
-    /**
-     * @brief 标准库键值对类型的概念
-     */
-    template <typename T>
-    concept ObjectLike = std::ranges::range<T> && requires (const T& t){
-        typename T::value_type;
-        typename T::key_type;
-        typename T::mapped_type;
-        requires std::convertible_to<typename T::key_type, std::string_view>;
-        { serialize(t) }-> std::same_as<Value>;
-    };
-
-    /**
-     * @brief 数值类型的序列化
-     */
-    template <Arithmetic T>
-    std::string serialize(T value) noexcept {
-        return std::to_string(value);
-    }
-
-    /**
-     * @brief 非数值类型的序列化（要求具有 .serialize() 成员函数）
+     * @brief 可序列化类型对象的序列化函数模板
      */
     template <Serializable T>
     std::string serialize(const T& value) {
@@ -736,20 +682,52 @@ export namespace Json {
 
 
     /**
-     * @brief 字符串类型的序列化
+     * @brief 字符串类型的概念
+     * @details
+     * 要求满足如下条件：
+     * 1. 可以转换成标准字符串std::string
+     * 2. 可以转换成标准字符串视图std::string_view
+     */
+    template <typename T>
+    concept StringLike = !Serializable<T> &&  requires{
+        requires std::convertible_to<T, std::string_view>;
+        requires std::convertible_to<T, std::string>;
+    };
+
+    /**
+     * @brief 字符串类型的序列化函数模板
      */
     template <StringLike T>
     std::string serialize(const T& str) {
         return reverse_escape(str);
     }
 
+
     /**
-     * @brief 数组类型的序列化
+     * @brief 标准数组类型的概念
+     * @details
+     * 注意，这是针对JSON设计的概念，并不适用在其他场景。
+     * 要求满足如下条件：
+     * 1. 类型本身不是可序列化的，即不提供serialize()成员函数（否则认为是可序列化类型）
+     * 2. 类型本身不能转换成字符串（否则认为是字符串类型）
+     * 3. 类型内部没有key_type（否则可能是键值对类型）
+     * 4. 内部纯储的值类型能够运行某种serialize(t)函数。（注意不是成员函数）
+     * 标准库的list,vector,array,deque等都满足外层要求，只要内部数据合法，就会调用此模板
+     */
+    template <typename T>
+    concept ArrayLike = !Serializable<T> && !StringLike<T> && std::ranges::range<T> &&
+        !requires { typename T::key_type; } &&
+        requires (const typename T::value_type& t){
+            { serialize(t) }-> std::convertible_to<std::string>;
+        };
+
+    /**
+     * @brief 标准数组类型的序列化函数模板
      */
     template <ArrayLike T>
     std::string serialize(const T& array) {
         std::string res{ "[" };
-        for (const Value& it : array) {
+        for (const auto& it : array) {
             // 递归序列号
             res += serialize(it);
             res += ',';
@@ -759,8 +737,31 @@ export namespace Json {
         return res;
     }
 
+
     /**
-     * @brief 键值对类型的序列化
+     * @brief 标准库键值对类型的概念
+    * @details
+     * 注意，这是针对JSON设计的概念，并不适用在其他场景。
+     * 要求满足如下条件：
+     * 1. 类型本身不是可序列化的，即不提供serialize()成员函数（否则认为是可序列化类型）
+     * 2. 类型本身不能转换成字符串（否则认为是字符串类型）
+     * 3. 类型内部有value_type，key_type和mapped_type（否则不是键值对）
+     * 4. key_type必须能转换成std::string和std::string_view
+     * 5. mapped_type类型支持serialize(t)函数。（注意不是成员函数）
+     * 标准库的map, unordered_map等都满足外层要求，只要内部数据合法，就会调用此模板
+     */
+    template <typename T>
+    concept ObjectLike = !Serializable<T> && !StringLike<T> && std::ranges::range<T> &&
+        requires (const typename T::mapped_type& t){
+            typename T::value_type;
+            typename T::key_type;
+            requires std::convertible_to<typename T::key_type, std::string_view>;
+            requires std::convertible_to<typename T::key_type, std::string>;
+            { serialize(t) }-> std::convertible_to<std::string>;
+    };
+
+    /**
+     * @brief 键值对类型的序列化函数模板
      */
     template <ObjectLike T>
     std::string serialize(const T& object) {
@@ -783,7 +784,7 @@ export namespace Json {
 module :private;
 
 
-namespace Json {
+namespace Vct::Tools::Json {
     ////////////////////////////////////////////////////////////////////////////////////
     ////// 模块私有函数，静态函数
 
@@ -979,8 +980,11 @@ namespace Json {
         return res;
     }
 
-    // 内部函数，反转义字符串
-    static std::string reverse_escape(std::string_view str) noexcept {
+    ////////////////////////////////////////////////////////////////////////////////////
+    ////// 库函数实现
+
+    // 反转义字符串
+    std::string reverse_escape(std::string_view str) noexcept {
         std::string res;
         // 提前分配空间，减少扩容开销
         if (str.size() > 15) res.reserve(str.size() + (str.size() >> 4));
@@ -1016,11 +1020,8 @@ namespace Json {
         return res;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////
-    ////// 库函数实现
-
     /////////////////////////////////////////////
-    /// 序列化函数 实现
+    /// 序反列化函数 实现
     Value deserialize(std::string_view str){
         auto it = str.begin();
         while(it!=str.end() && std::isspace(*it)) ++it;
@@ -1049,31 +1050,6 @@ namespace Json {
     std::string serialize(std::nullptr_t) noexcept {
         return "null";
     }
-    // std::string serialize(const Array& jsonArray) noexcept {
-    //     std::string res{ "[" };
-    //     for (const Value& it : jsonArray) {
-    //         // 递归序列号
-    //         res += it.serialize();
-    //         res += ',';
-    //     }
-    //     if (*res.rbegin() == ',') *res.rbegin() = ']';
-    //     else res += ']';
-    //     return res;
-    // }
-    // std::string serialize(const Object& jsonObject) noexcept {
-    //     std::string res{ "{" };
-    //     for (const auto& [fst, snd] : jsonObject) {
-    //         // 键是字符串，需要反转义
-    //         res += reverse_escape(fst);
-    //         res += ':';
-    //         // 递归序列号
-    //         res += snd.serialize();
-    //         res += ',';
-    //     }
-    //     if (*res.rbegin() == ',') *res.rbegin() = '}';
-    //     else res += '}';
-    //     return res;
-    // }
 
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -1092,7 +1068,7 @@ namespace Json {
                 content_ = Array{};
                 break;
             case Type::string:
-                content_ = std::string{};
+                content_ = std::string{ "\"\""};
                 break;
             case Type::number:
                 content_ = std::string{ "0" };
