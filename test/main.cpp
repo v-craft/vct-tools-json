@@ -186,6 +186,9 @@ M_TEST(JsonBase, construct) {
 
     M_EXPECT_EQ(Json::Value (1).as_int64(), 1);
     M_EXPECT_EQ(Json::Value ("str").as_string(), "str");
+    M_EXPECT_FLOAT_EQ(Json::Value (1.11111).as_ldouble(), 1.11111, 1e-12);
+    M_EXPECT_FLOAT_EQ(Json::Value (1.11111).as_double(), 1.11111, 1e-12);
+    M_EXPECT_FLOAT_EQ(Json::Value (1.1f).as_double(), 1.1f, 1e-4);
     M_EXPECT_EQ(Json::Value (1234567890123456LL).as_int64(), 1234567890123456LL);
     M_EXPECT_EQ(Json::Value (std::string("hello world")).as_string(), "hello world");
     M_EXPECT_EQ(Json::Value (0).as_int64(), 0);
@@ -194,6 +197,9 @@ M_TEST(JsonBase, construct) {
     M_EXPECT_EQ(Json::Value (nullptr).is_null(), true);
     M_EXPECT_EQ(Json::Value {1}.as_int64(), 1);
     M_EXPECT_EQ(Json::Value {"str"}.as_string(), "str");
+    M_EXPECT_FLOAT_EQ(Json::Value {1.11111}.as_ldouble(), 1.11111, 1e-12);
+    M_EXPECT_FLOAT_EQ(Json::Value {1.11111}.as_double(), 1.11111, 1e-12);
+    M_EXPECT_FLOAT_EQ(Json::Value {1.1f}.as_double(), 1.1f, 1e-4);
     M_EXPECT_EQ(Json::Value {1234567890123456LL}.as_int64(), 1234567890123456LL);
     M_EXPECT_EQ(Json::Value {std::string("hello world")}.as_string(), "hello world");
     M_EXPECT_EQ(Json::Value {0}.as_int64(), 0);
@@ -355,6 +361,10 @@ M_TEST(JsonAdvance, initializer) {
     M_EXPECT_EQ(v7[2].type(), Json::Type::number);
     M_EXPECT_EQ(v7[3].type(), Json::Type::null);
     M_EXPECT_EQ(v7[0]["key"].type(), Json::Type::number);
+    M_EXPECT_EQ(v7[0]["key"].as_int64(), 3);
+    M_EXPECT_FLOAT_EQ(v7[0]["key"].as_double(), 3.1415926, 1e-5);
+
+
 
     Json::Value v8 = Json::Object{
         { "key0",Json::Object{{ "key1",{ "key2", 1 } } } },
