@@ -1090,7 +1090,7 @@ namespace Vct::Tools::Json {
                 content_ = Array{};
             break;
             case Type::string:
-                content_ = std::string{};
+                content_ = std::string{ "\"\"" };
             break;
             case Type::number:
                 content_ = std::string{ "0" };

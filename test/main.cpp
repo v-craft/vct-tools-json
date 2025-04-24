@@ -95,6 +95,7 @@ M_TEST(JsonBase, type) {
     M_EXPECT_EQ(Json::Value(Json::Type::null).is_bool(), false);
     M_EXPECT_EQ(Json::Value(Json::Type::null).is_int64(), false);
     M_EXPECT_EQ(Json::Value(Json::Type::null).is_double(), false);
+
 }
 
 // 基础as运算符异常测试
@@ -283,6 +284,74 @@ M_TEST(JsonBase, array) {
     M_EXPECT_EQ(Json::Value(Json::Array{}).type(), Json::Value(Json::Type::array).type());
     M_EXPECT_NO_THROW(Json::Value(Json::Array{}).as_array());
     Json::Value v(Json::Array{});
+}
+
+// clear和reset函数测试
+M_TEST(JsonBase, clear) {
+
+    Json::Value v0;
+    Json::Value v1{};
+    Json::Value v2(Json::Type::object);
+    Json::Value v3(Json::Type::array);
+    Json::Value v4(Json::Type::string);
+    Json::Value v5(Json::Type::number);
+    Json::Value v6(Json::Type::boolean);
+    Json::Value v7(Json::Type::null);
+    M_EXPECT_NO_THROW( v0.clear() );
+    M_EXPECT_NO_THROW( v1.clear() );
+    M_EXPECT_NO_THROW( v2.clear() );
+    M_EXPECT_NO_THROW( v3.clear() );
+    M_EXPECT_NO_THROW( v4.clear() );
+    M_EXPECT_NO_THROW( v5.clear() );
+    M_EXPECT_NO_THROW( v6.clear() );
+    M_EXPECT_NO_THROW( v7.clear() );
+    M_EXPECT_EQ(v0.type(), Json::Type::null);
+    M_EXPECT_EQ(v1.type(), Json::Type::null);
+    M_EXPECT_EQ(v2.type(), Json::Type::object);
+    M_EXPECT_EQ(v3.type(), Json::Type::array);
+    M_EXPECT_EQ(v4.type(), Json::Type::string);
+    M_EXPECT_EQ(v5.type(), Json::Type::number);
+    M_EXPECT_EQ(v6.type(), Json::Type::boolean);
+    M_EXPECT_EQ(v7.type(), Json::Type::null);
+    M_EXPECT_EQ(v0.serialize(), "null");
+    M_EXPECT_EQ(v1.serialize(), "null");
+    M_EXPECT_EQ(v2.serialize(), "{}");
+    M_EXPECT_EQ(v3.serialize(), "[]");
+    M_EXPECT_EQ(v4.serialize(), "\"\"");
+    M_EXPECT_EQ(v5.serialize(), "0");
+    M_EXPECT_EQ(v6.serialize(), "false");
+    M_EXPECT_EQ(v7.serialize(), "null");
+    M_EXPECT_EQ(v0.is_null(), true);
+    M_EXPECT_EQ(v1.is_null(), true);
+    M_EXPECT_EQ(v4.as_string(), "");
+    M_EXPECT_EQ(v5.as_int64(), 0);
+    M_EXPECT_EQ(v6.as_bool(), false);
+    M_EXPECT_EQ(v7.is_null(), true);
+
+    M_EXPECT_NO_THROW( v0.reset() );
+    M_EXPECT_NO_THROW( v1.reset() );
+    M_EXPECT_NO_THROW( v2.reset() );
+    M_EXPECT_NO_THROW( v3.reset() );
+    M_EXPECT_NO_THROW( v4.reset() );
+    M_EXPECT_NO_THROW( v5.reset() );
+    M_EXPECT_NO_THROW( v6.reset() );
+    M_EXPECT_NO_THROW( v7.reset() );
+    M_EXPECT_EQ(v0.type(), Json::Type::null);
+    M_EXPECT_EQ(v1.type(), Json::Type::null);
+    M_EXPECT_EQ(v2.type(), Json::Type::null);
+    M_EXPECT_EQ(v3.type(), Json::Type::null);
+    M_EXPECT_EQ(v4.type(), Json::Type::null);
+    M_EXPECT_EQ(v5.type(), Json::Type::null);
+    M_EXPECT_EQ(v6.type(), Json::Type::null);
+    M_EXPECT_EQ(v7.type(), Json::Type::null);
+    M_EXPECT_EQ(v0.serialize(), "null");
+    M_EXPECT_EQ(v1.serialize(), "null");
+    M_EXPECT_EQ(v2.serialize(), "null");
+    M_EXPECT_EQ(v3.serialize(), "null");
+    M_EXPECT_EQ(v4.serialize(), "null");
+    M_EXPECT_EQ(v5.serialize(), "null");
+    M_EXPECT_EQ(v6.serialize(), "null");
+    M_EXPECT_EQ(v7.serialize(), "null");
 }
 
 // 增删改查
