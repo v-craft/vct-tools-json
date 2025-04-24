@@ -1,14 +1,18 @@
 # C++23 JSON解析库
 
+## 警告
+- 本库使用C++23标准库默认，依然是试验性支持
+- 库处于开发中，随时可能变更API/内容/模块名等
+
 ## 概要
 - C++23
 - 标准库模块
 - 充分测试
 - 性能优秀
 - 操作简单
+- 增删改查支持
 - 移动语义支持
 - 异常处理支持
-- 增删改查支持
 - 初始化列表支持
 - 序列化与反序列化支持
 - 自定义类型序列化与反序列化支持
@@ -92,7 +96,7 @@ Json::Value json = Json::Array{
 对于`Json::Value`对象，可以: <br>
 使用`对象.serialize()`成员函数进行序列化。<br>
 使用`对象.serialize_pretty()`函数函数进行美化序列化，可指定缩进长度。<br>
-（`Json::serialize(T t)`的T如果是`Json::Value`，就是直接调用`.serialize()`成员函数）。
+*（`Json::serialize(T t)`的T如果是`Json::Value`，就是直接调用`.serialize()`成员函数）*
 
 参考代码：
 ```c++
@@ -115,8 +119,9 @@ std::cout << json.serialize_pretty() << std::endl;
 注意，`对象.serialize()`成员函数是`Json::Value`类型特有的。
 
 而`Json::serialize(T t)`函数是函数模板：<br>
-对Json::Value，bool，nullptr等类型进行了普通函数重载，<br>
-对数值类型，可序列化类型（存在.serialize()成员函数)，字符串类型，标准数组类型，标准键值对类型等 进行了概念函数模板的编写。<br>
+- 对Json::Value，bool，nullptr等类型进行了普通函数重载，
+- 对数值类型，可序列化类型（存在.serialize()成员函数)，字符串类型，标准数组类型，标准键值对类型等 进行了概念函数模板的编写。
+
 所以他能够处理非常多的类型，甚至你的自定义类型（只要满足上述条件中的一种）。
 
 

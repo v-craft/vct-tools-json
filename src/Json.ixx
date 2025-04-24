@@ -1,15 +1,17 @@
-//
-// Created by mys_vac on 25-4-18.
-//
-
 export module Vct.Tools.Json;
-import std;
+export import std;
 
-#ifndef VCT_TOOL_PORT_SIGNAL
-    #define VCT_TOOL_PORT_SIGNAL
+#ifndef VCT_PORT_SIGNAL
+    #define VCT_PORT_SIGNAL
 #endif
 
-#define WIN_PORT_SIGNAL VCT_TOOL_PORT_SIGNAL
+#ifdef VCT_TOOL_JSON_PORT_SIGNAL
+    #define WIN_PORT_SIGNAL VCT_TOOL_JSON_PORT_SIGNAL
+#elifdef VCT_TOOL_PORT_SIGNAL
+    #define WIN_PORT_SIGNAL VCT_TOOL_PORT_SIGNAL
+#else
+    #define WIN_PORT_SIGNAL VCT_PORT_SIGNAL
+#endif
 
 /**
  * @namespace Vct::Tools::Json
