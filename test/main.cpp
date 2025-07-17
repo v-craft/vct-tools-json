@@ -1,563 +1,436 @@
-// //
-// // Created by mys_vac on 25-4-19.
-// import std;
-import Vct.Tools.Json;
-#include "test/M_TEST_MAIN.h"
+#include <vct/test_unit_macros.hpp>
 
-using namespace Vct::Tools;
+import std;
+import vct.test.unit;
+import vct.tools.json;
+
+using namespace vct::tools;
+
+int main() {
+    vct::test::unit::start();
+}
 
 // 基础类型测试
-M_TEST(JsonBase, type) {
-    M_EXPECT_NO_THROW(Json::Value value);
-    M_EXPECT_NO_THROW(Json::Value value{});
-    M_EXPECT_NO_THROW(Json::Value value(Json::Type::object));
-    M_EXPECT_NO_THROW(Json::Value value(Json::Type::array));
-    M_EXPECT_NO_THROW(Json::Value value(Json::Type::string));
-    M_EXPECT_NO_THROW(Json::Value value(Json::Type::number));
-    M_EXPECT_NO_THROW(Json::Value value(Json::Type::boolean));
-    M_EXPECT_NO_THROW(Json::Value value(Json::Type::null));
+M_TEST(jsonBase, type) {
+    M_EXPECT_NO_THROW(json::Value value);
+    M_EXPECT_NO_THROW(json::Value value{});
+    M_EXPECT_NO_THROW(json::Value value(json::Type::eObject));
+    M_EXPECT_NO_THROW(json::Value value(json::Type::eArray));
+    M_EXPECT_NO_THROW(json::Value value(json::Type::eString));
+    M_EXPECT_NO_THROW(json::Value value(json::Type::eNumber));
+    M_EXPECT_NO_THROW(json::Value value(json::Type::eBool));
+    M_EXPECT_NO_THROW(json::Value value(json::Type::eNull));
 
-    M_EXPECT_EQ(Json::Value().type(), Json::Type::null);
-    M_EXPECT_EQ(Json::Value(Json::Type::object).type(), Json::Type::object);
-    M_EXPECT_EQ(Json::Value(Json::Type::array).type(), Json::Type::array);
-    M_EXPECT_EQ(Json::Value(Json::Type::string).type(), Json::Type::string);
-    M_EXPECT_EQ(Json::Value(Json::Type::number).type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).type(), Json::Type::boolean);
-    M_EXPECT_EQ(Json::Value(Json::Type::null).type(), Json::Type::null);
-    M_EXPECT_EQ(Json::Value{}.type(), Json::Type::null);
-    M_EXPECT_EQ(Json::Value{Json::Type::object}.type(), Json::Type::object);
-    M_EXPECT_EQ(Json::Value{Json::Type::array}.type(), Json::Type::array);
-    M_EXPECT_EQ(Json::Value{Json::Type::string}.type(), Json::Type::string);
-    M_EXPECT_EQ(Json::Value{Json::Type::number}.type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value{Json::Type::boolean}.type(), Json::Type::boolean);
-    M_EXPECT_EQ(Json::Value{Json::Type::null}.type(), Json::Type::null);
+    M_EXPECT_EQ(json::Value().type(), json::Type::eNull);
+    M_EXPECT_EQ(json::Value(json::Type::eObject).type(), json::Type::eObject);
+    M_EXPECT_EQ(json::Value(json::Type::eArray).type(), json::Type::eArray);
+    M_EXPECT_EQ(json::Value(json::Type::eString).type(), json::Type::eString);
+    M_EXPECT_EQ(json::Value(json::Type::eNumber).type(), json::Type::eNumber);
+    M_EXPECT_EQ(json::Value(json::Type::eBool).type(), json::Type::eBool);
+    M_EXPECT_EQ(json::Value(json::Type::eNull).type(), json::Type::eNull);
+    
+    M_EXPECT_STREQ(json::Value{json::Type::eObject}.type_name(), "Object");
+    M_EXPECT_STREQ(json::Value{json::Type::eArray}.type_name(), "Array");
+    M_EXPECT_STREQ(json::Value{json::Type::eString}.type_name(), "String");
+    M_EXPECT_STREQ(json::Value{json::Type::eNumber}.type_name(), "Number");
+    M_EXPECT_STREQ(json::Value{json::Type::eBool}.type_name(), "Bool");
+    M_EXPECT_STREQ(json::Value{json::Type::eNull}.type_name(), "Null");
 
-    M_EXPECT_EQ(Json::Value().is_object(), false);
-    M_EXPECT_EQ(Json::Value().is_array(), false);
-    M_EXPECT_EQ(Json::Value().is_string(), false);
-    M_EXPECT_EQ(Json::Value().is_number(), false);
-    M_EXPECT_EQ(Json::Value().is_bool(), false);
-    M_EXPECT_EQ(Json::Value().is_int64(), false);
-    M_EXPECT_EQ(Json::Value().is_double(), false);
+    M_EXPECT_EQ(json::Value().is(json::Type::eNull), true);
+    M_EXPECT_EQ(json::Value().is(json::Type::eObject), false);
+    M_EXPECT_EQ(json::Value().is(json::Type::eArray), false);
+    M_EXPECT_EQ(json::Value().is(json::Type::eString), false);
+    M_EXPECT_EQ(json::Value().is(json::Type::eNumber), false);
+    M_EXPECT_EQ(json::Value().is(json::Type::eBool), false);
 
-    M_EXPECT_EQ(Json::Value().is_null(), true);
-    M_EXPECT_EQ(Json::Value(Json::Type::object).is_object(), true);
-    M_EXPECT_EQ(Json::Value(Json::Type::array).is_array(), true);
-    M_EXPECT_EQ(Json::Value(Json::Type::string).is_string(), true);
-    M_EXPECT_EQ(Json::Value(Json::Type::number).is_number(), true);
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).is_bool(), true);
-    M_EXPECT_EQ(Json::Value(Json::Type::null).is_null(), true);
+    M_EXPECT_EQ(json::Value(json::Type::eObject).is(json::Type::eObject), true);
+    M_EXPECT_EQ(json::Value(json::Type::eObject).is(json::Type::eNull), false);
+    M_EXPECT_EQ(json::Value(json::Type::eObject).is(json::Type::eArray), false);
+    M_EXPECT_EQ(json::Value(json::Type::eObject).is(json::Type::eString), false);
+    M_EXPECT_EQ(json::Value(json::Type::eObject).is(json::Type::eNumber), false);
+    M_EXPECT_EQ(json::Value(json::Type::eObject).is(json::Type::eBool), false);
 
-    M_EXPECT_EQ(Json::Value(Json::Type::object).is_array(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::object).is_string(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::object).is_number(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::object).is_bool(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::object).is_null(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::object).is_int64(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::object).is_double(), false);
+    M_EXPECT_EQ(json::Value(json::Type::eArray).is(json::Type::eNull), false);
+    M_EXPECT_EQ(json::Value(json::Type::eArray).is(json::Type::eObject), false);
+    M_EXPECT_EQ(json::Value(json::Type::eArray).is(json::Type::eArray), true);
+    M_EXPECT_EQ(json::Value(json::Type::eArray).is(json::Type::eString), false);
+    M_EXPECT_EQ(json::Value(json::Type::eArray).is(json::Type::eNumber), false);
+    M_EXPECT_EQ(json::Value(json::Type::eArray).is(json::Type::eBool), false);
 
-    M_EXPECT_EQ(Json::Value(Json::Type::array).is_object(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::array).is_string(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::array).is_number(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::array).is_bool(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::array).is_null(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::array).is_int64(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::array).is_double(), false);
+    M_EXPECT_EQ(json::Value(json::Type::eString).is(json::Type::eNull), false);
+    M_EXPECT_EQ(json::Value(json::Type::eString).is(json::Type::eObject), false);
+    M_EXPECT_EQ(json::Value(json::Type::eString).is(json::Type::eArray), false);
+    M_EXPECT_EQ(json::Value(json::Type::eString).is(json::Type::eString), true);
+    M_EXPECT_EQ(json::Value(json::Type::eString).is(json::Type::eNumber), false);
+    M_EXPECT_EQ(json::Value(json::Type::eString).is(json::Type::eBool), false);
 
-    M_EXPECT_EQ(Json::Value(Json::Type::string).is_object(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::string).is_array(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::string).is_number(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::string).is_bool(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::string).is_null(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::string).is_int64(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::string).is_double(), false);
 
-    M_EXPECT_EQ(Json::Value(Json::Type::number).is_object(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::number).is_array(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::number).is_string(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::number).is_bool(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::number).is_null(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::number).is_int64(), true);
-    M_EXPECT_EQ(Json::Value(Json::Type::number).is_double(), false);
+    M_EXPECT_EQ(json::Value(json::Type::eNumber).is(json::Type::eNull), false);
+    M_EXPECT_EQ(json::Value(json::Type::eNumber).is(json::Type::eObject), false);
+    M_EXPECT_EQ(json::Value(json::Type::eNumber).is(json::Type::eArray), false);
+    M_EXPECT_EQ(json::Value(json::Type::eNumber).is(json::Type::eString), false);
+    M_EXPECT_EQ(json::Value(json::Type::eNumber).is(json::Type::eNumber), true);
+    M_EXPECT_EQ(json::Value(json::Type::eNumber).is(json::Type::eBool), false);
 
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).is_object(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).is_array(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).is_string(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).is_number(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).is_null(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).is_int64(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::boolean).is_double(), false);
-
-    M_EXPECT_EQ(Json::Value(Json::Type::null).is_object(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::null).is_array(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::null).is_string(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::null).is_number(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::null).is_bool(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::null).is_int64(), false);
-    M_EXPECT_EQ(Json::Value(Json::Type::null).is_double(), false);
-
+    M_EXPECT_EQ(json::Value(json::Type::eBool).is(json::Type::eNull), false);
+    M_EXPECT_EQ(json::Value(json::Type::eBool).is(json::Type::eObject), false);
+    M_EXPECT_EQ(json::Value(json::Type::eBool).is(json::Type::eArray), false);
+    M_EXPECT_EQ(json::Value(json::Type::eBool).is(json::Type::eString), false);
+    M_EXPECT_EQ(json::Value(json::Type::eBool).is(json::Type::eNumber), false);
+    M_EXPECT_EQ(json::Value(json::Type::eBool).is(json::Type::eBool), true);
 }
 
-// 基础as运算符异常测试
-M_TEST(JsonBase, as) {
+// 构造函数测试
+M_TEST(jsonBase, construct) {
+    M_EXPECT_NO_THROW(json::Value v = 1);
+    M_EXPECT_NO_THROW(json::Value v = "str");
+    M_EXPECT_NO_THROW(json::Value v = 1.11111);
+    M_EXPECT_NO_THROW(json::Value v = 1234567890123456LL);
+    M_EXPECT_NO_THROW(json::Value v = 1.1f);
+    M_EXPECT_NO_THROW(json::Value v = std::string("hello world"));
+    M_EXPECT_NO_THROW(json::Value v = 0);
+    M_EXPECT_NO_THROW(json::Value v = false);
+    M_EXPECT_NO_THROW(json::Value v = true);
+    M_EXPECT_NO_THROW(json::Value v = nullptr);
 
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::object).as_object());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::object).as_string());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::array).as_array());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::array).as_string());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::number).as_int64());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::number).as_double());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::number).as_ldouble());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::number).as_string());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::boolean).as_bool());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::boolean).as_string());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::string).as_string());
-    M_EXPECT_NO_THROW(Json::Value (Json::Type::null).as_string());
+    M_EXPECT_EQ(json::Value(1).type(), json::Type::eNumber);
+    M_EXPECT_EQ(json::Value("str").type(), json::Type::eString);
+    M_EXPECT_EQ(json::Value(1.11111).type(), json::Type::eNumber);
+    M_EXPECT_EQ(json::Value(1234567890123456LL).type(), json::Type::eNumber);
+    M_EXPECT_EQ(json::Value(1.1f).type(), json::Type::eNumber);
+    M_EXPECT_EQ(json::Value(std::string("hello world")).type(), json::Type::eString);
+    M_EXPECT_EQ(json::Value(0).type(), json::Type::eNumber);
+    M_EXPECT_EQ(json::Value(false).type(), json::Type::eBool);
+    M_EXPECT_EQ(json::Value(true).type(), json::Type::eBool);
+    M_EXPECT_EQ(json::Value(nullptr).type(), json::Type::eNull);
 
+    M_EXPECT_EQ(json::Value(1).get<int>(), 1);
+    M_EXPECT_EQ(json::Value("str").get<std::string>(), "str");
+    M_EXPECT_FLOAT_EQ(json::Value(1.11111).get<double>(), 1.11111, 1e-12);
+    M_EXPECT_EQ(json::Value(1234567890123456LL).get<long long>(), 1234567890123456LL);
+    M_EXPECT_EQ(json::Value(std::string("hello world")).get<std::string>(), "hello world");
+    M_EXPECT_EQ(json::Value(0).get<int>(), 0);
+    M_EXPECT_EQ(json::Value(false).get<bool>(), false);
+    M_EXPECT_EQ(json::Value(true).get<bool>(), true);
+    M_EXPECT_EQ(json::Value(nullptr).get<std::nullptr_t>(), nullptr);
 
-    M_EXPECT_THROW(Json::Value (Json::Type::object).as_array(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::object).as_ldouble(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::object).as_double(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::object).as_int64(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::object).as_bool(), Json::TypeException);
-
-
-    M_EXPECT_THROW(Json::Value (Json::Type::array).as_object(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::array).as_ldouble(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::array).as_double(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::array).as_int64(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::array).as_bool(), Json::TypeException);
-
-
-    M_EXPECT_THROW(Json::Value (Json::Type::string).as_object(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::string).as_array(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::string).as_ldouble(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::string).as_double(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::string).as_int64(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::string).as_bool(), Json::TypeException);
-
-
-    M_EXPECT_THROW(Json::Value (Json::Type::number).as_object(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::number).as_array(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::number).as_bool(), Json::TypeException);
-
-
-    M_EXPECT_THROW(Json::Value (Json::Type::null).as_object(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::null).as_array(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::null).as_bool(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::null).as_int64(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::null).as_double(), Json::TypeException);
-    M_EXPECT_THROW(Json::Value (Json::Type::null).as_ldouble(), Json::TypeException);
-
+    M_EXPECT_NO_THROW(json::Value v = json::Object{});
+    M_EXPECT_NO_THROW(json::Value v = json::Array{});
+    M_EXPECT_EQ(json::Value(json::Object{}).type(), json::Type::eObject);
+    M_EXPECT_EQ(json::Value(json::Array{}).type(), json::Type::eArray);
 }
 
-// 基础类型转换函数测试
-M_TEST(JsonBase, construct) {
-    M_EXPECT_NO_THROW(Json::Value v = 1);
-    M_EXPECT_NO_THROW(Json::Value v = "str");
-    M_EXPECT_NO_THROW(Json::Value v = 1.11111);
-    M_EXPECT_NO_THROW(Json::Value v = 1234567890123456LL);
-    M_EXPECT_NO_THROW(Json::Value v = 1.1f);
-    M_EXPECT_NO_THROW(Json::Value v = std::string("hello world"));
-    M_EXPECT_NO_THROW(Json::Value v = 0);
-    M_EXPECT_NO_THROW(Json::Value v = false);
-    M_EXPECT_NO_THROW(Json::Value v = true);
-    M_EXPECT_NO_THROW(Json::Value v = nullptr);
+// 类型转换测试
+M_TEST(jsonBase, get) {
+    json::Value v_num = 42;
+    json::Value v_str = "hello";
+    json::Value v_bool = true;
+    json::Value v_null = nullptr;
 
-    M_EXPECT_EQ(Json::Value (1).type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value ("str").type(), Json::Type::string);
-    M_EXPECT_EQ(Json::Value (1.11111).type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value (1234567890123456LL).type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value (1.1f).type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value (std::string("hello world")).type(), Json::Type::string);
-    M_EXPECT_EQ(Json::Value (0).type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value (false).type(), Json::Type::boolean);
-    M_EXPECT_EQ(Json::Value (true).type(), Json::Type::boolean);
-    M_EXPECT_EQ(Json::Value (nullptr).type(), Json::Type::null);
-    M_EXPECT_EQ(Json::Value {1}.type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value {"str"}.type(), Json::Type::string);
-    M_EXPECT_EQ(Json::Value {1.11111}.type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value {1234567890123456LL}.type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value {1.1f}.type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value {std::string("hello world")}.type(), Json::Type::string);
-    M_EXPECT_EQ(Json::Value {0}.type(), Json::Type::number);
-    M_EXPECT_EQ(Json::Value {false}.type(), Json::Type::boolean);
-    M_EXPECT_EQ(Json::Value {true}.type(), Json::Type::boolean);
-    M_EXPECT_EQ(Json::Value {nullptr}.type(), Json::Type::null);
+    M_EXPECT_EQ(v_num.get<int>(), 42);
+    M_EXPECT_DOUBLE_EQ_DEFAULT(v_num.get<double>(), 42.0);
+    M_EXPECT_FLOAT_EQ_DEFAULT(v_num.get<float>(), 42.0f);
+    M_EXPECT_EQ(v_num.get<long>(), 42L);
 
-    M_EXPECT_EQ(Json::Value (1).as_int64(), 1);
-    M_EXPECT_EQ(Json::Value ("str").as_string(), "str");
-    M_EXPECT_FLOAT_EQ(Json::Value (1.11111).as_ldouble(), 1.11111, 1e-12);
-    M_EXPECT_FLOAT_EQ(Json::Value (1.11111).as_double(), 1.11111, 1e-12);
-    M_EXPECT_FLOAT_EQ(Json::Value (1.1f).as_double(), 1.1f, 1e-4);
-    M_EXPECT_EQ(Json::Value (1234567890123456LL).as_int64(), 1234567890123456LL);
-    M_EXPECT_EQ(Json::Value (std::string("hello world")).as_string(), "hello world");
-    M_EXPECT_EQ(Json::Value (0).as_int64(), 0);
-    M_EXPECT_EQ(Json::Value (false).as_bool(), false);
-    M_EXPECT_EQ(Json::Value (true).as_bool(), true);
-    M_EXPECT_EQ(Json::Value (nullptr).is_null(), true);
-    M_EXPECT_EQ(Json::Value {1}.as_int64(), 1);
-    M_EXPECT_EQ(Json::Value {"str"}.as_string(), "str");
-    M_EXPECT_FLOAT_EQ(Json::Value {1.11111}.as_ldouble(), 1.11111, 1e-12);
-    M_EXPECT_FLOAT_EQ(Json::Value {1.11111}.as_double(), 1.11111, 1e-12);
-    M_EXPECT_FLOAT_EQ(Json::Value {1.1f}.as_double(), 1.1f, 1e-4);
-    M_EXPECT_EQ(Json::Value {1234567890123456LL}.as_int64(), 1234567890123456LL);
-    M_EXPECT_EQ(Json::Value {std::string("hello world")}.as_string(), "hello world");
-    M_EXPECT_EQ(Json::Value {0}.as_int64(), 0);
-    M_EXPECT_EQ(Json::Value {false}.as_bool(), false);
-    M_EXPECT_EQ(Json::Value {true}.as_bool(), true);
-    M_EXPECT_EQ(Json::Value {nullptr}.is_null(), true);
+    M_EXPECT_STREQ(v_str.get<std::string>(), "hello");
+    M_EXPECT_EQ(v_bool.get<bool>(), true);
+    M_EXPECT_EQ(v_null.get<std::nullptr_t>(), nullptr);
+
+    M_EXPECT_NO_THROW(v_num.get<bool>());
+    M_EXPECT_THROW(v_str.get<int>(), std::runtime_error);
+    M_EXPECT_THROW(v_bool.get<std::string>(), std::runtime_error);
+    M_EXPECT_THROW(v_null.get<int>(), std::runtime_error);
 }
 
-// 解除类型解析
-M_TEST(JsonBase, deserialize) {
-    M_EXPECT_EQ(Json::deserialize("null").type(), Json::Type::null);
-    M_EXPECT_EQ(Json::deserialize("[]").type(), Json::Type::array);
-    M_EXPECT_EQ(Json::deserialize("{}").type(), Json::Type::object);
-    M_EXPECT_EQ(Json::deserialize("true").type(), Json::Type::boolean);
-    M_EXPECT_EQ(Json::deserialize("false").type(), Json::Type::boolean);
-    M_EXPECT_EQ(Json::deserialize("0").type(), Json::Type::number);
-    M_EXPECT_EQ(Json::deserialize("1").type(), Json::Type::number);
-    M_EXPECT_EQ(Json::deserialize("1.1414e+3").type(), Json::Type::number);
-    M_EXPECT_EQ(Json::deserialize("\"1.1414e+3\"").type(), Json::Type::string);
+// get_ref 测试
+M_TEST(jsonBase, get_ref) {
+    json::Value v_num = 42.5;
+    json::Value v_str = "hello";
+    json::Value v_bool = true;
+    json::Value v_null = nullptr;
 
-    M_EXPECT_THROW(Json::deserialize(""), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("  "), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("True"), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("False"), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("\""), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("\"\"\""), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("[]]"), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("nul"), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("["), Json::StructureException);
-    M_EXPECT_THROW(Json::deserialize("{[}"), Json::StructureException);
+    M_EXPECT_EQ(v_num.get_ref<double>(), 42.5);
+    M_EXPECT_EQ(v_str.get_ref<std::string>(), "hello");
+    M_EXPECT_EQ(v_bool.get_ref<bool>(), true);
+    M_EXPECT_EQ(v_null.get_ref<std::nullptr_t>(), nullptr);
 
-    M_EXPECT_EQ(Json::deserialize("null").as_string(), "null");
-    M_EXPECT_EQ(Json::deserialize("[]").as_string(), "[]");
-    M_EXPECT_EQ(Json::deserialize("{}").as_string(), "{}");
-    M_EXPECT_EQ(Json::deserialize("true").as_string(), "true");
-    M_EXPECT_EQ(Json::deserialize("true").as_bool(), true);
-    M_EXPECT_EQ(Json::deserialize("false").as_bool(), false);
-    M_EXPECT_EQ(Json::deserialize("0").as_int64(), 0);
-    M_EXPECT_EQ(Json::deserialize("0").as_string(), "0");
-    M_EXPECT_EQ(Json::deserialize("1").as_int64(), 1);
-    M_EXPECT_EQ(Json::deserialize("\"1.1414e+3\"").as_string(), "1.1414e+3");
+    // 测试可变引用
+    v_num.get_ref<double>() = 100.0;
+    M_EXPECT_EQ(v_num.get<double>(), 100.0);
+
+    v_str.get_ref<std::string>() = "world";
+    M_EXPECT_EQ(v_str.get<std::string>(), "world");
+
+    M_EXPECT_THROW((void)v_num.get_ref<bool>(), std::runtime_error);
+    M_EXPECT_THROW((void)v_str.get_ref<double>(), std::runtime_error);
 }
 
+// 对象操作测试
+M_TEST(jsonBase, object) {
+    json::Value obj(json::Type::eObject);
+    
+    M_EXPECT_EQ(obj.type(), json::Type::eObject);
+    M_EXPECT_EQ(obj.size(), 0);
+    
+    obj["key1"] = "value1";
+    obj["key2"] = 42;
+    obj["key3"] = true;
+    
+    M_EXPECT_EQ(obj.size(), 3);
+    M_EXPECT_EQ(obj["key1"].get<std::string>(), "value1");
+    M_EXPECT_EQ(obj["key2"].get<int>(), 42);
+    M_EXPECT_EQ(obj["key3"].get<bool>(), true);
+    
+    M_EXPECT_EQ(obj.contains("key1"), true);
+    M_EXPECT_EQ(obj.contains("key4"), false);
 
-std::string read_file(const std::string& path) {
-    const std::ifstream file(path);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file " + path);
-    }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
+
+    M_EXPECT_EQ(obj.at("key1").get<std::string>(), "value1");
+    M_EXPECT_THROW((void)obj.at("key4"), std::out_of_range);
+    
+    // 测试const访问
+    const json::Value& const_obj = obj;
+    M_EXPECT_EQ(const_obj["key1"].get<std::string>(), "value1");
+    M_EXPECT_THROW((void)const_obj["key4"], std::out_of_range);
+    
+    // 测试类型错误
+    json::Value arr(json::Type::eArray);
+    M_EXPECT_THROW((void)arr["key"], std::runtime_error);
+    M_EXPECT_THROW((void)arr.at("key"), std::runtime_error);
+    M_EXPECT_EQ(arr.contains("key"), false);
+}
+
+// 数组操作测试
+M_TEST(jsonBase, array) {
+    json::Value arr(json::Type::eArray);
+    
+    M_EXPECT_EQ(arr.type(), json::Type::eArray);
+    M_EXPECT_EQ(arr.size(), 0);
+    
+    arr.get_ref<json::Array>().push_back(json::Value("hello"));
+    arr.get_ref<json::Array>().push_back(json::Value(42));
+    arr.get_ref<json::Array>().push_back(json::Value(true));
+    
+    M_EXPECT_EQ(arr.size(), 3);
+    M_EXPECT_EQ(arr[0].get<std::string>(), "hello");
+    M_EXPECT_EQ(arr[1].get<int>(), 42);
+    M_EXPECT_EQ(arr[2].get<bool>(), true);
+    
+    M_EXPECT_EQ(arr.at(0).get<std::string>(), "hello");
+    M_EXPECT_THROW((void)arr.at(5), std::out_of_range);
+    
+    // 测试const访问
+    const json::Value& const_arr = arr;
+    M_EXPECT_EQ(const_arr[0].get<std::string>(), "hello");
+    M_EXPECT_THROW((void)const_arr[5], std::out_of_range);
+    
+    // 测试类型错误
+    json::Value obj(json::Type::eObject);
+    M_EXPECT_THROW((void)obj[0], std::runtime_error);
+    M_EXPECT_THROW((void)obj.at(0), std::runtime_error);
 }
 
 // 序列化测试
-M_TEST(JsonBase, serialize) {
-    M_EXPECT_EQ(Json::deserialize(read_file("files/medium_1.json")).serialize(), read_file("files/medium_1_plain.json"));
-    M_EXPECT_EQ(Json::deserialize(read_file("files/senior_1.json")).serialize(), read_file("files/senior_1_plain.json"));
-    M_EXPECT_EQ(Json::deserialize(read_file("files/senior_2.json")).serialize(), read_file("files/senior_2_plain.json"));
-    M_EXPECT_EQ(Json::deserialize(read_file("files/simple_1.json")).serialize(), read_file("files/simple_1_plain.json"));
-    M_EXPECT_EQ(Json::deserialize(read_file("files/simple_2.json")).serialize(), read_file("files/simple_2_plain.json"));
-    M_EXPECT_EQ(Json::deserialize(read_file("files/simple_3.json")).serialize(), read_file("files/simple_3_plain.json"));
-
-    M_EXPECT_NO_THROW(Json::deserialize(read_file("files/medium_1.json")).serialize_pretty());
-    M_EXPECT_NO_THROW(Json::deserialize(read_file("files/senior_2.json")).serialize_pretty());
-    M_EXPECT_NO_THROW(Json::deserialize(read_file("files/simple_3.json")).serialize_pretty());
+M_TEST(jsonBase, serialize) {
+    json::Value v_null = nullptr;
+    json::Value v_bool = true;
+    json::Value v_num = 42.5;
+    json::Value v_str = "hello";
+    
+    M_EXPECT_EQ(v_null.serialize(), "null");
+    M_EXPECT_EQ(v_bool.serialize(), "true");
+    M_EXPECT_EQ(json::Value(false).serialize(), "false");
+    M_EXPECT_EQ(v_str.serialize(), "\"hello\"");
+    
+    json::Value obj(json::Type::eObject);
+    obj["key1"] = "value1";
+    obj["key2"] = 42;
+    
+    json::Value arr(json::Type::eArray);
+    arr.get_ref<json::Array>().push_back(json::Value(1));
+    arr.get_ref<json::Array>().push_back(json::Value(2));
+    arr.get_ref<json::Array>().push_back(json::Value(3));
+    
+    M_EXPECT_EQ(arr.serialize(), "[1,2,3]");
+    
+    // 测试pretty序列化
+    auto pretty = arr.serialize_pretty(2, 0, 1024);
+    M_EXPECT_TRUE(pretty.has_value());
+    M_EXPECT_TRUE(pretty->find("[\n") != std::string::npos);
 }
 
-// 序列化测试
-M_TEST(JsonBase, object) {
-    M_EXPECT_EQ(Json::Value(Json::Object{}).serialize(), Json::Value(Json::Type::object).serialize());
-    M_EXPECT_EQ(Json::Value(Json::Object{}).type(), Json::Value(Json::Type::object).type());
-    M_EXPECT_NO_THROW(Json::Value(Json::Object{}).as_object());
-    Json::Value v(Json::Object{});
-
+// 反序列化测试
+M_TEST(jsonBase, deserialize) {
+    auto result_null = json::deserialize("null");
+    M_EXPECT_TRUE(result_null.has_value());
+    M_EXPECT_EQ(result_null->type(), json::Type::eNull);
+    
+    auto result_bool = json::deserialize("true");
+    M_EXPECT_TRUE(result_bool.has_value());
+    M_EXPECT_EQ(result_bool->type(), json::Type::eBool);
+    M_EXPECT_EQ(result_bool->get<bool>(), true);
+    
+    auto result_num = json::deserialize("42.5");
+    M_EXPECT_TRUE(result_num.has_value());
+    M_EXPECT_EQ(result_num->type(), json::Type::eNumber);
+    M_EXPECT_EQ(result_num->get<double>(), 42.5);
+    
+    auto result_str = json::deserialize("\"hello\"");
+    M_EXPECT_TRUE(result_str.has_value());
+    M_EXPECT_EQ(result_str->type(), json::Type::eString);
+    M_EXPECT_EQ(result_str->get<std::string>(), "hello");
+    
+    auto result_arr = json::deserialize("[1,2,3]");
+    M_EXPECT_TRUE(result_arr.has_value());
+    M_EXPECT_EQ(result_arr->type(), json::Type::eArray);
+    M_EXPECT_EQ(result_arr->size(), 3);
+    M_EXPECT_EQ((*result_arr)[0].get<int>(), 1);
+    M_EXPECT_EQ((*result_arr)[1].get<int>(), 2);
+    M_EXPECT_EQ((*result_arr)[2].get<int>(), 3);
+    
+    auto result_obj = json::deserialize(R"({"key1":"value1","key2":42})");
+    M_EXPECT_TRUE(result_obj.has_value());
+    M_EXPECT_EQ(result_obj->type(), json::Type::eObject);
+    M_EXPECT_EQ(result_obj->size(), 2);
+    M_EXPECT_EQ((*result_obj)["key1"].get<std::string>(), "value1");
+    M_EXPECT_EQ((*result_obj)["key2"].get<int>(), 42);
+    
+    // 测试错误情况
+    auto result_error = json::deserialize("invalid json");
+    M_EXPECT_FALSE(result_error.has_value());
+    M_EXPECT_EQ(result_error.error(), json::ParseError::eUnknownFormat);
+    
+    auto result_empty = json::deserialize("");
+    M_EXPECT_FALSE(result_empty.has_value());
+    M_EXPECT_EQ(result_empty.error(), json::ParseError::eEmptyData);
 }
 
-// 序列化测试
-M_TEST(JsonBase, array) {
-    M_EXPECT_EQ(Json::Value(Json::Array{}).serialize(), Json::Value(Json::Type::array).serialize());
-    M_EXPECT_EQ(Json::Value(Json::Array{}).type(), Json::Value(Json::Type::array).type());
-    M_EXPECT_NO_THROW(Json::Value(Json::Array{}).as_array());
-    Json::Value v(Json::Array{});
+// 复杂嵌套测试
+M_TEST(jsonBase, complex) {
+    json::Value complex_obj(json::Type::eObject);
+    complex_obj["name"] = "test";
+    complex_obj["version"] = 1;
+    complex_obj["active"] = true;
+    
+    json::Value arr(json::Type::eArray);
+    arr.get_ref<json::Array>().push_back(json::Value("item1"));
+    arr.get_ref<json::Array>().push_back(json::Value("item2"));
+    
+    complex_obj["items"] = arr;
+    
+    json::Value nested_obj(json::Type::eObject);
+    nested_obj["nested_key"] = "nested_value";
+    complex_obj["nested"] = nested_obj;
+    
+    M_EXPECT_EQ(complex_obj["name"].get<std::string>(), "test");
+    M_EXPECT_EQ(complex_obj["version"].get<int>(), 1);
+    M_EXPECT_EQ(complex_obj["active"].get<bool>(), true);
+    M_EXPECT_EQ(complex_obj["items"].size(), 2);
+    M_EXPECT_EQ(complex_obj["items"][0].get<std::string>(), "item1");
+    M_EXPECT_EQ(complex_obj["nested"]["nested_key"].get<std::string>(), "nested_value");
+    
+    // 测试序列化和反序列化
+    std::string serialized = complex_obj.serialize();
+    auto deserialized = json::deserialize(serialized);
+    M_EXPECT_TRUE(deserialized.has_value());
+    M_EXPECT_EQ(deserialized->type(), json::Type::eObject);
+    M_EXPECT_EQ((*deserialized)["name"].get<std::string>(), "test");
+    M_EXPECT_EQ((*deserialized)["items"].size(), 2);
 }
 
-// clear和reset函数测试
-M_TEST(JsonBase, clear) {
-
-    Json::Value v0;
-    Json::Value v1{};
-    Json::Value v2(Json::Type::object);
-    Json::Value v3(Json::Type::array);
-    Json::Value v4(Json::Type::string);
-    Json::Value v5(Json::Type::number);
-    Json::Value v6(Json::Type::boolean);
-    Json::Value v7(Json::Type::null);
-    M_EXPECT_NO_THROW( v0.clear() );
-    M_EXPECT_NO_THROW( v1.clear() );
-    M_EXPECT_NO_THROW( v2.clear() );
-    M_EXPECT_NO_THROW( v3.clear() );
-    M_EXPECT_NO_THROW( v4.clear() );
-    M_EXPECT_NO_THROW( v5.clear() );
-    M_EXPECT_NO_THROW( v6.clear() );
-    M_EXPECT_NO_THROW( v7.clear() );
-    M_EXPECT_EQ(v0.type(), Json::Type::null);
-    M_EXPECT_EQ(v1.type(), Json::Type::null);
-    M_EXPECT_EQ(v2.type(), Json::Type::object);
-    M_EXPECT_EQ(v3.type(), Json::Type::array);
-    M_EXPECT_EQ(v4.type(), Json::Type::string);
-    M_EXPECT_EQ(v5.type(), Json::Type::number);
-    M_EXPECT_EQ(v6.type(), Json::Type::boolean);
-    M_EXPECT_EQ(v7.type(), Json::Type::null);
-    M_EXPECT_EQ(v0.serialize(), "null");
-    M_EXPECT_EQ(v1.serialize(), "null");
-    M_EXPECT_EQ(v2.serialize(), "{}");
-    M_EXPECT_EQ(v3.serialize(), "[]");
-    M_EXPECT_EQ(v4.serialize(), "\"\"");
-    M_EXPECT_EQ(v5.serialize(), "0");
-    M_EXPECT_EQ(v6.serialize(), "false");
-    M_EXPECT_EQ(v7.serialize(), "null");
-    M_EXPECT_EQ(v0.is_null(), true);
-    M_EXPECT_EQ(v1.is_null(), true);
-    M_EXPECT_EQ(v4.as_string(), "");
-    M_EXPECT_EQ(v5.as_int64(), 0);
-    M_EXPECT_EQ(v6.as_bool(), false);
-    M_EXPECT_EQ(v7.is_null(), true);
-
-    M_EXPECT_NO_THROW( v0.reset() );
-    M_EXPECT_NO_THROW( v1.reset() );
-    M_EXPECT_NO_THROW( v2.reset() );
-    M_EXPECT_NO_THROW( v3.reset() );
-    M_EXPECT_NO_THROW( v4.reset() );
-    M_EXPECT_NO_THROW( v5.reset() );
-    M_EXPECT_NO_THROW( v6.reset() );
-    M_EXPECT_NO_THROW( v7.reset() );
-    M_EXPECT_EQ(v0.type(), Json::Type::null);
-    M_EXPECT_EQ(v1.type(), Json::Type::null);
-    M_EXPECT_EQ(v2.type(), Json::Type::null);
-    M_EXPECT_EQ(v3.type(), Json::Type::null);
-    M_EXPECT_EQ(v4.type(), Json::Type::null);
-    M_EXPECT_EQ(v5.type(), Json::Type::null);
-    M_EXPECT_EQ(v6.type(), Json::Type::null);
-    M_EXPECT_EQ(v7.type(), Json::Type::null);
-    M_EXPECT_EQ(v0.serialize(), "null");
-    M_EXPECT_EQ(v1.serialize(), "null");
-    M_EXPECT_EQ(v2.serialize(), "null");
-    M_EXPECT_EQ(v3.serialize(), "null");
-    M_EXPECT_EQ(v4.serialize(), "null");
-    M_EXPECT_EQ(v5.serialize(), "null");
-    M_EXPECT_EQ(v6.serialize(), "null");
-    M_EXPECT_EQ(v7.serialize(), "null");
+// 移动语义测试
+M_TEST(jsonBase, move) {
+    json::Value original = "hello";
+    json::Value moved = std::move(original);
+    
+    M_EXPECT_EQ(moved.get<std::string>(), "hello");
+    M_EXPECT_EQ(original.type(), json::Type::eNull);
+    
+    json::Value target;
+    target = std::move(moved);
+    M_EXPECT_EQ(target.get<std::string>(), "hello");
+    M_EXPECT_EQ(moved.type(), json::Type::eNull);
 }
 
-// 增删改查
-M_TEST(JsonBase, CURD) {
-    Json::Value v = Json::deserialize(read_file("files/medium_1.json"));
-    M_EXPECT_EQ(v.type(), Json::Type::object);
-    M_EXPECT_EQ(v.size(), 4);
-    M_EXPECT_EQ(v["version"].type(), Json::Type::number);
-    M_EXPECT_EQ(v["version"].as_int64(), 5);
-    M_EXPECT_EQ(v["configurePresets"].type(), Json::Type::array);
-    M_EXPECT_EQ(v["configurePresets"][0].type(), Json::Type::object);
-    M_EXPECT_EQ(v["configurePresets"][0].at("name").type(), Json::Type::string);
-    M_EXPECT_EQ(v["configurePresets"][0].at("name").as_string(), "Ninja-config");
-    M_EXPECT_EQ(v["configurePresets"][1].at("inherits").type(), Json::Type::array);
-    M_EXPECT_EQ(v["configurePresets"][1].at("inherits")[1].type(), Json::Type::string);
-    M_EXPECT_EQ(v["configurePresets"][1].at("inherits")[1].as_string(), "Qt-Default");
-    M_EXPECT_EQ(v["configurePresets"][2].at("hidden").as_bool(), true);
-    M_EXPECT_EQ(v.at("version").type(), Json::Type::number);
-    M_EXPECT_EQ(v.at("version").as_int64(), 5);
-    M_EXPECT_EQ(v.at("configurePresets").type(), Json::Type::array);
-    M_EXPECT_EQ(v.at("configurePresets").at(0).type(), Json::Type::object);
-    M_EXPECT_EQ(v.at("configurePresets").at(0)["name"].type(), Json::Type::string);
-    M_EXPECT_EQ(v.at("configurePresets").at(0)["name"].as_string(), "Ninja-config");
-    M_EXPECT_EQ(v.at("configurePresets").at(1)["inherits"].type(), Json::Type::array);
-    M_EXPECT_EQ(v.at("configurePresets").at(1)["inherits"][1].type(), Json::Type::string);
-    M_EXPECT_EQ(v.at("configurePresets").at(1)["inherits"][1].as_string(), "Qt-Default");
-    M_EXPECT_EQ(v.at("configurePresets").at(2)["hidden"].as_bool(), true);
-
-    M_EXPECT_THROW(v.at("null_key"),std::out_of_range);
-    M_EXPECT_THROW(v["configurePresets"].at(8),std::out_of_range);
-    M_EXPECT_THROW(v["configurePresets"].at(-1),std::out_of_range);
-    M_EXPECT_THROW(v.at(1),Json::TypeException);
-    M_EXPECT_THROW(v[1],Json::TypeException);
-    M_EXPECT_NO_THROW(v["null_key"]);
-    M_EXPECT_EQ(v["null_key"].type(), Json::Type::null);
-    M_EXPECT_NO_THROW(v.insert("key3","test_key3"));
-    M_EXPECT_NO_THROW(v.insert("key4",8848));
-    M_EXPECT_NO_THROW(v.insert("key5",nullptr));
-    M_EXPECT_EQ(v["key4"].type(), Json::Type::number);
-    M_EXPECT_EQ(v["key5"].type(), Json::Type::null);
-    M_EXPECT_EQ(v["key3"].as_string(), "test_key3");
-    M_EXPECT_NO_THROW(v["configurePresets"].pop_back());
-    M_EXPECT_EQ(v["configurePresets"].size(), 4);
-    M_EXPECT_NO_THROW(v["configurePresets"].push_back(false));
-    M_EXPECT_EQ(v["configurePresets"].size(), 5);
-    M_EXPECT_EQ(v["configurePresets"][4].as_bool(), false);
-    M_EXPECT_NO_THROW(v["configurePresets"].erase(3));
-    M_EXPECT_EQ(v["configurePresets"][3].as_bool(), false);
-    M_EXPECT_EQ(v["configurePresets"].size(), 4);
-    M_EXPECT_EQ(v.contains("null_key"), true);
-    M_EXPECT_NO_THROW(v.erase("null_key"));
-    M_EXPECT_EQ(v.contains("null_key"), false);
+// reset 和 clear_data 测试
+M_TEST(jsonBase, reset) {
+    json::Value v = "hello";
+    M_EXPECT_EQ(v.type(), json::Type::eString);
+    
+    v.reset();
+    M_EXPECT_EQ(v.type(), json::Type::eNull);
+    
+    v = json::Value(json::Type::eString);
+    M_EXPECT_EQ(v.type(), json::Type::eString);
+    M_EXPECT_EQ(v.get<std::string>(), "");
+    
+    v = "world";
+    M_EXPECT_EQ(v.get<std::string>(), "world");
+    
+    v.clear_data();
+    M_EXPECT_EQ(v.type(), json::Type::eString);
+    M_EXPECT_EQ(v.get<std::string>(), "");
 }
 
-// 初始化列表
-M_TEST(JsonAdvance, initializer) {
-    Json::Value v0 = {};
-    Json::Value v1 = { 1 };
-    Json::Value v2 = { 2, 3 };
-    Json::Value v3 = { 4, 5, true, false, nullptr };
-    Json::Value v4 = { "key", "value" };
-    Json::Value v5 = { "key0", { "key1", { "key2", 1 } } };
-    Json::Value v6 = { "key0", "value", 313 };
-    Json::Value v7 = { { "key", 3.1415926}, { "?" }, { { { 1 } } }, nullptr };
-    M_EXPECT_EQ(v0.type(), Json::Type::null);
-    M_EXPECT_EQ(v1.type(), Json::Type::number);
-    M_EXPECT_EQ(v2.type(), Json::Type::array);
-    M_EXPECT_EQ(v3.type(), Json::Type::array);
-    M_EXPECT_EQ(v4.type(), Json::Type::object);
-    M_EXPECT_EQ(v5.type(), Json::Type::object);
-    M_EXPECT_EQ(v6.type(), Json::Type::array);
-    M_EXPECT_EQ(v7.type(), Json::Type::array);
-    M_EXPECT_EQ(v7.size(), 4);
-    M_EXPECT_EQ(v7[0].type(), Json::Type::object);
-    M_EXPECT_EQ(v7[1].type(), Json::Type::string);
-    M_EXPECT_EQ(v7[2].type(), Json::Type::number);
-    M_EXPECT_EQ(v7[3].type(), Json::Type::null);
-    M_EXPECT_EQ(v7[0]["key"].type(), Json::Type::number);
-    M_EXPECT_EQ(v7[0]["key"].as_int64(), 3);
-    M_EXPECT_FLOAT_EQ(v7[0]["key"].as_double(), 3.1415926, 1e-5);
-
-
-
-    Json::Value v8 = Json::Object{
-        { "key0",Json::Object{{ "key1",{ "key2", 1 } } } },
-        {"key1", Json::Array{"key4", "value4"}},
-        {"key2", {"key4", "value4"}}
+// 解析错误测试
+M_TEST(jsonBase, parse_errors) {
+    auto test_error = [](const std::string& json_str, json::ParseError expected_error) {
+        auto result = json::deserialize(json_str);
+        M_EXPECT_FALSE(result.has_value());
+        M_EXPECT_EQ(result.error(), expected_error);
     };
-    M_EXPECT_EQ(v8.type(), Json::Type::object);
-    M_EXPECT_TRUE(v8.contains("key0"));
-    M_EXPECT_TRUE(v8.contains("key1"));
-    M_EXPECT_TRUE(v8.contains("key2"));
-    M_EXPECT_FALSE(v8.contains("key3"));
-
-    M_EXPECT_EQ(v8["key1"].type(), Json::Type::array);
-    M_EXPECT_EQ(v8["key2"].type(), Json::Type::object);
+    
+    test_error("", json::ParseError::eEmptyData);
+    test_error("   ", json::ParseError::eEmptyData);
+    test_error("invalid", json::ParseError::eUnknownFormat);
+    test_error("{", json::ParseError::eUnclosedObject);
+    test_error("[", json::ParseError::eUnclosedArray);
+    test_error("\"unclosed string", json::ParseError::eUnclosedString);
+    test_error("\"\\invalid\"", json::ParseError::eIllegalEscape);
+    test_error("123.456.789", json::ParseError::eUnknownFormat);
+    
+    // 测试深度限制
+    std::string deep_json = "[";
+    for (int i = 0; i < 600; ++i) {
+        deep_json += "[";
+    }
+    for (int i = 0; i < 600; ++i) {
+        deep_json += "]";
+    }
+    deep_json += "]";
+    
+    auto deep_result = json::deserialize(deep_json, 500);
+    M_EXPECT_FALSE(deep_result.has_value());
+    M_EXPECT_EQ(deep_result.error(), json::ParseError::eDepthExceeded);
 }
 
-struct A {
-    std::string serialize() const {
-        return "A";
-    }
-};
-
-// 序列化
-M_TEST(JsonAdvance, serializable) {
-    Json::Value j0 = {1,4,5,2};
-    M_EXPECT_NO_THROW( Json::serialize(j0) );
-    Json::Array j1 = { 1, 2, "string", true, false, nullptr};
-    M_EXPECT_NO_THROW( Json::serialize(j1) );
-    Json::Object j2= { {"1", 1}, {"2", 22}, {"3", false}};
-    M_EXPECT_NO_THROW( Json::serialize(j2) );
-
-    M_EXPECT_NO_THROW( Json::serialize("string") );
-    M_EXPECT_NO_THROW( Json::serialize(std::string{"string"}) );
-    M_EXPECT_NO_THROW( Json::serialize(1 ) );
-    M_EXPECT_NO_THROW( Json::serialize(2222.22 ) );
-    M_EXPECT_NO_THROW( Json::serialize(2222.22f ) );
-    M_EXPECT_NO_THROW( Json::serialize(true ) );
-    M_EXPECT_NO_THROW( Json::serialize(false ) );
-    M_EXPECT_NO_THROW( Json::serialize( nullptr ) );
-
-    std::vector<int> v0 = { 1, 2, 3, 4};
-    std::vector<bool> v1 = { true, false, true, false};
-    std::vector<std::string> v2 = { "1", "2", "3", "4"};
-    std::list<std::string> v3 = { "1", "2", "3", "4"};
-    std::deque<double> v4 = { 1, 2.2, 3, -4};
-    std::list<Json::Value> v5 = { "1", 2, false, nullptr};
-    M_EXPECT_NO_THROW( Json::serialize( v0 ) );
-    M_EXPECT_NO_THROW( Json::serialize( v1 ) );
-    M_EXPECT_NO_THROW( Json::serialize( v2 ) );
-    M_EXPECT_NO_THROW( Json::serialize( v3 ) );
-    M_EXPECT_NO_THROW( Json::serialize( v4 ) );
-    M_EXPECT_NO_THROW( Json::serialize( v5 ) );
-    M_EXPECT_EQ( Json::serialize( v0 ), "[1,2,3,4]" );
-    M_EXPECT_EQ( Json::serialize( v1 ), "[true,false,true,false]" );
-    M_EXPECT_EQ( Json::serialize( v2 ), R"(["1","2","3","4"])" );
-    M_EXPECT_EQ( Json::serialize( v3 ), R"(["1","2","3","4"])" );
-    M_EXPECT_EQ( Json::serialize( v5 ), R"(["1",2,false,null])" );
-
-    // 失败测试↓
-    // M_EXPECT_EQ( Json::serialize( v5 ), R"(["1",2,false,nul])" );
-
-    std::map<std::string, std::string> m0 = { {"1", "2"}, {"3", "4"}, {"5", "6"}};
-    std::unordered_map<std::string, std::string> m1 = { {"1", "2"}, {"3", "4"}, {"5", "6"}};
-    std::map<std::string, int> m2 = { {"1", 2}, {"3", 4}, {"5", 6}};
-    std::unordered_map<std::string, bool> m3 = { {"1", true}, {"3", false}, {"5", true}};
-    std::unordered_map<std::string, Json::Value> m4 = { {"1", true}, {"3", 1}, {"5", nullptr}, {"6", "7"}};
-    M_EXPECT_NO_THROW( Json::serialize( m0 ) );
-    M_EXPECT_NO_THROW( Json::serialize( m1 ) );
-    M_EXPECT_NO_THROW( Json::serialize( m2 ) );
-    M_EXPECT_NO_THROW( Json::serialize( m3 ) );
-    M_EXPECT_NO_THROW( Json::serialize( m4 ) );
-    M_EXPECT_EQ( Json::serialize( m0 ), R"({"1":"2","3":"4","5":"6"})" );
-    M_EXPECT_EQ( Json::serialize( m2 ), R"({"1":2,"3":4,"5":6})" );
-
-    A a;
-    std::vector<A> va(5);
-    std::map<std::string, A> ma ={ { "1", {} }, {"2", {} }, {"3", {}}, {"4", {}}, {"5", {}} };
-    M_EXPECT_EQ( Json::serialize( a ), "A" );
-    M_EXPECT_EQ( Json::serialize( va ), "[A,A,A,A,A]" );
-    M_EXPECT_EQ( Json::serialize( ma ), R"({"1":A,"2":A,"3":A,"4":A,"5":A})" );
+// 容器构造测试
+M_TEST(jsonBase, containers) {
+    json::Object obj_data;
+    obj_data["key1"] = json::Value("value1");
+    obj_data["key2"] = json::Value(42);
+    
+    json::Value obj_from_map = obj_data;
+    M_EXPECT_EQ(obj_from_map.type(), json::Type::eObject);
+    M_EXPECT_EQ(obj_from_map["key1"].get<std::string>(), "value1");
+    M_EXPECT_EQ(obj_from_map["key2"].get<int>(), 42);
+    
+    json::Array arr_data;
+    arr_data.push_back(json::Value("item1"));
+    arr_data.push_back(json::Value(123));
+    
+    json::Value arr_from_vector = arr_data;
+    M_EXPECT_EQ(arr_from_vector.type(), json::Type::eArray);
+    M_EXPECT_EQ(arr_from_vector[0].get<std::string>(), "item1");
+    M_EXPECT_EQ(arr_from_vector[1].get<int>(), 123);
+    
+    // 测试移动构造
+    json::Value moved_obj = std::move(obj_data);
+    M_EXPECT_EQ(moved_obj.type(), json::Type::eObject);
+    M_EXPECT_EQ(moved_obj["key1"].get<std::string>(), "value1");
+    
+    json::Value moved_arr = std::move(arr_data);
+    M_EXPECT_EQ(moved_arr.type(), json::Type::eArray);
+    M_EXPECT_EQ(moved_arr[0].get<std::string>(), "item1");
 }
 
-
-
-struct B{
-    std::string name;
-    int value;
-    bool check;
-    // 编写类型转换运算符
-    operator Json::Value() const {
-        Json::Value result(Json::Type::object);
-        result["name"] = name;
-        result["value"] = value;
-        result["check"] = check;
-        return result;
-    };
-};
-// 测试README.md中的样例代码
-M_TEST(README, md) {
-    {
-        Json::Value json = {
-            { "key", nullptr },
-            { 1, 2, 3, 4, 5 },
-            "string",
-            true,
-            false,
-            1234.5
-        };
-    }
-
-    {
-        Json::Value json = Json::Array{
-            Json::Object { {"key", nullptr} },
-            Json::Array{ 1, 2, 3, 4, 5 },
-            "string",
-            true,
-            false,
-            1234.5
-        };
-    }
-
-    {
-        B b;
-        Json::serialize(b);
-    }
-
-}

@@ -1,0 +1,125 @@
+{
+    "version": 10,
+    "configurePresets": [
+        {
+            "name": "local-msvc",
+            "inherits": "win-msvc",
+            "cacheVariables": {
+                "BUILD_TESTING": "ON",
+                "CMAKE_EXPERIMENTAL_CXX_IMPORT_STD": "d0edc3af-4c50-42ea-a356-e2862fe7a444",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_C_COMPILER": "cl.exe"
+            }
+        },
+        {
+            "name": "local-clang",
+            "inherits": "win-clang",
+            "cacheVariables": {
+                "BUILD_TESTING": "ON",
+                "CMAKE_EXPERIMENTAL_CXX_IMPORT_STD": "d0edc3af-4c50-42ea-a356-e2862fe7a444",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_C_COMPILER": "clang"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "local-msvc-debug",
+            "configurePreset": "local-msvc",
+            "configuration": "Debug"
+        },
+        {
+            "name": "local-msvc-release",
+            "configurePreset": "local-msvc",
+            "configuration": "Release"
+        },
+        {
+            "name": "local-clang-debug",
+            "configurePreset": "local-clang",
+            "configuration": "Debug"
+        },
+        {
+            "name": "local-clang-release",
+            "configurePreset": "local-clang",
+            "configuration": "Release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "default-test",
+            "hidden": true,
+            "output": {
+                "verbosity": "verbose",
+                "outputOnFailure": true
+            },
+            "execution": {
+                "timeout": 60,
+                "stopOnFailure": false
+            }
+        },
+        {
+            "name": "local-msvc-debug",
+            "inherits": "default-test",
+            "configurePreset": "local-msvc",
+            "configuration": "Debug"
+        },
+        {
+            "name": "local-msvc-release",
+            "inherits": "default-test",
+            "configurePreset": "local-msvc",
+            "configuration": "Release"
+        },
+        {
+            "name": "local-clang-debug",
+            "inherits": "default-test",
+            "configurePreset": "local-clang",
+            "configuration": "Debug"
+        },
+        {
+            "name": "local-clang-release",
+            "inherits": "default-test",
+            "configurePreset": "local-clang",
+            "configuration": "Release"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "local-msvc",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "local-msvc"
+                },
+                {
+                    "type": "build",
+                    "name": "local-msvc-debug"
+                },
+                {
+                    "type": "test",
+                    "name": "local-msvc-debug"
+                }
+            ]
+        },
+        {
+            "name": "local-clang",
+            "steps": [
+                {
+                "type": "configure",
+                "name": "local-clang"
+                },
+                {
+                "type": "build",
+                "name": "local-clang-release"
+                },
+                {
+                "type": "test",
+                "name": "local-clang-release"
+                }
+            ]
+        }
+    ]
+}
