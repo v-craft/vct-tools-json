@@ -1,3 +1,8 @@
+/**
+ * @file tools_json.cpp
+ * @brief JSON parsing and serialization implementation
+ */
+
 module vct.tools.json;
 
 import std;
@@ -6,18 +11,13 @@ import std;
 namespace vct::tools::json{
 
 /**
- * @brief Escape JSON string with proper quote wrapping
- * @param str String view to escape
- * @return Escaped string with surrounding quotes
- * 
- * Converts special characters to their JSON escape sequences:
- * - Backslash (\) -> \\
- * - Quote (") -> \"
- * - Control characters (newline, tab, etc.) -> \n, \t, etc.
+ * @brief Escape special characters in JSON string
+ * @param str String to escape
+ * @return Escaped string with quotes
  */
-static std::string escape(const std::string_view str) noexcept {
-    std::string result;
-    result.reserve(str.size() + (str.size() >> 1) + 2);
+static String escape(const std::string_view str) noexcept {
+    String result;
+    result.reserve(str.size() + (str.size() >> 1) + 3);
     
     result.push_back('"');
     for (char c : str) {
@@ -29,7 +29,12 @@ static std::string escape(const std::string_view str) noexcept {
             case '\f': result.append(R"(\f)"); break;
             case '\t': result.append(R"(\t)"); break;
             case '\b': result.append(R"(\b)"); break;
-            default:   result.push_back(c); break;
+            default: {
+                if (static_cast<unsigned char>(c) < 0x20) {
+                    // Handle control characters (0x00-0x1F except already handled ones)
+                    result.append(std::format("\\u{:04x}", static_cast<unsigned char>(c)));
+                } else result.push_back(c);
+            } break;
         }
     }
     result.push_back('"');
@@ -37,63 +42,70 @@ static std::string escape(const std::string_view str) noexcept {
 }
 
 /**
- * @brief Parse 4-digit hexadecimal value from string
- * @param p Pointer to start of hex digits
- * @return Parsed hex value, or UINT32_MAX if invalid
- * 
- * Parses exactly 4 hexadecimal characters into a 32-bit unsigned integer.
- * Used for Unicode escape sequence processing (\uXXXX).
+ * @brief Lookup table for hexadecimal character to digit conversion
  */
-static std::uint32_t parse_hex4(const char* p) noexcept {
-    static constexpr std::array<std::uint8_t, 256> hex_table = []() {
-        std::array<std::uint8_t, 256> table{};
-        for (int i = 0; i < 256; ++i) table[i] = 255; // Invalid marker
-        for (int i = 0; i <= 9; ++i) table['0' + i] = i;
-        for (int i = 0; i <= 5; ++i) table['A' + i] = 10 + i;
-        for (int i = 0; i <= 5; ++i) table['a' + i] = 10 + i;
-        return table;
-    }();
-    
+static constexpr std::array<std::uint8_t, 256> hex_table = []() {
+    std::array<std::uint8_t, 256> table{};
+    for (int i = 0; i < 256; ++i) table[i] = 255; // Invalid marker
+    for (int i = 0; i <= 9; ++i) table['0' + i] = i;
+    for (int i = 0; i <= 5; ++i) table['A' + i] = 10 + i;
+    for (int i = 0; i <= 5; ++i) table['a' + i] = 10 + i;
+    return table;
+}();
+
+/**
+ * @brief Concept for character iterators used in JSON parsing
+ */
+template<typename T>
+concept char_iterator =  std::disjunction_v<
+    std::is_same<T, std::string_view::const_iterator>,
+    std::is_same<T, std::istreambuf_iterator<char>>
+>;
+
+/**
+ * @brief Parse 4 hexadecimal characters into a 32-bit value
+ * @param it Iterator positioned at first hex character
+ * @param end_ptr End iterator
+ * @return Parsed value or max uint32_t on error
+ */
+static std::uint32_t hex4_next(char_iterator auto& it, const char_iterator auto end_ptr) noexcept {
+    // `it` wat in `\uABCD`'s A position, and not be end_ptr
     std::uint32_t result = 0;
     for (int i = 0; i < 4; ++i) {
-        std::uint8_t digit = hex_table[static_cast<unsigned char>(p[i])];
-        if (digit == 255) return std::numeric_limits<std::uint32_t>::max();
+        if(i > 0) {
+            ++it;
+            if(it == end_ptr) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not enough characters
+        }
+        const std::uint8_t digit = hex_table[static_cast<unsigned char>(*it)];
+        if (digit == 255) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not a hex digit
         result = (result << 4) | digit;
     }
+    // `it` wat in `\uABCD`'s D position
     return result;
 }
 
 /**
- * @brief Parse Unicode escape sequence and convert to UTF-8
- * @param it Iterator reference, positioned at 'u' in \uXXXX
- * @param end_ptr End iterator for bounds checking
- * @return UTF-8 encoded string or nullopt if invalid
- * 
- * Handles both basic Unicode (\uXXXX) and surrogate pairs (\uD800-\uDBFF \uDC00-\uDFFF).
- * Converts Unicode code points to UTF-8 encoding:
- * - U+0000-U+007F: 1 byte
- * - U+0080-U+07FF: 2 bytes  
- * - U+0800-U+FFFF: 3 bytes
- * - U+10000-U+10FFFF: 4 bytes (via surrogate pairs)
- * 
- * @note Iterator is advanced to the last character of the escape sequence
+ * @brief Convert Unicode escape sequence to UTF-8 string
+ * @param it Iterator positioned at 'u' in \uXXXX
+ * @param end_ptr End iterator
+ * @return UTF-8 encoded string or nullopt on error
  */
-static std::optional<std::string> unescape_unicode_next(
-    std::string_view::const_iterator& it, 
-    const std::string_view::const_iterator end_ptr
+static std::optional<String> unescape_unicode_next(
+    char_iterator auto& it, 
+    const char_iterator auto end_ptr
 ) noexcept {
-    std::string out;
+    // it was in `\uABCD`'s `u` position
+    String out;
     out.reserve( 4 );
 
-    // `it` was in \uXXXX's u position, so we need at least 4 more characters.
-    if (end_ptr - it <= 4) return std::nullopt; 
     ++it;
+    if (it == end_ptr) return std::nullopt;
+    // `it` was in `\uXXXX`'s A position
 
-    std::uint32_t code_point = parse_hex4( &(*it) );
+    // move to \uABCD's D position and get hex4 value
+    std::uint32_t code_point = hex4_next( it , end_ptr);
     if(code_point > 0xFFFF) return std::nullopt;
-
-    // when this function returns, `it` should be at the D position of \uABCD, so we can only add 3
-    it += 3;
+    // `it` was in `\uXXXX`'s D position and not be `end_ptr`, if hex4_next successful
 
     // [0xD800 , 0xE000) is agent pair, which is two consecutive \u encoding
     if (code_point >= 0xD800 && code_point <= 0xDFFF) {
@@ -105,14 +117,19 @@ static std::optional<std::string> unescape_unicode_next(
         if (code_point >= 0xDC00) return std::nullopt;
 
         // second char must be low agent
-        if (end_ptr - it < 7 || *(it+1) != '\\' || *(it+2) != 'u') return std::nullopt;
+        ++it;
+        if(it == end_ptr || *it != '\\') return std::nullopt;
+        ++it;
+        if(it == end_ptr || *it != 'u') return std::nullopt;
+        ++it;
+        if(it == end_ptr) return std::nullopt;
 
-        it += 3; // move to \uABCD's A position
+        // `it` was in `\uXXXX`'s A position, and note be end_ptr
 
-        std::uint32_t low_code_point = parse_hex4( &(*it) );
-        if( low_code_point < 0xDC00 || low_code_point > 0xDFFF  ) return std::nullopt;
-    
-        it += 3; // move to \uABCD's D position
+        // move to \uABCD's D position and get hex4 value
+        const std::uint32_t low_code_point = hex4_next( it, end_ptr );
+        if( 0xDFFF < low_code_point ||  low_code_point < 0xDC00 ) return std::nullopt;
+        // `it` was in `\uXXXX`'s D position and not be `end_ptr`, if hex4_next successful
 
         // combine the agent pair into a single code point
         code_point = 0x10000 + ((code_point - 0xD800) << 10) + (low_code_point - 0xDC00);
@@ -139,21 +156,14 @@ static std::optional<std::string> unescape_unicode_next(
 }
 
 /**
- * @brief Parse and unescape JSON string content
- * @param it Iterator reference, positioned after opening quote
- * @param end_ptr End iterator for bounds checking
+ * @brief Parse and unescape JSON string
+ * @param it Iterator positioned at opening quote
+ * @param end_ptr End iterator
  * @return Unescaped string or ParseError
- * 
- * Processes JSON string escape sequences:
- * - Basic escapes: \", \\, \/, \n, \r, \t, \f, \b
- * - Unicode escapes: \uXXXX and surrogate pairs
- * - Validates string is properly closed with ending quote
- * 
- * Performance optimized with direct character processing and minimal allocations.
  */
 static std::expected<std::string, ParseError> unescape_next(
-    std::string_view::const_iterator& it, 
-    const std::string_view::const_iterator end_ptr
+    char_iterator auto& it, 
+    const char_iterator auto end_ptr
 ) noexcept {
     std::string res;
 
@@ -167,7 +177,6 @@ static std::expected<std::string, ParseError> unescape_next(
                 switch (*it) {
                     case '\"': res += '\"'; break;
                     case '\\': res += '\\'; break;
-                    case '/':  res += '/';  break;
                     case 'n':  res += '\n'; break;
                     case 'r':  res += '\r'; break;
                     case 't':  res += '\t'; break;
@@ -176,12 +185,12 @@ static std::expected<std::string, ParseError> unescape_next(
                     case 'u': case 'U': {
                         const auto str = unescape_unicode_next(it, end_ptr);
                         if (!str) return std::unexpected( ParseError::eIllegalEscape );
-                        res += *str;
+                        res.append( *str );
                     } break;
                     default: return std::unexpected( ParseError::eIllegalEscape );
                 }
             } break;
-            default: res += *it; break;
+            default: res.push_back( *it ); break;
         }
     }
     if(it == end_ptr) return std::unexpected( ParseError::eUnclosedString );
@@ -191,22 +200,14 @@ static std::expected<std::string, ParseError> unescape_next(
 
 /**
  * @brief Recursive JSON value parser
- * @param it Iterator reference for current parsing position
- * @param end_ptr End iterator for bounds checking
- * @param max_depth Maximum recursion depth allowed
- * @return Parsed JSON Value or ParseError
- * 
- * Recursively parses JSON values with support for:
- * - Objects: { "key": value, ... }
- * - Arrays: [ value, value, ... ]
- * - Strings: "escaped content"
- * - Numbers: integers, floats, scientific notation
- * - Booleans: true, false
- * - Null: null
+ * @param it Current iterator position
+ * @param end_ptr End iterator
+ * @param max_depth Maximum recursion depth
+ * @return Parsed JSON value or ParseError
  */
 static std::expected<Value, ParseError> reader(
-    std::string_view::const_iterator& it, 
-    const std::string_view::const_iterator end_ptr, 
+    char_iterator auto& it, 
+    const char_iterator auto end_ptr, 
     const std::int32_t max_depth
 ) noexcept {
     // Check for maximum depth
@@ -217,7 +218,7 @@ static std::expected<Value, ParseError> reader(
     // return value
     Value json; 
     // Check the first character to determine the type
-    switch (*it){
+    switch (*it) {
         case '{': {
             // Object type
             ++it;
@@ -244,7 +245,9 @@ static std::expected<Value, ParseError> reader(
                 object.emplace(std::move(*key), std::move(*value));
 
                 while(it != end_ptr && std::isspace(*it)) ++it;
-                if(it != end_ptr && *it == ',') ++it;
+                if(it == end_ptr) break;
+                if(*it == ',') ++it;
+                else if(*it != '}') return std::unexpected( ParseError::eUnknownFormat );
             }
             if(it == end_ptr) return std::unexpected( ParseError::eUnclosedObject );
             ++it;
@@ -265,7 +268,9 @@ static std::expected<Value, ParseError> reader(
                 array.emplace_back(std::move(*value));
 
                 while(it != end_ptr && std::isspace(*it)) ++it;
-                if(it != end_ptr && *it == ',') ++it;
+                if(it == end_ptr) break;
+                if(*it == ',') ++it;
+                else if(*it != ']') return std::unexpected( ParseError::eUnknownFormat );
             }
             if(it == end_ptr) return std::unexpected( ParseError::eUnclosedArray );
             ++it;
@@ -278,50 +283,54 @@ static std::expected<Value, ParseError> reader(
         } break;
         case 't': {
             // true
-            if (it + 3 <= end_ptr && *it=='t' && *(it+1)=='r' && *(it+2)=='u' && *(it+3)=='e') {
-                json = true;
-                it += 4;
-            } else return std::unexpected( ParseError::eUnknownFormat );
+            if (++it == end_ptr || *it != 'r' ||
+                ++it == end_ptr || *it != 'u' ||
+                ++it == end_ptr || *it != 'e' 
+            ) return std::unexpected( ParseError::eUnknownFormat );
+            json = Bool(true);
+            ++it;
         } break;
         case 'f': {
             // false
-            if (it + 4 <= end_ptr &&  *it=='f' && *(it+1)=='a' && *(it+2)=='l' && *(it+3)=='s' && *(it+4)=='e' ) {
-                json = false;
-                it += 5;
-            } else return std::unexpected( ParseError::eUnknownFormat );
+            if (++it == end_ptr || *it != 'a' ||
+                ++it == end_ptr || *it != 'l' ||
+                ++it == end_ptr || *it != 's' ||
+                ++it == end_ptr || *it != 'e' 
+            ) return std::unexpected( ParseError::eUnknownFormat );
+            json = Bool(false);
+            ++it;
         } break;
         case 'n': {
             // null
-            if (it + 3 <= end_ptr && *it=='n' && *(it+1)=='u' && *(it+2)=='l' && *(it+3)=='l') {
-                json = nullptr;
-                it += 4;
-            } else return std::unexpected( ParseError::eUnknownFormat );
+            if (++it == end_ptr || *it != 'u' ||
+                ++it == end_ptr || *it != 'l' ||
+                ++it == end_ptr || *it != 'l' 
+            ) return std::unexpected( ParseError::eUnknownFormat );
+            json = Null();
+            ++it;
         } break;
         default: {
-            // number
-            if(!std::isdigit(*it) && *it != '-' && *it != '.') return std::unexpected( ParseError::eUnknownFormat );
-            bool have_not_point = true;
-            bool have_not_e = true;
-            auto left = it;
-            if(*it == '-') ++it;
+            // ************ SIMD optimization is required here ************
+            if(* it == 'e' || *it == 'E' ) {
+                return std::unexpected( ParseError::eUnknownFormat );
+            } // begin with e/E is invalid, other invalid type will be handled after
 
-            if(it == end_ptr || !std::isdigit(*it)) return std::unexpected( ParseError::eInvalidNumber );
-            while (it != end_ptr) {
-                if (std::isdigit(*it)) {
-                    ++it;
-                } else if (*it == '.' && have_not_point && have_not_e) {
-                    have_not_point = false;
-                    ++it;
-                } else if ((*it == 'e' || *it == 'E') && have_not_e) {
-                    have_not_e = false;
-                    ++it;
-                    if (it != end_ptr && (*it == '-' || *it == '+')) ++it;
-                } else break;
-            }
-            if(it == left || (*left=='-' && it==left+1)) return std::unexpected( ParseError::eInvalidNumber );
-            double value;
-            auto [ptr, ec] = std::from_chars(left, it, value);
-            if(ec != std::errc{} || ptr != it) {
+            // number
+            std::uint8_t buffer_len = 0;
+            std::array<char, 24> buffer; // Reserve enough space for typical numbers
+
+            // ************ SIMD optimization is required here ************
+            while(buffer_len < 24 && it != end_ptr && 
+                (std::isdigit(*it)  || *it=='-' || *it=='.' || *it=='e' || *it=='E' || *it=='+')
+            ) buffer[buffer_len++] = *(it++);
+            
+            if( buffer_len == 0  ) return std::unexpected( ParseError::eInvalidNumber );
+            if( buffer_len == 24 ) return std::unexpected( ParseError::eInvalidNumber );
+            if( it != end_ptr && !std::isspace(*it) && *it != '}' && *it != ']' && *it != ',' ) return std::unexpected( ParseError::eInvalidNumber );
+
+            Number value;
+            const auto [ptr, ec] = std::from_chars(buffer.begin(), buffer.begin()+buffer_len, value);
+            if(ec != std::errc{} || ptr != buffer.begin() + buffer_len) {
                 return std::unexpected( ParseError::eInvalidNumber );
             }
             json = value;
@@ -331,120 +340,49 @@ static std::expected<Value, ParseError> reader(
 }
 
 /**
- * @brief Deserialize JSON string into Value object
- * @param text JSON string to parse
- * @param max_depth Maximum recursion depth (default: reasonable limit)
- * @return Parsed JSON Value or ParseError
- * 
- * Main entry point for JSON deserialization. Parses complete JSON document
- * and validates that no trailing content remains after parsing.
- * 
- * @throws ParseError Various parsing errors (see reader() documentation)
- * @throws ParseError::eUnknownFormat Trailing content after valid JSON
- * 
- * Usage example:
- * @code
- * auto result = json::deserialize(R"({"key": "value"})");
- * if (result) {
- *     auto& json = *result;
- *     // or: json::Value json = *result;
- *     // Use json object
- * }
- * @endcode
+ * @brief Parse JSON from string view
+ * @param text JSON text to parse
+ * @param max_depth Maximum nesting depth
+ * @return Parsed JSON value or ParseError
  */
 std::expected<Value, ParseError> deserialize(const std::string_view text, const std::int32_t max_depth) noexcept{
     auto it = text.begin();
-    const auto result = reader(it, text.end(), max_depth-1);
+    const auto end_ptr = text.end();
+    const auto result = reader(it, end_ptr, max_depth-1);
     if(!result) return std::unexpected( result.error() );
-    while(it != text.end() && std::isspace(*it)) ++it;
-    if(it != text.end()) return std::unexpected( ParseError::eUnknownFormat );
+    while(it != end_ptr && std::isspace(*it)) ++it;
+    if(it != end_ptr) return std::unexpected( ParseError::eUnknownFormat );
     return result;
 }
 
-
 /**
- * @brief Get string representation of current value type
- * @return Type name as string
- * 
- * Returns human-readable type names:
- * - "Object" for JSON objects
- * - "Array" for JSON arrays  
- * - "String" for JSON strings
- * - "Number" for JSON numbers
- * - "Bool" for JSON booleans
- * - "Null" for JSON null
+ * @brief Parse JSON from input stream
+ * @param is_test Input stream containing JSON
+ * @param max_depth Maximum nesting depth
+ * @return Parsed JSON value or ParseError
  */
-std::string Value::type_name() const noexcept {
-    switch (m_type) {
-        case Type::eObject: return "Object";
-        case Type::eArray: return "Array";
-        case Type::eString: return "String";
-        case Type::eNumber: return "Number";
-        case Type::eBool: return "Bool";
-        case Type::eNull: return "Null";
-    }
+std::expected<Value, ParseError> deserialize(std::istream& is_test, const std::int32_t max_depth) noexcept{
+    auto it = std::istreambuf_iterator<char>(is_test);
+    const auto end_ptr = std::istreambuf_iterator<char>();
+    const auto result = reader(it, end_ptr, max_depth-1);
+    if(!result) return std::unexpected( result.error() );
+    while(it != end_ptr && std::isspace(*it)) ++it;
+    if(it != end_ptr) return std::unexpected( ParseError::eUnknownFormat );
+    return result;
 }
-
-/**
- * @brief Reset value data to default state for current type
- * 
- * Initializes the variant data to type-appropriate default values:
- * - Object: empty map
- * - Array: empty vector
- * - String: empty string
- * - Number: 0.0
- * - Bool: false
- * - Null: nullptr
- * 
- * Used internally for type changes and initialization.
- */
-void Value::clear_data() noexcept {
-    switch (m_type) {
-    case Type::eObject:
-        m_data = Object();
-        break;
-    case Type::eArray:
-        m_data = Array();
-        break;
-    case Type::eString:
-        m_data = std::string();
-        break;
-    case Type::eNumber:
-        m_data = 0.0;
-        break;
-    case Type::eBool:
-        m_data = false;
-        break;
-    case Type::eNull:
-        m_data = nullptr;
-        break;
-    }
-}
-
 
 /**
  * @brief Serialize JSON value to compact string format
- * @param out Output string buffer to append to
- * @return true if successful, false on error
- * 
- * Converts JSON value to compact string representation without formatting:
- * - Objects: {"key":value,"key2":value2}
- * - Arrays: [value,value,value]
- * - Strings: "escaped content"
- * - Numbers: decimal representation
- * - Booleans: true/false
- * - Null: null
- * 
- * Performance optimized with direct string appending and minimal allocations.
+ * @param out Output string to append to
  */
-bool Value::write_out(std::string& out) const noexcept {
+void Value::serialize_to(String& out) const noexcept {
     switch (m_type) {
         case Type::eObject: {
             out.push_back('{');
             for (const auto& [key, val] : std::get<Object>(m_data)) {
                 out.append(escape(key));
                 out.push_back(':');
-                if(!val.write_out(out)) return false;
+                val.serialize_to(out);
                 out.push_back(',');
             }
             if (*out.rbegin() == ',') *out.rbegin() = '}';
@@ -453,39 +391,82 @@ bool Value::write_out(std::string& out) const noexcept {
         case Type::eArray: {
             out.push_back('[');
             for (const auto& val : std::get<Array>(m_data)) {
-                if(!val.write_out(out)) return false;
+                val.serialize_to(out);
                 out.push_back(',');
             }
             if (*out.rbegin() == ',') *out.rbegin() = ']';
             else out.push_back(']');
         } break;
         case Type::eBool:
-            out.append(std::get<bool>(m_data) ? "true" : "false");
+            out.append(std::get<Bool>(m_data) ? "true" : "false");
             break;
         case Type::eNull:
             out.append("null");
             break;
         case Type::eString:
-            out.append(escape(std::get<std::string>(m_data)));
+            out.append(escape(std::get<String>(m_data)));
             break;
         case Type::eNumber:
-            out.append(std::format("{:.15}",std::get<double>(m_data)));
+            out.append(std::format("{:.17}",std::get<Number>(m_data)));
             break;
     }
-    return true;
+}
+
+/**
+ * @brief Serialize JSON value to compact stream format
+ * @param out Output stream to write to
+ */
+void Value::serialize_to(std::ostream& out) const noexcept {
+    switch (m_type) {
+        case Type::eObject: {
+            out.put('{');
+            for(bool first = true;
+                const auto& [key, val] : std::get<Object>(m_data)
+            ) {
+                if(!first) out.put(',');
+                else first = false;
+                out << escape(key);
+                out.put(':');
+                val.serialize_to(out);
+            }
+            out.put('}');
+        } break;
+        case Type::eArray: {
+            out.put('[');
+            for(bool first = true;
+                const auto& val : std::get<Array>(m_data)
+            ) {
+                if(!first) out.put(',');
+                else first = false;
+                val.serialize_to(out);
+            }
+            out.put(']');
+        } break;
+        case Type::eBool:
+            out << (std::get<Bool>(m_data) ? "true" : "false");
+            break;
+        case Type::eNull:
+            out << "null";
+            break;
+        case Type::eString:
+            out << escape(std::get<String>(m_data));
+            break;
+        case Type::eNumber:
+            out << std::format("{:.17}",std::get<Number>(m_data));
+            break;
+    }
 }
 
 /**
  * @brief Serialize JSON value to pretty-printed string format
- * @param out Output string buffer to append to
+ * @param out Output string to append to
  * @param space_num Number of spaces per indentation level
  * @param depth Current nesting depth
- * @param max_space Maximum allowed total spaces (overflow protection)
- * @return true if successful, false if max_space exceeded
- * @note Fails safely if indentation would exceed max_space limit
+ * @param max_space Maximum allowed spaces (depth protection)
+ * @return true on success, false if max_space exceeded
  */
-bool Value::write_out_pretty(
-    std::string& out, 
+Bool Value::serialize_pretty_to(
+    String& out, 
     const std::uint16_t space_num, 
     const std::uint16_t depth, 
     const std::uint32_t max_space
@@ -501,7 +482,7 @@ bool Value::write_out_pretty(
                 out.append(tabs, ' ');
                 out.append(escape(key));
                 out.append(": ");
-                if(!val.write_out_pretty(out, space_num, depth + 1, max_space)) return false;
+                if(!val.serialize_pretty_to(out, space_num, depth + 1, max_space)) return false;
                 out.push_back(',');
             }
             if (*out.rbegin() == ',') *out.rbegin() = '\n';
@@ -515,7 +496,7 @@ bool Value::write_out_pretty(
             for (const auto& val : std::get<Array>(m_data)) {
                 out.push_back('\n');
                 out.append(tabs, ' ');
-                if(!val.write_out_pretty(out, space_num, depth + 1, max_space)) return false;
+                if(!val.serialize_pretty_to(out, space_num, depth + 1, max_space)) return false;
                 out.push_back(',');
             }
             if (*out.rbegin() == ',') *out.rbegin() = '\n';
@@ -525,62 +506,98 @@ bool Value::write_out_pretty(
             } else out.append(" ]");
         } break;
         case Type::eBool:
-            out.append(std::get<bool>(m_data) ? "true" : "false");
+            out.append(std::get<Bool>(m_data) ? "true" : "false");
             break;
         case Type::eNull:
             out.append("null");
             break;
         case Type::eString:
-            out.append(escape(std::get<std::string>(m_data)));
+            out.append(escape(std::get<String>(m_data)));
             break;
         case Type::eNumber:
-            out.append(std::format("{:.15}",std::get<double>(m_data)));
+            out.append(std::format("{:.17}",std::get<Number>(m_data)));
             break;
     }
     return true;
 }
 
 /**
- * @brief Serialize JSON value to compact string
- * @return JSON string representation
- * 
- * Convenience wrapper around write_out() that returns a new string.
- * For performance-critical code, consider using write_out() directly
- * to append to an existing buffer.
- */
-std::string Value::serialize() const noexcept {
-    std::string res;
-    write_out(res);
-    return res;
-}
-
-/**
- * @brief Serialize JSON value to pretty-printed string
+ * @brief Serialize JSON value to pretty-printed stream format
+ * @param out Output stream to write to
  * @param space_num Number of spaces per indentation level
- * @param depth Starting nesting depth
- * @param max_space Maximum allowed total spaces
- * @return Formatted JSON string or nullopt if space limit exceeded
- * 
- * Convenience wrapper around write_out_pretty() that returns a new string.
- * Returns nullopt if formatting would exceed the space limit.
- * 
- * Typical usage:
- * @code
- * auto pretty = value.serialize_pretty(2, 0, 10000);
- * if (pretty) {
- *     std::cout << *pretty << std::endl;
- * }
- * @endcode
+ * @param depth Current nesting depth
+ * @param max_space Maximum allowed spaces (depth protection)
+ * @return true on success, false if max_space exceeded or stream error
  */
-std::optional<std::string> Value::serialize_pretty(
+Bool Value::serialize_pretty_to(
+    std::ostream& out, 
     const std::uint16_t space_num, 
     const std::uint16_t depth, 
-    const std::uint32_t max_space 
+    const std::uint32_t max_space
 ) const noexcept {
-    std::string res;
-    if(!write_out_pretty(res, space_num, depth, max_space)) return std::nullopt;
-    return res;
+    const std::uint32_t tabs  = depth * space_num + space_num;
+    if(tabs > max_space) return false;
+
+    switch (m_type) {
+        case Type::eObject: {
+            out.put('{');
+            bool first = true;
+            for(const auto& [key, val] : std::get<Object>(m_data)) {
+                if(!first) out.put(',');
+                else first = false;
+                out.put('\n');
+                out << std::setfill(' ') << std::setw(tabs) << "";
+                out << escape(key);
+                out.put(':');
+                out.put(' ');
+                if(!val.serialize_pretty_to(out, space_num, depth + 1, max_space)) return false;
+
+            }
+            if(!first) out.put('\n');
+            if(!std::get<Object>(m_data).empty()){
+                out << std::setfill(' ') << std::setw(tabs - space_num) << "";
+                out.put('}');
+            } else {
+                out.put(' ');
+                out.put('}');
+            }
+        } break;
+        case Type::eArray: {
+            out.put('[');
+            bool first = true;
+            for (const auto& val : std::get<Array>(m_data)) {
+                if(!first) out.put(',');
+                else first = false;
+                out.put('\n');
+                out << std::setfill(' ') << std::setw(tabs) << "";
+                if(!val.serialize_pretty_to(out, space_num, depth + 1, max_space)) return false;
+            }
+            if(!first) out.put('\n');
+            if(!std::get<Array>(m_data).empty()){
+                out << std::setfill(' ') << std::setw(tabs - space_num) << "";
+                out.put(']');
+            } else {
+                out.put(' ');
+                out.put(']');
+            }
+        } break;
+        case Type::eBool:
+            out << (std::get<Bool>(m_data) ? "true" : "false");
+            break;
+        case Type::eNull:
+            out << "null";
+            break;
+        case Type::eString:
+            out << escape(std::get<String>(m_data));
+            break;
+        case Type::eNumber:
+            out << std::format("{:.17}",std::get<Number>(m_data));
+            break;
+    }
+    if(out.fail()) return false;
+    return true;
 }
+
 
 }
 

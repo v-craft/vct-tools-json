@@ -25,6 +25,12 @@ add_library(${lib_name}  ${cxx_cpp_files})
 # Create an alias target for namespaced usage
 add_library(${prev_name}::${lib_name} ALIAS ${lib_name})
 
+# Default use unordered_map
+# If you want to use std::map instead, define M_VCT_TOOLS_JSON_ORDERED_MAP
+# target_compile_definitions(${lib_name} PUBLIC
+#     M_VCT_TOOLS_JSON_UNORDERED_MAP=1    # Define to use std::unordered_map for JSON objects
+# )
+
 # Library properties configuration
 set_target_properties(${lib_name} PROPERTIES
     CXX_STANDARD 23                                   # Require C++23 standard
