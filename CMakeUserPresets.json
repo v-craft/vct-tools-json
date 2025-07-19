@@ -50,7 +50,7 @@
     ],
     "testPresets": [
         {
-            "name": "default-test",
+            "name": "local-default-test",
             "hidden": true,
             "output": {
                 "verbosity": "verbose",
@@ -63,25 +63,25 @@
         },
         {
             "name": "local-msvc-debug",
-            "inherits": "default-test",
+            "inherits": "local-default-test",
             "configurePreset": "local-msvc",
             "configuration": "Debug"
         },
         {
             "name": "local-msvc-release",
-            "inherits": "default-test",
+            "inherits": "local-default-test",
             "configurePreset": "local-msvc",
             "configuration": "Release"
         },
         {
             "name": "local-clang-debug",
-            "inherits": "default-test",
+            "inherits": "local-default-test",
             "configurePreset": "local-clang",
             "configuration": "Debug"
         },
         {
             "name": "local-clang-release",
-            "inherits": "default-test",
+            "inherits": "local-default-test",
             "configurePreset": "local-clang",
             "configuration": "Release"
         }

@@ -1,5 +1,5 @@
 /**
- * @file tools_json.cpp
+ * @file json.cpp
  * @brief JSON parsing and serialization implementation
  */
 
@@ -64,7 +64,7 @@ concept char_iterator =  std::disjunction_v<
 
 /**
  * @brief Parse 4 hexadecimal characters into a 32-bit value
- * @param it Iterator positioned at first hex character
+ * @param it_ref Iterator positioned at first hex character
  * @param end_ptr End iterator
  * @return Parsed value or max uint32_t on error
  */
@@ -102,9 +102,9 @@ static std::uint32_t hex4_next(char_iterator auto& it_ref, const char_iterator a
 
 /**
  * @brief Convert Unicode escape sequence to UTF-8 string
- * @param it Iterator positioned at 'u' in \uXXXX
+ * @param it_ref Iterator positioned at 'u' in \uXXXX
  * @param end_ptr End iterator
- * @return UTF-8 encoded string or nullopt on error
+ * @return UTF-8 encoded string or null-opt on error
  */
 static std::optional<String> unescape_unicode_next(
     char_iterator auto& it_ref, 
@@ -175,7 +175,7 @@ static std::optional<String> unescape_unicode_next(
 
 /**
  * @brief Parse and unescape JSON string
- * @param it Iterator positioned at opening quote
+ * @param it_ref Iterator positioned at opening quote
  * @param end_ptr End iterator
  * @return Unescaped string or ParseError
  */
@@ -220,7 +220,7 @@ static std::expected<std::string, ParseError> unescape_next(
 
 /**
  * @brief Recursive JSON value parser
- * @param it Current iterator position
+ * @param it_ref Current iterator position
  * @param end_ptr End iterator
  * @param max_depth Maximum recursion depth
  * @return Parsed JSON value or ParseError
@@ -348,10 +348,10 @@ static std::expected<Value, ParseError> reader(
             if( it != end_ptr && !std::isspace(*it) && *it != '}' && *it != ']' && *it != ',' ) return std::unexpected( ParseError::eInvalidNumber );
 
             Number value;
-            const auto [ptr, ec] = std::from_chars(buffer.begin(), buffer.begin()+buffer_len, value);
-            if(ec != std::errc{} || ptr != buffer.begin() + buffer_len) {
-                return std::unexpected( ParseError::eInvalidNumber );
-            }
+            if(const auto [ptr, ec] = std::from_chars(&*buffer.cbegin(), &*buffer.cbegin() + buffer_len, value);
+                ec != std::errc{} || ptr != &*buffer.cbegin() + buffer_len
+            ) return std::unexpected( ParseError::eInvalidNumber );
+
             json = value;
         } break;
     }
@@ -371,7 +371,7 @@ std::expected<Value, ParseError> deserialize(const std::string_view text, const 
     const auto result = reader(it, end_ptr, max_depth-1);
     if(!result) return std::unexpected( result.error() );
     while(it != end_ptr && std::isspace(*it)) ++it;
-    if(it != end_ptr) return std::unexpected( ParseError::eRedundentText );
+    if(it != end_ptr) return std::unexpected( ParseError::eRedundantText );
     return result;
 }
 
@@ -383,11 +383,11 @@ std::expected<Value, ParseError> deserialize(const std::string_view text, const 
  */
 std::expected<Value, ParseError> deserialize(std::istream& is_test, const std::int32_t max_depth) noexcept{
     auto it = std::istreambuf_iterator<char>(is_test);
-    const auto end_ptr = std::istreambuf_iterator<char>();
+    constexpr auto end_ptr = std::istreambuf_iterator<char>();
     const auto result = reader(it, end_ptr, max_depth-1);
     if(!result) return std::unexpected( result.error() );
     while(it != end_ptr && std::isspace(*it)) ++it;
-    if(it != end_ptr) return std::unexpected( ParseError::eRedundentText );
+    if(it != end_ptr) return std::unexpected( ParseError::eRedundantText );
     return result;
 }
 

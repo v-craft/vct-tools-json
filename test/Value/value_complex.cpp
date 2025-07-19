@@ -20,11 +20,11 @@ M_TEST(Value, Complex) {
                 {"debug", false},
                 {"port", 8080},
                 {"host", "localhost"},
-                {"features", json::Array{
+                {"features", json::Array{{
                     json::Object{{"name", "auth"}, {"enabled", true}, {"priority", 1}},
                     json::Object{{"name", "logging"}, {"enabled", false}, {"priority", 2}},
                     json::Object{{"name", "cache"}, {"enabled", true}, {"priority", 3}}
-                }},
+                }}},
                 {"database", json::Object{
                     {"type", "postgresql"},
                     {"connection", json::Object{
@@ -39,40 +39,40 @@ M_TEST(Value, Complex) {
                             {"connection_timeout", nullptr}
                         }}
                     }},
-                    {"migrations", json::Array{
+                    {"migrations", json::Array{{
                         json::Object{{"version", "001"}, {"applied", true}, {"timestamp", 1640995200}},
                         json::Object{{"version", "002"}, {"applied", true}, {"timestamp", 1641081600}},
                         json::Object{{"version", "003"}, {"applied", false}, {"timestamp", nullptr}}
-                    }}
+                    }}}
                 }}
             }}
         }},
-        { "users" , json::Array{
-            json::Object{
-                {"id", 1},
-                {"name", "John Doe"},
-                {"email", "john@example.com"},
-                {"active", true},
-                {"permissions", json::Array{"read", "write", "admin"}},
-                {"profile", json::Object{
-                    {"age", 30},
-                    {"country", "USA"},
-                    {"preferences", json::Object{
-                        {"theme", "dark"},
-                        {"notifications", true},
-                        {"language", "en"},
-                        {"timezone", "UTC-5"}
-                    }}
-                }},
-                {"last_login", 1640995200},
-                {"metadata", nullptr}
-            },
+        { "users" , json::Array{{
+                json::Object{
+                    {"id", 1},
+                    {"name", "John Doe"},
+                    {"email", "john@example.com"},
+                    {"active", true},
+                    {"permissions", json::Array{{"read", "write", "admin"}}},
+                    {"profile", json::Object{
+                        {"age", 30},
+                        {"country", "USA"},
+                        {"preferences", json::Object{
+                            {"theme", "dark"},
+                            {"notifications", true},
+                            {"language", "en"},
+                            {"timezone", "UTC-5"}
+                        }}
+                    }},
+                    {"last_login", 1640995200},
+                    {"metadata", nullptr}
+            }},
             json::Object{
                 {"id", 2},
                 {"name", "Jane Smith"},
                 {"email", "jane@example.com"},
                 {"active", false},
-                {"permissions", json::Array{"read"}},
+                {"permissions", json::Array{{"read"}}},
                 {"profile", json::Object{
                     {"age", 25},
                     {"country", "Canada"},
@@ -92,16 +92,16 @@ M_TEST(Value, Complex) {
             {"active_users", 1},
             {"avg_login_time", 1640995200},
             {"performance", json::Object{
-                {"response_times", json::Array{120, 85, 95, 110, 88}},
-                {"error_rates", json::Array{0.01, 0.02, 0.015, 0.008, 0.012}},
+                {"response_times", json::Array{{120, 85, 95, 110, 88}}},
+                {"error_rates", json::Array{{0.01, 0.02, 0.015, 0.008, 0.012}}},
                 {"uptime", 99.95},
                 {"last_restart", nullptr}
             }},
-            {"features_usage", json::Array{
+            {"features_usage", json::Array{{
                 json::Object{{"feature", "auth"}, {"usage_count", 1500}, {"success_rate", 0.98}},
                 json::Object{{"feature", "logging"}, {"usage_count", 0}, {"success_rate", nullptr}},
                 json::Object{{"feature", "cache"}, {"usage_count", 800}, {"success_rate", 0.95}}
-            }}
+            }}}
         }}
         // Additional nested structures can be added here
     };
@@ -193,10 +193,10 @@ M_TEST(Value, Complex) {
     complex_data["application"]["config"]["new_feature"] = json::Object{
         {"name", "monitoring"},
         {"enabled", true},
-        {"settings", json::Array{
+        {"settings", json::Array{{
             json::Object{{"metric", "cpu"}, {"threshold", 0.8}},
             json::Object{{"metric", "memory"}, {"threshold", 0.9}}
-        }}
+        }}}
     };
     
     M_ASSERT_TRUE( complex_data["application"]["config"].contains("new_feature") );
@@ -265,14 +265,14 @@ M_TEST(Value, Complex) {
     // Test complex structure with move semantics
     std::vector<json::Value> complex_array{
         json::Object{
-            {"item1", json::Array{1, 2, 3}},
+            {"item1", json::Array{{1, 2, 3}}},
             {"item2", json::Object{{"nested", true}}}
         },
-        json::Array{
+        json::Array{{
             json::String("first"),
-            json::Number(42),
-            json::Object{{"deep", json::Array{"very", "deep", "nesting"}}}
-        }
+            42,
+            json::Object{{"deep", json::Array{{"very", "deep", "nesting"}}}}
+        }}
     };
     
     json::Value moved_complex{std::move(complex_array)};
@@ -346,11 +346,11 @@ M_TEST(Value, Complex) {
                 {"debug", false},
                 {"port", 9090},  // Modified value
                 {"host", "localhost"},
-                {"features", json::Array{
+                {"features", json::Array{{
                     json::Object{{"name", "auth"}, {"enabled", false}, {"priority", 1}},  // Modified
                     json::Object{{"name", "logging"}, {"enabled", false}, {"priority", 2}},
                     json::Object{{"name", "cache"}, {"enabled", true}, {"priority", 3}}
-                }},
+                }}},
                 {"database", json::Object{
                     {"type", "postgresql"},
                     {"connection", json::Object{
@@ -365,29 +365,29 @@ M_TEST(Value, Complex) {
                             {"connection_timeout", nullptr}
                         }}
                     }},
-                    {"migrations", json::Array{
+                    {"migrations", json::Array{{
                         json::Object{{"version", "001"}, {"applied", true}, {"timestamp", 1640995200}},
                         json::Object{{"version", "002"}, {"applied", true}, {"timestamp", 1641081600}},
                         json::Object{{"version", "003"}, {"applied", false}, {"timestamp", nullptr}}
-                    }}
+                    }}}
                 }},
                 {"new_feature", json::Object{  // Added feature
                     {"name", "monitoring"},
                     {"enabled", true},
-                    {"settings", json::Array{
+                    {"settings", json::Array{{
                         json::Object{{"metric", "cpu"}, {"threshold", 0.8}},
                         json::Object{{"metric", "memory"}, {"threshold", 0.9}}
-                    }}
+                    }}}
                 }}
             }}
         }},
-        {"users", json::Array{
+        {"users", json::Array{{
             json::Object{
                 {"id", 1},
                 {"name", "John Doe"},
                 {"email", "john@example.com"},
                 {"active", true},
-                {"permissions", json::Array{"read", "write", "admin"}},
+                {"permissions", json::Array{{"read", "write", "admin"}}},
                 {"profile", json::Object{
                     {"age", 30},
                     {"country", "USA"},
@@ -400,13 +400,13 @@ M_TEST(Value, Complex) {
                 }},
                 {"last_login", 1640995200},
                 {"metadata", nullptr}
-            },
+            }},
             json::Object{
                 {"id", 2},
                 {"name", "Jane Smith"},
                 {"email", "jane@example.com"},
                 {"active", true},  // Modified
-                {"permissions", json::Array{"read"}},
+                {"permissions", json::Array{{"read"}}},
                 {"profile", json::Object{
                     {"age", 25},
                     {"country", "Canada"},
@@ -426,16 +426,16 @@ M_TEST(Value, Complex) {
             {"active_users", 1},
             {"avg_login_time", 1640995200},
             {"performance", json::Object{
-                {"response_times", json::Array{120, 85, 95, 110, 88, 75}},  // Added element
-                {"error_rates", json::Array{0.01, 0.02, 0.015, 0.008, 0.012}},
+                {"response_times", json::Array{{120, 85, 95, 110, 88, 75}}},  // Added element
+                {"error_rates", json::Array{{0.01, 0.02, 0.015, 0.008, 0.012}}},
                 {"uptime", 99.95},
                 {"last_restart", nullptr}
             }},
-            {"features_usage", json::Array{
+            {"features_usage", json::Array{{
                 json::Object{{"feature", "auth"}, {"usage_count", 1500}, {"success_rate", 0.98}},
                 json::Object{{"feature", "logging"}, {"usage_count", 0}, {"success_rate", nullptr}},
                 json::Object{{"feature", "cache"}, {"usage_count", 800}, {"success_rate", 0.95}}
-            }},
+            }}},
             {"new_metric", 123.45}  // Added metric
         }}
     }};
@@ -447,12 +447,12 @@ M_TEST(Value, Complex) {
     M_ASSERT_FALSE( complex_data == complex_clone );
     
     // Test serialization of complex structure
-    M_ASSERT_NO_THROW( complex_data.serialize() );
+    M_ASSERT_NO_THROW( std::ignore = complex_data.serialize() );
     auto serialized = complex_data.serialize();
     M_ASSERT_TRUE( serialized.size() > 1000 );  // Should be quite large
     
     // Test pretty serialization
-    M_ASSERT_NO_THROW( complex_data.serialize_pretty() );
+    M_ASSERT_NO_THROW( std::ignore = complex_data.serialize_pretty() );
     auto pretty_serialized = complex_data.serialize_pretty();
     if (pretty_serialized.has_value()) {
         M_ASSERT_TRUE( pretty_serialized->size() > serialized.size() );
@@ -511,7 +511,7 @@ M_TEST(Value, Complex) {
         for (int j = 0; j < 10; ++j) {
             std::string subsection_name = "subsection_" + std::to_string(j);
             large_nested[section_name][subsection_name] = json::Array{};
-            
+
             for (int k = 0; k < 10; ++k) {
                 large_nested[section_name][subsection_name].get<json::Array>().push_back(
                     json::Object{
@@ -537,7 +537,7 @@ M_TEST(Value, Complex) {
     M_ASSERT_EQ( large_nested["section_5"]["subsection_7"][7]["metadata"]["info"].to<json::String>(), "data" );
     
     // Test serialization performance on large structure
-    M_ASSERT_NO_THROW( large_nested.serialize() );
+    M_ASSERT_NO_THROW( std::ignore = large_nested.serialize() );
     auto large_serialized = large_nested.serialize();
     M_ASSERT_TRUE( large_serialized.size() > 10000 );
     

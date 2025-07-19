@@ -57,6 +57,10 @@
  * - **Simplified API**: Optional short macro names for cleaner code
  */
 
+
+#ifndef _M_VCT_TOOLS_JSON_MACROS_HPP
+#define _M_VCT_TOOLS_JSON_MACROS_HPP
+
 /**
  * @brief Macro for converting a class member to JSON with automatic move semantics
  * @param member_name The name of the member variable to convert
@@ -83,7 +87,6 @@
     do {    \
         static_assert( std::is_convertible_v< decltype(this->member_name), ::vct::tools::json::Value >, "VCT_TOOLS_JSON: " #member_name " use macros CONVERSION_FILED, must is_convertible to json::Value. " );  \
         macro_result[ #member_name ] = ::vct::tools::json::Value{ _move_if_rvalue(this->member_name) };  \
-        \
     }while(false)
     
 
@@ -111,7 +114,7 @@
  */
 #define M_VCT_TOOLS_JSON_CONVERSION_MAP_FIELD( field_name, member_name ) \
     do {    \
-        static_assert( std::is_convertible_v< decltype(this->member_name), ::vct::tools::json::Value> >, "VCT_TOOLS_JSON: " #member_name " use macros CONVERSION_FILED, must is_convertible to json::Value. " );  \
+        static_assert( std::is_convertible_v< decltype(this->member_name), ::vct::tools::json::Value>, "VCT_TOOLS_JSON: " #member_name " use macros CONVERSION_FILED, must is_convertible to json::Value. " );  \
         macro_result[ #field_name ] = ::vct::tools::json::Value{ _move_if_rvalue(this->member_name) };  \
     }while(false)
 
@@ -156,24 +159,25 @@
  *              expensive-to-copy members like std::string, std::vector, etc.
  */
 #define M_VCT_TOOLS_JSON_CONVERSION_FUNCTION( class_name, ... )   \
-    operator ::vct::tools::json::Value() const & { \
+    explicit operator ::vct::tools::json::Value() const & { \
         ::vct::tools::json::Value macro_result{::vct::tools::json::Type::eObject}; \
         auto _move_if_rvalue = [](const auto& val) -> const auto& { return val; }; \
         __VA_ARGS__; \
         return macro_result; \
     } \
-    operator ::vct::tools::json::Value() & { \
+    explicit operator ::vct::tools::json::Value() && { \
+    ::vct::tools::json::Value macro_result{::vct::tools::json::Type::eObject}; \
+    auto _move_if_rvalue = [](auto& val) -> auto&& { return std::move(val); }; \
+    __VA_ARGS__; \
+    return macro_result; \
+    } \
+    explicit operator ::vct::tools::json::Value() & { \
         ::vct::tools::json::Value macro_result{::vct::tools::json::Type::eObject}; \
         auto _move_if_rvalue = [](auto& val) -> auto& { return val; }; \
         __VA_ARGS__; \
         return macro_result; \
     } \
-    operator ::vct::tools::json::Value() && { \
-        ::vct::tools::json::Value macro_result{::vct::tools::json::Type::eObject}; \
-        auto _move_if_rvalue = [](auto& val) -> auto&& { return std::move(val); }; \
-        __VA_ARGS__; \
-        return macro_result; \
-    } 
+
 
 
 
@@ -416,5 +420,7 @@
     #define M_JSON_CS_MEM_OR    M_VCT_TOOLS_JSON_CONSTRUCTOR_FIELD_OR
     #define M_JSON_CS_MAP_OR    M_VCT_TOOLS_JSON_CONSTRUCTOR_MAP_FIELD_OR
     #define M_JSON_CS_FUN       M_VCT_TOOLS_JSON_CONSTRUCTOR_FUNCTION
-#endif
+#endif // M_VCT_JSON_SIMPLIFY_MACROS
+
+#endif // _M_VCT_TOOLS_JSON_MACROS_HPP
 

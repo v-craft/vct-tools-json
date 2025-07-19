@@ -45,7 +45,7 @@ export namespace vct::tools::json{
         eUnclosedObject,    ///< Unclosed object literal in JSON data
         eUnclosedArray,     ///< Unclosed array literal in JSON data
         eUnknownFormat,     ///< Invalid JSON format encountered
-        eRedundentText      ///< Redundant text after valid JSON data
+        eRedundantText      ///< Redundant text after valid JSON data
     };
 
 
@@ -125,6 +125,48 @@ export namespace vct::tools::json{
     >;
 
     /**
+     * @brief The available types for 'to/move' function, must include 'json types'
+     */
+    template<typename T>
+    concept convertible_types = json_types<T> || std::disjunction_v<
+        std::is_arithmetic<T>,
+        std::is_enum<T>,
+        std::is_convertible<Array, T>,
+        std::is_convertible<Object, T>,
+        std::is_convertible<String, T>,
+        std::is_convertible<Number, T>,
+        std::is_convertible<Bool, T>,
+        std::is_convertible<Null, T>,
+        std::is_convertible<Value, T>
+    >;
+
+    /**
+     * @brief Convertable k-v type
+     */
+    template<typename T>
+    concept convertible_map_types = std::ranges::range<T> && requires {
+        typename T::key_type;
+        typename T::mapped_type;
+        requires std::is_convertible_v<String, typename T::key_type>;
+        requires convertible_types<typename T::mapped_type>;
+        requires std::is_default_constructible_v<T>;
+    } && requires (T t, String s, typename T::mapped_type m) {
+        t.emplace(static_cast<typename T::key_type>(s), m);
+    };
+
+    /**
+     * @brief Convertable array type
+     */
+    template<typename T>
+    concept convertible_array_types = std::ranges::range<T> && requires {
+        typename T::value_type;
+        requires convertible_types<typename T::value_type>;
+        requires std::is_default_constructible_v<T>;
+    } && requires (T t, typename T::value_type v) {
+        t.emplace_back(v);
+    };
+
+    /**
      * @class Value
      * @brief Universal container class for JSON values
      * 
@@ -178,10 +220,10 @@ export namespace vct::tools::json{
          * @return Size of the container, or 0 for non-container types (including string)
          */
         [[nodiscard]]
-        const std::size_t size() const noexcept {
+        std::size_t size() const noexcept {
             switch (m_type) {
                 case Type::eObject: return std::get<Object>(m_data).size();
-                case Type::eArray: return std::get<Array>(m_data).size();
+                case Type::eArray:  return std::get<Array>(m_data).size();
                 default: return 0;
             }
         }
@@ -211,6 +253,7 @@ export namespace vct::tools::json{
                 case Type::eBool:   return "Bool";
                 case Type::eNull:   return "Null";
             }
+            return "Unknown"; // Should never happen
         }
 
         /**
@@ -230,7 +273,6 @@ export namespace vct::tools::json{
         
         /**
          * @brief Default copy assignment operator
-         * @param other The Value object to copy from
          * @return Reference to this Value object
          */
         Value& operator=(const Value&) = default;
@@ -299,7 +341,7 @@ export namespace vct::tools::json{
         /**
          * @brief Construct Value from nullptr
          */
-        Value(const Null) noexcept : m_type(Type::eNull), m_data(Null{}) {}
+        Value(const Null) noexcept {}
 
         /**
          * @brief Assign Value from nullptr
@@ -313,7 +355,7 @@ export namespace vct::tools::json{
         /**
          * @brief Construct Value from boolean
          */
-        Value(const Bool bl) noexcept : m_type(Type::eBool), m_data(bl) {}
+        Value(const Bool bl) noexcept : m_data(bl), m_type(Type::eBool) {}
 
         /**
          * @brief Assign Value from boolean
@@ -324,13 +366,30 @@ export namespace vct::tools::json{
             return *this;
         }
 
+
+        /**
+         * @brief Construct Value from numeric type
+         * @param num Numeric value to initialize
+         */
+        Value(Number num) noexcept : m_data(num), m_type(Type::eNumber) {}
+
+        /**
+         * @brief Assign Value from numeric type
+         * @param num Numeric value to assign
+         */
+        Value& operator=(const Number num) noexcept {
+            m_type = Type::eNumber;
+            m_data = num;
+            return *this;
+        }
+
         /**
          * @brief Construct Value from numeric types
          * @tparam T Numeric type (integral or floating-point or enum)
          */
         template<typename T>
         requires (std::is_arithmetic_v<T> || std::is_enum_v<T>)
-        Value(T num) noexcept : m_type(Type::eNumber), m_data( static_cast<Number>(num) ) {}
+        Value(T num) noexcept : m_data( static_cast<Number>(num) ), m_type(Type::eNumber) {}
 
         /**
          * @brief Assign Value from numeric types
@@ -347,13 +406,13 @@ export namespace vct::tools::json{
         /**
          * @brief Construct Value from string types
          */
-        Value(String str) noexcept : m_type(Type::eString), m_data(std::move(str)) {}
+        Value(String str) noexcept : m_data(std::move(str)), m_type(Type::eString) {}
 
         /**
          * @brief Construct Value from C-style string literal
          * @param str C-style string literal or const char*
          */
-        Value(const char* str) noexcept : m_type(Type::eString), m_data(String{str}) {}
+        Value(const char* str) noexcept : m_data(String{str}), m_type(Type::eString) {}
 
         /**
          * @brief Assign Value from string types
@@ -377,7 +436,7 @@ export namespace vct::tools::json{
         /**
          * @brief Construct Value from Object
          */
-        Value(Object obj) noexcept : m_type(Type::eObject), m_data(std::move(obj)) {}
+        Value(Object obj) noexcept : m_data(std::move(obj)), m_type(Type::eObject) {}
 
 
         /**
@@ -392,7 +451,7 @@ export namespace vct::tools::json{
         /**
          * @brief Construct Value from Array
          */
-        Value(Array arr) noexcept : m_type(Type::eArray), m_data(std::move(arr)) {}
+        Value(Array arr) noexcept : m_data(std::move(arr)), m_type(Type::eArray) {}
         /**
          * @brief Assign Value from Array
          */
@@ -401,76 +460,32 @@ export namespace vct::tools::json{
             m_data = std::move(arr);
             return *this;
         }
-    
-        /**
-         * @brief Type conversion operator to convert Value to numeric types
-         * @tparam T Numeric type (integral or floating-point or enum)
-         * @note 
-         * if type is integer or enum, it will round the number to nearest integer.  
-         * if json type is not number, it will return T{} (default value for T).
-         */
+
+
         template<typename T>
-        requires (std::is_arithmetic_v<T> || std::is_enum_v<T>)
-        [[nodiscard]]
-        explicit operator T() const noexcept {
-            if(m_type != Type::eNumber)  return T{};
-            if constexpr (std::is_enum_v<T>) {
-                return static_cast<T>(std::llround(std::get<Number>(m_data)));
-            } else if constexpr (std::is_integral_v<T>) {
-                return static_cast<T>(std::llround(std::get<Number>(m_data)));
-            } else {
-                return static_cast<T>(std::get<Number>(m_data));
+        requires std::ranges::range<T> && std::is_convertible_v<typename T::value_type, Value>
+        explicit Value(T && other) noexcept : m_type( Type::eArray ) {
+            for (auto&& item : std::forward<T>(other)) {
+                if constexpr (json_types<typename T::value_type>) {
+                    std::get<Array>(m_data).emplace_back(std::forward<decltype(item)>(item));
+                } else {
+                    std::get<Array>(m_data).emplace_back(static_cast<Number>(item));
+                }
             }
         }
 
-        /**
-         * @brief Type conversion operators to convert Value to String ( std::string )
-         * @note if json type is not string, it will return empty string.
-         */
-        [[nodiscard]]
-        explicit operator String() const noexcept {
-            if (m_type != Type::eString) return String{};
-            return std::get<String>(m_data);
+        template<typename T>
+        requires std::ranges::range<T> && std::is_convertible_v<typename T::key_type, String> && std::is_convertible_v<typename T::mapped_type, Value>
+        explicit Value(T && other) noexcept : m_type( Type::eObject ) {
+            for (auto&& [key, val]: std::forward<T>(other)) {
+                if constexpr (json_types<typename T::mapped_type>) {
+                    std::get<Object>(m_data).emplace(static_cast<String>(key), std::forward<decltype(val)>(val));
+                } else {
+                    std::get<Object>(m_data).emplace(static_cast<String>(key), static_cast<Number>(val));
+                }
+            }
         }
 
-        /**
-         * @brief Type conversion operator to convert Value to Bool ( bool )
-         * @note if json type is not bool, it will return false.
-         */
-        [[nodiscard]]
-        explicit operator Bool() const noexcept {
-            if (m_type != Type::eBool) return Bool{};
-            return std::get<Bool>(m_data);
-        }
-
-        /**
-         * @brief Type conversion operator to convert Value to Null ( std::nullptr_t )
-         * @note return nullptr always
-         */
-        [[nodiscard]]
-        explicit operator Null() const noexcept {
-            return Null{};
-        }
-
-        /**
-         * @brief Type conversion operator to convert Value to Object ( std::map<String, Value> )
-         * @note if json type is not object, it will return empty object.
-         */
-         [[nodiscard]]
-        explicit operator Object() const noexcept {
-            if (m_type != Type::eObject) return Object{};
-            return std::get<Object>(m_data);
-        }
-
-        /**
-         * @brief Type conversion operator to convert Value to Array ( std::vector<Value> )
-         * @note if json type is not array, it will return empty array.
-         */
-        [[nodiscard]]
-        explicit operator Array() const noexcept {
-            if (m_type != Type::eArray) return Array{};
-            return std::get<Array>(m_data);
-        }
 
         /**
          * @brief Access object member by key (non-const)
@@ -586,7 +601,7 @@ export namespace vct::tools::json{
          * @param os Output stream to write JSON data
          * @note 
          * output to stream may be failed If an unknown problem occurs (e.g. stream is closed or not writable)
-         * when stream.fail() return true, this function will qucikly return but not throw any exception.
+         * when stream.fail() return true, this function will quickly return but not throw any exception.
          */
         void serialize_to(std::ostream& os) const noexcept;
 
@@ -594,9 +609,10 @@ export namespace vct::tools::json{
          * @brief Serialize Value to compact JSON string ( Must succeed )
          * @return Compact JSON string without formatting
          */
+        [[nodiscard]]
         String serialize() const noexcept {
             String res;
-            serialize_to(res);
+            this->serialize_to(res);
             return res;
         }
 
@@ -610,9 +626,9 @@ export namespace vct::tools::json{
          */
         Bool serialize_pretty_to(
             String& str, 
-            const std::uint16_t space_num = 2, 
-            const std::uint16_t depth = 0, 
-            const std::uint32_t max_space = 512
+            std::uint16_t space_num = 2,
+            std::uint16_t depth = 0,
+            std::uint32_t max_space = 512
         ) const noexcept;
 
         /**
@@ -625,9 +641,9 @@ export namespace vct::tools::json{
          */
         Bool serialize_pretty_to(
             std::ostream& out, 
-            const std::uint16_t space_num, 
-            const std::uint16_t depth, 
-            const std::uint32_t max_space
+            std::uint16_t space_num,
+            std::uint16_t depth,
+            std::uint32_t max_space
         ) const noexcept;
 
 
@@ -638,13 +654,13 @@ export namespace vct::tools::json{
          * @param max_space Maximum allowed spaces to prevent memory explosion (default: 512)
          * @return Formatted JSON string or nullopt if max_space exceeded
          */
+        [[nodiscard]]
         std::optional<String> serialize_pretty(
             const std::uint16_t space_num = 2, 
             const std::uint16_t depth = 0, 
             const std::uint32_t max_space = 512
         ) const noexcept {
-            String res;
-            if(serialize_pretty_to(res, space_num, depth, max_space)) return res;
+            if(String res; this->serialize_pretty_to(res, space_num, depth, max_space)) return res;
             return std::nullopt;
         }
 
@@ -714,10 +730,6 @@ export namespace vct::tools::json{
          * @return The converted value
          * @throws std::runtime_error if conversion fails
          * @note Number is double, so conversions to integral (and enum) types will round to nearest.
-         * @warning 
-         * The type conversion function of `json::Value` supports `enum`, `arithmetic`, and `json types`, and can return default values even if they are incompatible.
-         * However, **the 'to' function does not return a default value when completely incompatible**, but instead chooses to throw an exception. 
-         * If you need default values, please use to_or.
          * @details
          * Attempt sequence of conversions:
          * inner value type -> target type
@@ -729,27 +741,20 @@ export namespace vct::tools::json{
          * 6. Number -> enum types (us llround, round to nearest)
          * 7. Number -> integral types (us llround, round to nearest)
          * 8. Number -> floating_point types
-         * 9. Object -> convertible types
-         * 10. Array -> convertible types
-         * 11. String -> convertible types
-         * 12. Number -> convertible types
-         * 13. Bool -> convertible types
-         * 14. Null -> convertible types
-         * 15. Any -> Value convertible types, but convertible type is not `json_types` or `is_arithmetic` or `is_enum`
+         * 9. Any -> Value convertible types
+         * 10. Object -> convertible types
+         * 11. Array -> convertible types
+         * 12. String -> convertible types
+         * 13. Number -> convertible types
+         * 14. Bool -> convertible types
+         * 15. Null -> convertible types (Null is not convertible to bool !!!!!)
+         * 16. Object -> Try copy to range && String->key_type && Value->mapped_type types
+         * 17. Array -> Try copy to range && Value->value_type types
          * 16. throw std::runtime_error
          */
         template<typename T>
-        requires json_types<T> || std::disjunction_v<
-            std::is_arithmetic<T>,
-            std::is_enum<T>,
-            std::is_convertible<Array, T>,
-            std::is_convertible<Object, T>,
-            std::is_convertible<String, T>,
-            std::is_convertible<Number, T>,
-            std::is_convertible<Bool, T>,
-            std::is_convertible<Null, T>,
-            std::is_convertible<Value, T>
-        > [[nodiscard]]
+        requires convertible_types<T> || convertible_map_types<T> || convertible_array_types<T>
+        [[nodiscard]]
         T  to() const {
             if constexpr (std::is_same_v<T, Null>) {
                 if (m_type == Type::eNull) return Null{};
@@ -768,6 +773,9 @@ export namespace vct::tools::json{
             } else if constexpr (std::is_floating_point_v<T>) {
                 if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
+            if constexpr (std::is_convertible_v<Value, T>) {
+                return static_cast<T>(*this);
+            }
             if constexpr (std::is_convertible_v<Object, T>) {
                 if (m_type == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
             }
@@ -784,13 +792,29 @@ export namespace vct::tools::json{
                 if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(nullptr);
+                if (m_type == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr (!json_types<T> && !std::is_arithmetic_v<T> && !std::is_enum_v<T> && std::is_convertible_v<Value, T>) {
-                // try convert Value to T, but T is not json_types or is_arithmetic or is_enum
-                // Because these types have already been determined above
-                // Value supports default values for these types of conversion functions, which can interfere with the output results
-                return static_cast<T>(*this);
+            if constexpr ( convertible_map_types<T> ) {
+                if (m_type == Type::eObject) {
+                    T result{};
+                    for (auto& [key, value] : std::get<Object>(m_data)) {
+                        auto val = value.to_if<typename T::mapped_type>();
+                        if (!val) continue;
+                        result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
+                    }
+                    return result;
+                }
+            }
+            if constexpr ( convertible_array_types<T> ) {
+                if (m_type == Type::eArray) {
+                    T result{};
+                    for (auto& value : std::get<Array>(m_data)) {
+                        auto val = value.to_if<typename T::value_type>();
+                        if (!val) continue;
+                        result.emplace_back(std::move(*val));
+                    }
+                    return result;
+                }
             }
             throw std::runtime_error("Value type mismatch");
         }
@@ -800,10 +824,6 @@ export namespace vct::tools::json{
          * @tparam T The target type to convert to
          * @return The converted value
          * @note Number is double, so conversions to integral (and enum) types will round to nearest.
-         * @warning 
-         * The type conversion function of `json::Value` supports `enum`, `arithmetic`, and `json types`, and can return default values even if they are incompatible.
-         * However, **the 'to' function does not return a default value when completely incompatible**, but instead chooses to throw an exception. 
-         * If you need default values, please use to_or.
          * @details
          * Attempt sequence of conversions:
          * inner value type -> target type
@@ -815,27 +835,20 @@ export namespace vct::tools::json{
          * 6. Number -> enum types (us llround, round to nearest)
          * 7. Number -> integral types (us llround, round to nearest)
          * 8. Number -> floating_point types
-         * 9. Object -> convertible types
-         * 10. Array -> convertible types
-         * 11. String -> convertible types
-         * 12. Number -> convertible types
-         * 13. Bool -> convertible types
-         * 14. Null -> convertible types
-         * 15. Any -> Value convertible types, but convertible type is not `json_types` or `is_arithmetic` or `is_enum`
-         * 16. return std::nullopt;
+         * 9. Any -> Value convertible types
+         * 10. Object -> convertible types
+         * 11. Array -> convertible types
+         * 12. String -> convertible types
+         * 13. Number -> convertible types
+         * 14. Bool -> convertible types
+         * 15. Null -> convertible types (Null is not convertible to bool !!!!!)
+         * 16. Object -> Try copy to range && String->key_type && Value->mapped_type types
+         * 17. Array -> Try copy to range && Value->value_type types
+         * 18. return std::nullopt;
          */
         template<typename T>
-        requires json_types<T> || std::disjunction_v<
-            std::is_arithmetic<T>,
-            std::is_enum<T>,
-            std::is_convertible<Array, T>,
-            std::is_convertible<Object, T>,
-            std::is_convertible<String, T>,
-            std::is_convertible<Number, T>,
-            std::is_convertible<Bool, T>,
-            std::is_convertible<Null, T>,
-            std::is_convertible<Value, T>
-        > [[nodiscard]]
+        requires convertible_types<T> || convertible_map_types<T> || convertible_array_types<T>
+        [[nodiscard]]
         std::optional<T>  to_if() const noexcept {
             if constexpr (std::is_same_v<T, Null>) {
                 if (m_type == Type::eNull) return Null{};
@@ -854,6 +867,9 @@ export namespace vct::tools::json{
             } else if constexpr (std::is_floating_point_v<T>) {
                 if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
+            if constexpr (std::is_convertible_v<Value, T>) {
+                return static_cast<T>(*this);
+            }
             if constexpr (std::is_convertible_v<Object, T>) {
                 if (m_type == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
             }
@@ -870,13 +886,29 @@ export namespace vct::tools::json{
                 if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(nullptr);
+                if (m_type == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr (!json_types<T> && !std::is_arithmetic_v<T> && !std::is_enum_v<T> && std::is_convertible_v<Value, T>) {
-                // try convert Value to T, but T is not json_types or is_arithmetic or is_enum
-                // Because these types have already been determined above
-                // Value supports default values for these types of conversion functions, which can interfere with the output results
-                return static_cast<T>(*this);
+            if constexpr ( convertible_map_types<T> ) {
+                if (m_type == Type::eObject) {
+                    T result{};
+                    for (auto& [key, value] : std::get<Object>(m_data)) {
+                        auto val = value.to_if<typename T::mapped_type>();
+                        if (!val) continue;
+                        result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
+                    }
+                    return result;
+                }
+            }
+            if constexpr ( convertible_array_types<T> ) {
+                if (m_type == Type::eArray) {
+                    T result{};
+                    for (auto& value : std::get<Array>(m_data)) {
+                        auto val = value.to_if<typename T::value_type>();
+                        if (!val) continue;
+                        result.emplace_back(std::move(*val));
+                    }
+                    return result;
+                }
             }
             return std::nullopt; // return nullopt if conversion fails
         }
@@ -898,27 +930,20 @@ export namespace vct::tools::json{
          * 6. Number -> enum types (us llround, round to nearest)
          * 7. Number -> integral types (us llround, round to nearest)
          * 8. Number -> floating_point types
-         * 9. Object -> convertible types
-         * 10. Array -> convertible types
-         * 11. String -> convertible types
-         * 12. Number -> convertible types
-         * 13. Bool -> convertible types
-         * 14. Null -> convertible types
-         * 15. Any -> Value convertible types, but convertible type is not `json_types` or `is_arithmetic` or `is_enum`
-         * 16. return default_value 
+         * 9. Any -> Value convertible types
+         * 10. Object -> convertible types
+         * 11. Array -> convertible types
+         * 12. String -> convertible types
+         * 13. Number -> convertible types
+         * 14. Bool -> convertible types
+         * 15. Null -> convertible types (Null is not convertible to bool !!!!!)
+         * 16. Object -> Try copy to range && String->key_type && Value->mapped_type types
+         * 17. Array -> Try copy to range && Value->value_type types
+         * 18. return default_value
          */
         template<typename T>
-        requires json_types<T> || std::disjunction_v<
-            std::is_arithmetic<T>,
-            std::is_enum<T>,
-            std::is_convertible<Array, T>,
-            std::is_convertible<Object, T>,
-            std::is_convertible<String, T>,
-            std::is_convertible<Number, T>,
-            std::is_convertible<Bool, T>,
-            std::is_convertible<Null, T>,
-            std::is_convertible<Value, T>
-        > [[nodiscard]]
+        requires convertible_types<T> || convertible_map_types<T> || convertible_array_types<T>
+        [[nodiscard]]
         T  to_or( T default_value ) const noexcept {
             if constexpr (std::is_same_v<T, Null>) {
                 if (m_type == Type::eNull) return Null{};
@@ -937,6 +962,9 @@ export namespace vct::tools::json{
             } else if constexpr (std::is_floating_point_v<T>) {
                 if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
+            if constexpr (std::is_convertible_v<Value, T>) {
+                return static_cast<T>(*this);
+            }
             if constexpr (std::is_convertible_v<Object, T>) {
                 if (m_type == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
             }
@@ -953,13 +981,29 @@ export namespace vct::tools::json{
                 if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(nullptr);
+                if (m_type == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr (!json_types<T> && !std::is_arithmetic_v<T> && !std::is_enum_v<T> && std::is_convertible_v<Value, T>) {
-                // try convert Value to T, but T is not json_types or is_arithmetic or is_enum
-                // Because these types have already been determined above
-                // Value supports default values for these types of conversion functions, which can interfere with the output results
-                return static_cast<T>(*this);
+            if constexpr ( convertible_map_types<T> ) {
+                if (m_type == Type::eObject) {
+                    T result{};
+                    for (auto& [key, value] : std::get<Object>(m_data)) {
+                        auto val = value.to_if<typename T::mapped_type>();
+                        if (!val) continue;
+                        result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
+                    }
+                    return result;
+                }
+            }
+            if constexpr ( convertible_array_types<T> ) {
+                if (m_type == Type::eArray) {
+                    T result{};
+                    for (auto& value : std::get<Array>(m_data)) {
+                        auto val = value.to_if<typename T::value_type>();
+                        if (!val) continue;
+                        result.emplace_back(std::move(*val));
+                    }
+                    return result;
+                }
             }
             return default_value;
         }
@@ -975,42 +1019,31 @@ export namespace vct::tools::json{
          * Number is double, so conversions to integral (and enum) types will round to nearest.
          * Complex types like Object, Array, String will be moved if possible.
          * Simple types like Bool, Number, Null will be copied.
-         * @warning 
-         * The type conversion function of `json::Value` supports `enum`, `arithmetic`, and `json types`, and can return default values even if they are incompatible.
-         * However, **the 'to' function does not return a default value when completely incompatible**, but instead chooses to throw an exception. 
-         * If you need default values, please use move_or.
          * @details
          * Attempt sequence of conversions:
          * inner value type -> target type
          * 1. Null -> Null
-         * 2. Object -> Object (Move)
-         * 3. Array -> Array (Move)
+         * 2. Object -> Object  (Move)
+         * 3. Array -> Array  (Move)
          * 4. String -> String (Move)
          * 5. Bool -> Bool
          * 6. Number -> enum types (us llround, round to nearest)
          * 7. Number -> integral types (us llround, round to nearest)
          * 8. Number -> floating_point types
-         * 9. Object -> convertible types (Move)
-         * 10. Array -> convertible types (Move)
-         * 11. String -> convertible types (Move)
-         * 12. Number -> convertible types
-         * 13. Bool -> convertible types
-         * 14. Null -> convertible types
-         * 15. Any -> Value convertible types (Move), but convertible type is not `json_types` or `is_arithmetic` or `is_enum`
-         * 16. throw std::runtime_error
+         * 9. Any -> Value convertible types (try Move)
+         * 10. Object -> convertible types (try Move)
+         * 11. Array -> convertible types (try Move)
+         * 12. String -> convertible types (tr Move)
+         * 13. Number -> convertible types
+         * 14. Bool -> convertible types
+         * 15. Null -> convertible types (Null is not convertible to bool !!!!!)
+         * 16. Object -> Try copy to range && String->key_type && Value->mapped_type types
+         * 17. Array -> Try copy to range && Value->value_type types
+         * 18. throw std::runtime_error
          */
         template<typename T>
-        requires json_types<T> || std::disjunction_v<
-            std::is_arithmetic<T>,
-            std::is_enum<T>,
-            std::is_convertible<Array, T>,
-            std::is_convertible<Object, T>,
-            std::is_convertible<String, T>,
-            std::is_convertible<Number, T>,
-            std::is_convertible<Bool, T>,
-            std::is_convertible<Null, T>,
-            std::is_convertible<Value, T>
-        > [[nodiscard]]
+        requires convertible_types<T> || convertible_map_types<T> || convertible_array_types<T>
+        [[nodiscard]]
         T  move() {
             if constexpr (std::is_same_v<T, Null>) {
                 if (m_type == Type::eNull) return Null{};
@@ -1029,6 +1062,9 @@ export namespace vct::tools::json{
             } else if constexpr (std::is_floating_point_v<T>) {
                 if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
+            if constexpr (std::is_convertible_v<Value, T>) {
+                return static_cast<T>(std::move(*this));
+            }
             if constexpr (std::is_convertible_v<Object, T>) {
                 if (m_type == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
             }
@@ -1045,13 +1081,29 @@ export namespace vct::tools::json{
                 if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(nullptr);
+                if (m_type == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr (!json_types<T> && !std::is_arithmetic_v<T> && !std::is_enum_v<T> && std::is_convertible_v<Value, T>) {
-                // try convert Value to T, but T is not json_types or is_arithmetic or is_enum
-                // Because these types have already been determined above
-                // Value supports default values for these types of conversion functions, which can interfere with the output results
-                return static_cast<T>(std::move(*this));
+            if constexpr ( convertible_map_types<T> ) {
+                if (m_type == Type::eObject) {
+                    T result{};
+                    for (auto& [key, value] : std::get<Object>(m_data)) {
+                        auto val = value.move_if<typename T::mapped_type>();
+                        if (!val) continue;
+                        result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
+                    }
+                    return result;
+                }
+            }
+            if constexpr ( convertible_array_types<T> ) {
+                if (m_type == Type::eArray) {
+                    T result{};
+                    for (auto& value : std::get<Array>(m_data)) {
+                        auto val = value.move_if<typename T::value_type>();
+                        if (!val) continue;
+                        result.emplace_back(std::move(*val));
+                    }
+                    return result;
+                }
             }
             throw std::runtime_error("Value type mismatch");
         }
@@ -1064,42 +1116,31 @@ export namespace vct::tools::json{
          * Number is double, so conversions to integral (and enum) types will round to nearest.
          * Complex types like Object, Array, String will be moved if possible.
          * Simple types like Bool, Number, Null will be copied.
-         * @warning 
-         * The type conversion function of `json::Value` supports `enum`, `arithmetic`, and `json types`, and can return default values even if they are incompatible.
-         * However, **the 'to' function does not return a default value when completely incompatible**, but instead chooses to throw an exception. 
-         * If you need default values, please use move_or.
          * @details
          * Attempt sequence of conversions:
          * inner value type -> target type
          * 1. Null -> Null
-         * 2. Object -> Object (Move)
-         * 3. Array -> Array (Move)
+         * 2. Object -> Object  (Move)
+         * 3. Array -> Array  (Move)
          * 4. String -> String (Move)
          * 5. Bool -> Bool
          * 6. Number -> enum types (us llround, round to nearest)
          * 7. Number -> integral types (us llround, round to nearest)
          * 8. Number -> floating_point types
-         * 9. Object -> convertible types (Move)
-         * 10. Array -> convertible types (Move)
-         * 11. String -> convertible types (Move)
-         * 12. Number -> convertible types
-         * 13. Bool -> convertible types
-         * 14. Null -> convertible types
-         * 15. Any -> Value convertible types (Move), but convertible type is not `json_types` or `is_arithmetic` or `is_enum`
-         * 16. return std::nullopt;
+         * 9. Any -> Value convertible types (try Move)
+         * 10. Object -> convertible types (try Move)
+         * 11. Array -> convertible types (try Move)
+         * 12. String -> convertible types (tr Move)
+         * 13. Number -> convertible types
+         * 14. Bool -> convertible types
+         * 15. Null -> convertible types (Null is not convertible to bool !!!!!)
+         * 16. Object -> Try copy to range && String->key_type && Value->mapped_type types
+         * 17. Array -> Try copy to range && Value->value_type types
+         * 18. return std::nullopt;
          */
         template<typename T>
-        requires json_types<T> || std::disjunction_v<
-            std::is_arithmetic<T>,
-            std::is_enum<T>,
-            std::is_convertible<Array, T>,
-            std::is_convertible<Object, T>,
-            std::is_convertible<String, T>,
-            std::is_convertible<Number, T>,
-            std::is_convertible<Bool, T>,
-            std::is_convertible<Null, T>,
-            std::is_convertible<Value, T>
-        > [[nodiscard]]
+        requires convertible_types<T> || convertible_map_types<T> || convertible_array_types<T>
+        [[nodiscard]]
         std::optional<T>  move_if() noexcept {
             if constexpr (std::is_same_v<T, Null>) {
                 if (m_type == Type::eNull) return Null{};
@@ -1118,6 +1159,9 @@ export namespace vct::tools::json{
             } else if constexpr (std::is_floating_point_v<T>) {
                 if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
+            if constexpr (std::is_convertible_v<Value, T>) {
+                return static_cast<T>(std::move(*this));
+            }
             if constexpr (std::is_convertible_v<Object, T>) {
                 if (m_type == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
             }
@@ -1134,13 +1178,29 @@ export namespace vct::tools::json{
                 if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(nullptr);
+                if (m_type == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr (!json_types<T> && !std::is_arithmetic_v<T> && !std::is_enum_v<T> && std::is_convertible_v<Value, T>) {
-                // try convert Value to T, but T is not json_types or is_arithmetic or is_enum
-                // Because these types have already been determined above
-                // Value supports default values for these types of conversion functions, which can interfere with the output results
-                return static_cast<T>(std::move(*this));
+            if constexpr ( convertible_map_types<T> ) {
+                if (m_type == Type::eObject) {
+                    T result{};
+                    for (auto& [key, value] : std::get<Object>(m_data)) {
+                        auto val = value.move_if<typename T::mapped_type>();
+                        if (!val) continue;
+                        result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
+                    }
+                    return result;
+                }
+            }
+            if constexpr ( convertible_array_types<T> ) {
+                if (m_type == Type::eArray) {
+                    T result{};
+                    for (auto& value : std::get<Array>(m_data)) {
+                        auto val = value.move_if<typename T::value_type>();
+                        if (!val) continue;
+                        result.emplace_back(std::move(*val));
+                    }
+                    return result;
+                }
             }
             return std::nullopt; // return nullopt if conversion fails
         }
@@ -1157,34 +1217,27 @@ export namespace vct::tools::json{
          * Attempt sequence of conversions:
          * inner value type -> target type
          * 1. Null -> Null
-         * 2. Object -> Object (Move)
-         * 3. Array -> Array (Move)
+         * 2. Object -> Object  (Move)
+         * 3. Array -> Array  (Move)
          * 4. String -> String (Move)
          * 5. Bool -> Bool
          * 6. Number -> enum types (us llround, round to nearest)
          * 7. Number -> integral types (us llround, round to nearest)
          * 8. Number -> floating_point types
-         * 9. Object -> convertible types (Move)
-         * 10. Array -> convertible types (Move)
-         * 11. String -> convertible types (Move)
-         * 12. Number -> convertible types
-         * 13. Bool -> convertible types
-         * 14. Null -> convertible types
-         * 15. Any -> Value convertible types (Move), but convertible type is not `json_types` or `is_arithmetic` or `is_enum`
-         * 16. return default_value
+         * 9. Any -> Value convertible types (try Move)
+         * 10. Object -> convertible types (try Move)
+         * 11. Array -> convertible types (try Move)
+         * 12. String -> convertible types (tr Move)
+         * 13. Number -> convertible types
+         * 14. Bool -> convertible types
+         * 15. Null -> convertible types (Null is not convertible to bool !!!!!)
+         * 16. Object -> Try copy to range && String->key_type && Value->mapped_type types
+         * 17. Array -> Try copy to range && Value->value_type types
+         * 18. return default_value
          */
         template<typename T>
-        requires json_types<T> || std::disjunction_v<
-            std::is_arithmetic<T>,
-            std::is_enum<T>,
-            std::is_convertible<Array, T>,
-            std::is_convertible<Object, T>,
-            std::is_convertible<String, T>,
-            std::is_convertible<Number, T>,
-            std::is_convertible<Bool, T>,
-            std::is_convertible<Null, T>,
-            std::is_convertible<Value, T>
-        > [[nodiscard]]
+        requires convertible_types<T> || convertible_map_types<T> || convertible_array_types<T>
+        [[nodiscard]]
         T  move_or( T default_value ) noexcept {
             if constexpr (std::is_same_v<T, Null>) {
                 if (m_type == Type::eNull) return Null{};
@@ -1203,6 +1256,9 @@ export namespace vct::tools::json{
             } else if constexpr (std::is_floating_point_v<T>) {
                 if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
+            if constexpr (std::is_convertible_v<Value, T>) {
+                return static_cast<T>(std::move(*this));
+            }
             if constexpr (std::is_convertible_v<Object, T>) {
                 if (m_type == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
             }
@@ -1219,13 +1275,29 @@ export namespace vct::tools::json{
                 if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(nullptr);
+                if (m_type == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr (!json_types<T> && !std::is_arithmetic_v<T> && !std::is_enum_v<T> && std::is_convertible_v<Value, T>) {
-                // try convert Value to T, but T is not json_types or is_arithmetic or is_enum
-                // Because these types have already been determined above
-                // Value supports default values for these types of conversion functions, which can interfere with the output results
-                return static_cast<T>(std::move(*this));
+            if constexpr ( convertible_map_types<T> ) {
+                if (m_type == Type::eObject) {
+                    T result{};
+                    for (auto& [key, value] : std::get<Object>(m_data)) {
+                        auto val = value.move_if<typename T::mapped_type>();
+                        if (!val) continue;
+                        result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
+                    }
+                    return result;
+                }
+            }
+            if constexpr ( convertible_array_types<T> ) {
+                if (m_type == Type::eArray) {
+                    T result{};
+                    for (auto& value : std::get<Array>(m_data)) {
+                        auto val = value.move_if<typename T::value_type>();
+                        if (!val) continue;
+                        result.emplace_back(std::move(*val));
+                    }
+                    return result;
+                }
             }
             return default_value; // Return default value if conversion fails
         }
@@ -1248,6 +1320,7 @@ export namespace vct::tools::json{
                 case Type::eObject: return std::get<Object>(m_data) == std::get<Object>(other.m_data);
                 case Type::eArray: return std::get<Array>(m_data) == std::get<Array>(other.m_data);
             }
+            return false; // Should never reach here, but added for safety
         }
 
 
@@ -1259,7 +1332,8 @@ export namespace vct::tools::json{
          * 
          * @details
          * rules:
-         * 0. IF T is Value, use Value::operator==(const Value& other) ,
+         * A. bool is not equal to any number( int and float )
+         * B. IF T is Value, use Value::operator==(const Value& other) ,
          *    it's Accurate comparison !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          * --------------------------------------------------------------------------------------------
          * 1.  IF T is Null, return true if this Value is null, false otherwise
@@ -1293,10 +1367,8 @@ export namespace vct::tools::json{
                 if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data))) == other;
             } else if constexpr (std::is_integral_v<T>) {
                 if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data))) == other;
-                if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data)) == other;
             } else if constexpr (std::is_floating_point_v<T>) {
                 if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data)) == other;
-                if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data)) == other;
             } else if constexpr (std::is_convertible_v<T, std::string_view>) {
                 if(m_type == Type::eString) return std::get<String>(m_data) == std::string_view( other );
             } 
@@ -1311,7 +1383,7 @@ export namespace vct::tools::json{
      * @param max_depth Maximum nesting depth (default: 256)
      * @return std::expected<Value, ParseError> Parsed Value or error
      */
-    std::expected<Value, ParseError> deserialize(const std::string_view text, const std::int32_t max_depth = 256 ) noexcept;
+    std::expected<Value, ParseError> deserialize(std::string_view text, std::int32_t max_depth = 256 ) noexcept;
 
     /**
      * @brief Parse JSON string from input-stream into Value object (Equal to `parse( ... )`)
@@ -1319,7 +1391,7 @@ export namespace vct::tools::json{
      * @param max_depth Maximum nesting depth (default: 256)
      * @return std::expected<Value, ParseError> Parsed Value or error
      */
-    std::expected<Value, ParseError> deserialize(std::istream& is_test, const std::int32_t max_depth = 256 ) noexcept;
+    std::expected<Value, ParseError> deserialize(std::istream& is_test, std::int32_t max_depth = 256 ) noexcept;
 
 
     /**
