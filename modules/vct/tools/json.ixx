@@ -1,4 +1,3 @@
-#include <type_traits>
 export module vct.tools.json;
 
 import std;
@@ -245,7 +244,7 @@ export namespace vct::tools::json{
         Value(Value&& other) noexcept {
             m_data = std::move(other.m_data);
             other.m_data = Null{};
-            m_type = jsonValue.m_type;
+            m_type = other.m_type;
             other.m_type = Type::eNull;
         }
 
@@ -351,11 +350,27 @@ export namespace vct::tools::json{
         Value(String str) noexcept : m_type(Type::eString), m_data(std::move(str)) {}
 
         /**
+         * @brief Construct Value from C-style string literal
+         * @param str C-style string literal or const char*
+         */
+        Value(const char* str) noexcept : m_type(Type::eString), m_data(String{str}) {}
+
+        /**
          * @brief Assign Value from string types
          */
         Value& operator=(String str) noexcept {
             m_type = Type::eString;
             m_data = std::move(str);
+            return *this;
+        }
+
+        /**
+         * @brief Assign Value from C-style string literal
+         * @param str C-style string literal or const char*
+         */
+        Value& operator=(const char* str) noexcept {
+            m_type = Type::eString;
+            m_data = String{str};
             return *this;
         }
         

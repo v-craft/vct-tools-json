@@ -12,7 +12,7 @@ M_TEST(Value, Array) {
     M_ASSERT_NO_THROW( json::Value arr_default{json::Type::eArray} );
     M_ASSERT_EQ( json::Value{json::Type::eArray}.type(), json::Type::eArray );
     M_ASSERT_EQ( json::Value{json::Type::eArray}.size(), 0 );
-    M_ASSERT_TRUE( json::Value{json::Type::eArray}.get<json::Array>().empty() );
+    M_ASSERT_TRUE( json::Value{json::Type::eArray}.to<json::Array>().empty() );
     
     // Test construction with explicit Array wrapper
     M_ASSERT_NO_THROW( json::Value arr_explicit{json::Array{}} );
@@ -22,7 +22,7 @@ M_TEST(Value, Array) {
     json::Value arr_direct{json::Array{10, 20, 30}};
     M_ASSERT_EQ( arr_direct.type(), json::Type::eArray );
     M_ASSERT_EQ( arr_direct.size(), 3 );
-    M_ASSERT_FALSE( arr_direct.get<json::Array>().empty() );
+    M_ASSERT_FALSE( arr_direct.to<json::Array>().empty() );
     
     // Test array with mixed types
     json::Value mixed_arr{json::Array{
@@ -56,20 +56,20 @@ M_TEST(Value, Array) {
     // Test size() function
     json::Value size_test{json::Array{1, 2, 3, 4, 5}};
     M_ASSERT_EQ( size_test.size(), 5 );
-    M_ASSERT_EQ( size_test.get<json::Array>().size(), 5 );
+    M_ASSERT_EQ( size_test.to<json::Array>().size(), 5 );
     
     json::Value empty_size_test{json::Array{}};
     M_ASSERT_EQ( empty_size_test.size(), 0 );
-    M_ASSERT_EQ( empty_size_test.get<json::Array>().size(), 0 );
-    M_ASSERT_TRUE( empty_size_test.get<json::Array>().empty() );
+    M_ASSERT_EQ( empty_size_test.to<json::Array>().size(), 0 );
+    M_ASSERT_TRUE( empty_size_test.to<json::Array>().empty() );
     
     // Test [] operator (subscript access)
     json::Value subscript_test{json::Array{10, 20, 30, 40, 50}};
-    M_ASSERT_EQ( subscript_test[0].get<json::Number>(), 10 );
-    M_ASSERT_EQ( subscript_test[1].get<json::Number>(), 20 );
-    M_ASSERT_EQ( subscript_test[2].get<json::Number>(), 30 );
-    M_ASSERT_EQ( subscript_test[3].get<json::Number>(), 40 );
-    M_ASSERT_EQ( subscript_test[4].get<json::Number>(), 50 );
+    M_ASSERT_EQ( subscript_test[0].to<json::Number>(), 10 );
+    M_ASSERT_EQ( subscript_test[1].to<json::Number>(), 20 );
+    M_ASSERT_EQ( subscript_test[2].to<json::Number>(), 30 );
+    M_ASSERT_EQ( subscript_test[3].to<json::Number>(), 40 );
+    M_ASSERT_EQ( subscript_test[4].to<json::Number>(), 50 );
     
     // Test [] operator with mixed types
     json::Value mixed_subscript{json::Array{
@@ -78,9 +78,9 @@ M_TEST(Value, Array) {
         true,   // implicit bool conversion
         nullptr // implicit null conversion
     }};
-    M_ASSERT_EQ( mixed_subscript[0].get<json::Number>(), 42 );
-    M_ASSERT_EQ( mixed_subscript[1].get<json::String>(), "test" );
-    M_ASSERT_EQ( mixed_subscript[2].get<json::Bool>(), true );
+    M_ASSERT_EQ( mixed_subscript[0].to<json::Number>(), 42 );
+    M_ASSERT_EQ( mixed_subscript[1].to<json::String>(), "test" );
+    M_ASSERT_EQ( mixed_subscript[2].to<json::Bool>(), true );
     M_ASSERT_EQ( mixed_subscript[3].type(), json::Type::eNull );
     
     // Test [] operator modification
@@ -89,15 +89,15 @@ M_TEST(Value, Array) {
     modify_test[1] = "modified";  // implicit string conversion
     modify_test[2] = false;       // implicit bool conversion
     
-    M_ASSERT_EQ( modify_test[0].get<json::Number>(), 100 );
-    M_ASSERT_EQ( modify_test[1].get<json::String>(), "modified" );
-    M_ASSERT_EQ( modify_test[2].get<json::Bool>(), false );
+    M_ASSERT_EQ( modify_test[0].to<json::Number>(), 100 );
+    M_ASSERT_EQ( modify_test[1].to<json::String>(), "modified" );
+    M_ASSERT_EQ( modify_test[2].to<json::Bool>(), false );
     
     // Test const [] operator
     const json::Value const_arr{json::Array{1, 2, 3}};
-    M_ASSERT_EQ( const_arr[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( const_arr[1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( const_arr[2].get<json::Number>(), 3 );
+    M_ASSERT_EQ( const_arr[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( const_arr[1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( const_arr[2].to<json::Number>(), 3 );
     
     // Test at() function
     json::Value at_test{json::Array{100, 200, 300}};
@@ -105,9 +105,9 @@ M_TEST(Value, Array) {
     M_ASSERT_NO_THROW( std::ignore = at_test.at(1) );
     M_ASSERT_NO_THROW( std::ignore = at_test.at(2) );
     
-    M_ASSERT_EQ( at_test.at(0).get<json::Number>(), 100 );
-    M_ASSERT_EQ( at_test.at(1).get<json::Number>(), 200 );
-    M_ASSERT_EQ( at_test.at(2).get<json::Number>(), 300 );
+    M_ASSERT_EQ( at_test.at(0).to<json::Number>(), 100 );
+    M_ASSERT_EQ( at_test.at(1).to<json::Number>(), 200 );
+    M_ASSERT_EQ( at_test.at(2).to<json::Number>(), 300 );
     
     // Test at() with out-of-bounds access (should throw)
     M_ASSERT_THROW( std::ignore = at_test.at(3), std::out_of_range );
@@ -126,57 +126,57 @@ M_TEST(Value, Array) {
     // Test const at() function
     const json::Value const_at_test{json::Array{1, 2, 3}};
     M_ASSERT_NO_THROW( std::ignore = const_at_test.at(0) );
-    M_ASSERT_EQ( const_at_test.at(0).get<json::Number>(), 1 );
-    M_ASSERT_EQ( const_at_test.at(1).get<json::Number>(), 2 );
-    M_ASSERT_EQ( const_at_test.at(2).get<json::Number>(), 3 );
+    M_ASSERT_EQ( const_at_test.at(0).to<json::Number>(), 1 );
+    M_ASSERT_EQ( const_at_test.at(1).to<json::Number>(), 2 );
+    M_ASSERT_EQ( const_at_test.at(2).to<json::Number>(), 3 );
     M_ASSERT_THROW( std::ignore = const_at_test.at(3), std::out_of_range );
     
     // Test get<T>() method
     json::Value get_test{json::Array{1, 2, 3}};
-    M_ASSERT_NO_THROW( std::ignore = get_test.get<json::Array>() );
-    auto arr = get_test.get<json::Array>();
+    M_ASSERT_NO_THROW( std::ignore = get_test.to<json::Array>() );
+    auto arr = get_test.to<json::Array>();
     M_ASSERT_EQ( arr.size(), 3 );
-    M_ASSERT_EQ( arr[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( arr[1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( arr[2].get<json::Number>(), 3 );
+    M_ASSERT_EQ( arr[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( arr[1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( arr[2].to<json::Number>(), 3 );
     
-    // Test get_ref<T>() method
+    // Test get<T>() method
     json::Value ref_test{json::Array{10, 20, 30}};
-    M_ASSERT_NO_THROW( auto& ref = ref_test.get_ref<json::Array>() );
-    auto& arr_ref = ref_test.get_ref<json::Array>();
+    M_ASSERT_NO_THROW( auto& ref = ref_test.get<json::Array>() );
+    auto& arr_ref = ref_test.get<json::Array>();
     M_ASSERT_EQ( arr_ref.size(), 3 );
     
     // Test reference modification
     arr_ref[0] = 100;  // implicit number conversion
     arr_ref.push_back(40);
     M_ASSERT_EQ( ref_test.size(), 4 );
-    M_ASSERT_EQ( ref_test[0].get<json::Number>(), 100 );
-    M_ASSERT_EQ( ref_test[3].get<json::Number>(), 40 );
+    M_ASSERT_EQ( ref_test[0].to<json::Number>(), 100 );
+    M_ASSERT_EQ( ref_test[3].to<json::Number>(), 40 );
     
-    // Test const get_ref
+    // Test const get
     const json::Value const_ref_test{json::Array{1, 2, 3}};
-    M_ASSERT_NO_THROW( auto& const_ref = const_ref_test.get_ref<json::Array>() );
-    const auto& const_arr_ref = const_ref_test.get_ref<json::Array>();
+    M_ASSERT_NO_THROW( auto& const_ref = const_ref_test.get<json::Array>() );
+    const auto& const_arr_ref = const_ref_test.get<json::Array>();
     M_ASSERT_EQ( const_arr_ref.size(), 3 );
-    M_ASSERT_EQ( const_arr_ref[0].get<json::Number>(), 1 );
+    M_ASSERT_EQ( const_arr_ref[0].to<json::Number>(), 1 );
     
-    // Test get_ref type safety - wrong type should throw
+    // Test get type safety - wrong type should throw
     json::Value wrong_type_val{42};
-    M_ASSERT_THROW( std::ignore = wrong_type_val.get_ref<json::Array>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = wrong_type_val.get<json::Array>(), std::runtime_error );
     
     json::Value string_val{"not array"};
-    M_ASSERT_THROW( std::ignore = string_val.get_ref<json::Array>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = string_val.get<json::Array>(), std::runtime_error );
     
     // Test assignment operations
     json::Value assign_val{json::Type::eArray};
     M_ASSERT_NO_THROW( assign_val = json::Array{1, 2, 3} );
     M_ASSERT_EQ( assign_val.size(), 3 );
-    M_ASSERT_EQ( assign_val[0].get<json::Number>(), 1 );
+    M_ASSERT_EQ( assign_val[0].to<json::Number>(), 1 );
     
     M_ASSERT_NO_THROW( assign_val = json::Array{10, 20} );
     M_ASSERT_EQ( assign_val.size(), 2 );
-    M_ASSERT_EQ( assign_val[0].get<json::Number>(), 10 );
-    M_ASSERT_EQ( assign_val[1].get<json::Number>(), 20 );
+    M_ASSERT_EQ( assign_val[0].to<json::Number>(), 10 );
+    M_ASSERT_EQ( assign_val[1].to<json::Number>(), 20 );
     
     // Test nested arrays (2D array)
     json::Value nested_2d{json::Array{
@@ -190,23 +190,23 @@ M_TEST(Value, Array) {
     // Test accessing nested array elements
     M_ASSERT_EQ( nested_2d[0].type(), json::Type::eArray );
     M_ASSERT_EQ( nested_2d[0].size(), 3 );
-    M_ASSERT_EQ( nested_2d[0][0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( nested_2d[0][1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( nested_2d[0][2].get<json::Number>(), 3 );
+    M_ASSERT_EQ( nested_2d[0][0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( nested_2d[0][1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( nested_2d[0][2].to<json::Number>(), 3 );
     
-    M_ASSERT_EQ( nested_2d[1][0].get<json::Number>(), 4 );
-    M_ASSERT_EQ( nested_2d[1][1].get<json::Number>(), 5 );
-    M_ASSERT_EQ( nested_2d[1][2].get<json::Number>(), 6 );
+    M_ASSERT_EQ( nested_2d[1][0].to<json::Number>(), 4 );
+    M_ASSERT_EQ( nested_2d[1][1].to<json::Number>(), 5 );
+    M_ASSERT_EQ( nested_2d[1][2].to<json::Number>(), 6 );
     
-    M_ASSERT_EQ( nested_2d[2][0].get<json::Number>(), 7 );
-    M_ASSERT_EQ( nested_2d[2][1].get<json::Number>(), 8 );
-    M_ASSERT_EQ( nested_2d[2][2].get<json::Number>(), 9 );
+    M_ASSERT_EQ( nested_2d[2][0].to<json::Number>(), 7 );
+    M_ASSERT_EQ( nested_2d[2][1].to<json::Number>(), 8 );
+    M_ASSERT_EQ( nested_2d[2][2].to<json::Number>(), 9 );
     
     // Test nested arrays with at()
     M_ASSERT_NO_THROW( std::ignore = nested_2d.at(0).at(0) );
-    M_ASSERT_EQ( nested_2d.at(0).at(0).get<json::Number>(), 1 );
-    M_ASSERT_EQ( nested_2d.at(1).at(1).get<json::Number>(), 5 );
-    M_ASSERT_EQ( nested_2d.at(2).at(2).get<json::Number>(), 9 );
+    M_ASSERT_EQ( nested_2d.at(0).at(0).to<json::Number>(), 1 );
+    M_ASSERT_EQ( nested_2d.at(1).at(1).to<json::Number>(), 5 );
+    M_ASSERT_EQ( nested_2d.at(2).at(2).to<json::Number>(), 9 );
     
     // Test nested arrays bounds checking
     M_ASSERT_THROW( std::ignore = nested_2d.at(3), std::out_of_range );
@@ -228,18 +228,18 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ( nested_3d[0].size(), 2 );
     M_ASSERT_EQ( nested_3d[0][0].size(), 2 );
     
-    M_ASSERT_EQ( nested_3d[0][0][0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( nested_3d[0][0][1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( nested_3d[0][1][0].get<json::Number>(), 3 );
-    M_ASSERT_EQ( nested_3d[0][1][1].get<json::Number>(), 4 );
-    M_ASSERT_EQ( nested_3d[1][0][0].get<json::Number>(), 5 );
-    M_ASSERT_EQ( nested_3d[1][0][1].get<json::Number>(), 6 );
-    M_ASSERT_EQ( nested_3d[1][1][0].get<json::Number>(), 7 );
-    M_ASSERT_EQ( nested_3d[1][1][1].get<json::Number>(), 8 );
+    M_ASSERT_EQ( nested_3d[0][0][0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( nested_3d[0][0][1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( nested_3d[0][1][0].to<json::Number>(), 3 );
+    M_ASSERT_EQ( nested_3d[0][1][1].to<json::Number>(), 4 );
+    M_ASSERT_EQ( nested_3d[1][0][0].to<json::Number>(), 5 );
+    M_ASSERT_EQ( nested_3d[1][0][1].to<json::Number>(), 6 );
+    M_ASSERT_EQ( nested_3d[1][1][0].to<json::Number>(), 7 );
+    M_ASSERT_EQ( nested_3d[1][1][1].to<json::Number>(), 8 );
     
     // Test 3D arrays with at()
-    M_ASSERT_EQ( nested_3d.at(0).at(0).at(0).get<json::Number>(), 1 );
-    M_ASSERT_EQ( nested_3d.at(1).at(1).at(1).get<json::Number>(), 8 );
+    M_ASSERT_EQ( nested_3d.at(0).at(0).at(0).to<json::Number>(), 1 );
+    M_ASSERT_EQ( nested_3d.at(1).at(1).at(1).to<json::Number>(), 8 );
     M_ASSERT_THROW( std::ignore = nested_3d.at(0).at(0).at(2), std::out_of_range );
     M_ASSERT_THROW( std::ignore = nested_3d.at(2), std::out_of_range );
     
@@ -258,12 +258,12 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ( mixed_nested[1].type(), json::Type::eString );
     M_ASSERT_EQ( mixed_nested[2].size(), 3 );
     
-    M_ASSERT_EQ( mixed_nested[0][0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( mixed_nested[1].get<json::String>(), "nested string" );
-    M_ASSERT_EQ( mixed_nested[2][0].get<json::Bool>(), true );
+    M_ASSERT_EQ( mixed_nested[0][0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( mixed_nested[1].to<json::String>(), "nested string" );
+    M_ASSERT_EQ( mixed_nested[2][0].to<json::Bool>(), true );
     M_ASSERT_EQ( mixed_nested[2][1].size(), 2 );
-    M_ASSERT_EQ( mixed_nested[2][1][0].get<json::Number>(), 4 );
-    M_ASSERT_EQ( mixed_nested[2][1][1].get<json::Number>(), 5 );
+    M_ASSERT_EQ( mixed_nested[2][1][0].to<json::Number>(), 4 );
+    M_ASSERT_EQ( mixed_nested[2][1][1].to<json::Number>(), 5 );
     M_ASSERT_EQ( mixed_nested[2][2].type(), json::Type::eNull );
     
     // Test irregular nested arrays (different sizes)
@@ -279,10 +279,10 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ( irregular[2].size(), 3 );
     M_ASSERT_EQ( irregular[3].size(), 4 );
     
-    M_ASSERT_EQ( irregular[0][0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( irregular[1][1].get<json::Number>(), 3 );
-    M_ASSERT_EQ( irregular[2][2].get<json::Number>(), 6 );
-    M_ASSERT_EQ( irregular[3][3].get<json::Number>(), 10 );
+    M_ASSERT_EQ( irregular[0][0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( irregular[1][1].to<json::Number>(), 3 );
+    M_ASSERT_EQ( irregular[2][2].to<json::Number>(), 6 );
+    M_ASSERT_EQ( irregular[3][3].to<json::Number>(), 10 );
     
     // Test Value-to-Value comparison
     json::Value arr_cmp1{json::Array{1, 2, 3}};
@@ -356,9 +356,9 @@ M_TEST(Value, Array) {
     if (parsed_simple.has_value()) {
         M_ASSERT_EQ( parsed_simple->type(), json::Type::eArray );
         M_ASSERT_EQ( parsed_simple->size(), 3 );
-        M_ASSERT_EQ( (*parsed_simple)[0].get<json::Number>(), 1 );
-        M_ASSERT_EQ( (*parsed_simple)[1].get<json::Number>(), 2 );
-        M_ASSERT_EQ( (*parsed_simple)[2].get<json::Number>(), 3 );
+        M_ASSERT_EQ( (*parsed_simple)[0].to<json::Number>(), 1 );
+        M_ASSERT_EQ( (*parsed_simple)[1].to<json::Number>(), 2 );
+        M_ASSERT_EQ( (*parsed_simple)[2].to<json::Number>(), 3 );
     } else {
         M_ASSERT_FAIL("Failed to parse simple array");
     }
@@ -378,10 +378,10 @@ M_TEST(Value, Array) {
         M_ASSERT_EQ( parsed_nested->size(), 2 );
         M_ASSERT_EQ( (*parsed_nested)[0].size(), 2 );
         M_ASSERT_EQ( (*parsed_nested)[1].size(), 2 );
-        M_ASSERT_EQ( (*parsed_nested)[0][0].get<json::Number>(), 1 );
-        M_ASSERT_EQ( (*parsed_nested)[0][1].get<json::Number>(), 2 );
-        M_ASSERT_EQ( (*parsed_nested)[1][0].get<json::Number>(), 3 );
-        M_ASSERT_EQ( (*parsed_nested)[1][1].get<json::Number>(), 4 );
+        M_ASSERT_EQ( (*parsed_nested)[0][0].to<json::Number>(), 1 );
+        M_ASSERT_EQ( (*parsed_nested)[0][1].to<json::Number>(), 2 );
+        M_ASSERT_EQ( (*parsed_nested)[1][0].to<json::Number>(), 3 );
+        M_ASSERT_EQ( (*parsed_nested)[1][1].to<json::Number>(), 4 );
     } else {
         M_ASSERT_FAIL("Failed to parse nested array");
     }
@@ -391,9 +391,9 @@ M_TEST(Value, Array) {
     if (parsed_mixed.has_value()) {
         M_ASSERT_EQ( parsed_mixed->type(), json::Type::eArray );
         M_ASSERT_EQ( parsed_mixed->size(), 4 );
-        M_ASSERT_EQ( (*parsed_mixed)[0].get<json::Number>(), 42 );
-        M_ASSERT_EQ( (*parsed_mixed)[1].get<json::String>(), "test" );
-        M_ASSERT_EQ( (*parsed_mixed)[2].get<json::Bool>(), true );
+        M_ASSERT_EQ( (*parsed_mixed)[0].to<json::Number>(), 42 );
+        M_ASSERT_EQ( (*parsed_mixed)[1].to<json::String>(), "test" );
+        M_ASSERT_EQ( (*parsed_mixed)[2].to<json::Bool>(), true );
         M_ASSERT_EQ( (*parsed_mixed)[3].type(), json::Type::eNull );
     } else {
         M_ASSERT_FAIL("Failed to parse mixed type array");
@@ -416,18 +416,18 @@ M_TEST(Value, Array) {
     }
     
     // Test type safety - wrong type access should throw
+    M_ASSERT_THROW( std::ignore = arr_val.to<json::Number>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = arr_val.to<json::String>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = arr_val.to<json::Bool>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = arr_val.to<json::Object>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = arr_val.to<std::nullptr_t>(), std::runtime_error );
+    
+    // Test Array get type safety
     M_ASSERT_THROW( std::ignore = arr_val.get<json::Number>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = arr_val.get<json::String>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = arr_val.get<json::Bool>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = arr_val.get<json::Object>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = arr_val.get<std::nullptr_t>(), std::runtime_error );
-    
-    // Test Array get_ref type safety
-    M_ASSERT_THROW( std::ignore = arr_val.get_ref<json::Number>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = arr_val.get_ref<json::String>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = arr_val.get_ref<json::Bool>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = arr_val.get_ref<json::Object>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = arr_val.get_ref<std::nullptr_t>(), std::runtime_error );
     
     // Test array consistency across different construction methods
     json::Value consistency_arr1{json::Array{1, 2, 3}};
@@ -445,8 +445,8 @@ M_TEST(Value, Array) {
             }
         }
     }};
-    M_ASSERT_EQ( deep_nested[0][0][0][0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( deep_nested[0][0][0][1].get<json::Number>(), 2 );
+    M_ASSERT_EQ( deep_nested[0][0][0][0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( deep_nested[0][0][0][1].to<json::Number>(), 2 );
     
     // Test complex high-dimensional array with mixed types
     json::Value complex_multi_dim{json::Array{
@@ -542,54 +542,54 @@ M_TEST(Value, Array) {
     // Numbers matrix
     M_ASSERT_EQ( complex_multi_dim[0][0].size(), 3 );
     M_ASSERT_EQ( complex_multi_dim[0][0][0].size(), 3 );
-    M_ASSERT_EQ( complex_multi_dim[0][0][0][0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( complex_multi_dim[0][0][1][1].get<json::Number>(), 5 );
-    M_ASSERT_EQ( complex_multi_dim[0][0][2][2].get<json::Number>(), 9 );
+    M_ASSERT_EQ( complex_multi_dim[0][0][0][0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( complex_multi_dim[0][0][1][1].to<json::Number>(), 5 );
+    M_ASSERT_EQ( complex_multi_dim[0][0][2][2].to<json::Number>(), 9 );
     
     // Strings matrix
-    M_ASSERT_EQ( complex_multi_dim[0][1][0][0].get<json::String>(), "a" );
-    M_ASSERT_EQ( complex_multi_dim[0][1][1][1].get<json::String>(), "e" );
-    M_ASSERT_EQ( complex_multi_dim[0][1][2][2].get<json::String>(), "i" );
+    M_ASSERT_EQ( complex_multi_dim[0][1][0][0].to<json::String>(), "a" );
+    M_ASSERT_EQ( complex_multi_dim[0][1][1][1].to<json::String>(), "e" );
+    M_ASSERT_EQ( complex_multi_dim[0][1][2][2].to<json::String>(), "i" );
     
     // Booleans matrix
-    M_ASSERT_EQ( complex_multi_dim[0][2][0][0].get<json::Bool>(), true );
-    M_ASSERT_EQ( complex_multi_dim[0][2][1][1].get<json::Bool>(), true );
-    M_ASSERT_EQ( complex_multi_dim[0][2][2][2].get<json::Bool>(), false );
+    M_ASSERT_EQ( complex_multi_dim[0][2][0][0].to<json::Bool>(), true );
+    M_ASSERT_EQ( complex_multi_dim[0][2][1][1].to<json::Bool>(), true );
+    M_ASSERT_EQ( complex_multi_dim[0][2][2][2].to<json::Bool>(), false );
     
     // Test second dimension - 3D structures
     // 3D numbers cube
-    M_ASSERT_EQ( complex_multi_dim[1][0][0][0][0].get<json::Number>(), 10 );
-    M_ASSERT_EQ( complex_multi_dim[1][0][0][0][2].get<json::Number>(), 12 );
-    M_ASSERT_EQ( complex_multi_dim[1][0][1][1][2].get<json::Number>(), 21 );
+    M_ASSERT_EQ( complex_multi_dim[1][0][0][0][0].to<json::Number>(), 10 );
+    M_ASSERT_EQ( complex_multi_dim[1][0][0][0][2].to<json::Number>(), 12 );
+    M_ASSERT_EQ( complex_multi_dim[1][0][1][1][2].to<json::Number>(), 21 );
     
     // 3D mixed structure
-    M_ASSERT_EQ( complex_multi_dim[1][1][0][0][0].get<json::String>(), "x" );
-    M_ASSERT_EQ( complex_multi_dim[1][1][0][1][0].get<json::Bool>(), true );
+    M_ASSERT_EQ( complex_multi_dim[1][1][0][0][0].to<json::String>(), "x" );
+    M_ASSERT_EQ( complex_multi_dim[1][1][0][1][0].to<json::Bool>(), true );
     M_ASSERT_EQ( complex_multi_dim[1][1][0][1][2].type(), json::Type::eNull );
-    M_ASSERT_EQ( complex_multi_dim[1][1][1][0][1].get<json::Number>(), 200 );
-    M_ASSERT_EQ( complex_multi_dim[1][1][1][1][2].get<json::String>(), "gamma" );
+    M_ASSERT_EQ( complex_multi_dim[1][1][1][0][1].to<json::Number>(), 200 );
+    M_ASSERT_EQ( complex_multi_dim[1][1][1][1][2].to<json::String>(), "gamma" );
     
     // Test third dimension - irregular 4D structures
     // First irregular 4D
-    M_ASSERT_EQ( complex_multi_dim[2][0][0][0][0][0].get<json::Number>(), 1000 );
-    M_ASSERT_EQ( complex_multi_dim[2][0][0][0][1][2].get<json::Number>(), 5000 );
-    M_ASSERT_EQ( complex_multi_dim[2][0][0][1][0][0].get<json::String>(), "deep" );
-    M_ASSERT_EQ( complex_multi_dim[2][0][0][1][1][3].get<json::String>(), "mixed" );
+    M_ASSERT_EQ( complex_multi_dim[2][0][0][0][0][0].to<json::Number>(), 1000 );
+    M_ASSERT_EQ( complex_multi_dim[2][0][0][0][1][2].to<json::Number>(), 5000 );
+    M_ASSERT_EQ( complex_multi_dim[2][0][0][1][0][0].to<json::String>(), "deep" );
+    M_ASSERT_EQ( complex_multi_dim[2][0][0][1][1][3].to<json::String>(), "mixed" );
     M_ASSERT_EQ( complex_multi_dim[2][0][1][0][0][0].type(), json::Type::eNull );
-    M_ASSERT_EQ( complex_multi_dim[2][0][1][0][1][1].get<json::Number>(), 43 );
+    M_ASSERT_EQ( complex_multi_dim[2][0][1][0][1][1].to<json::Number>(), 43 );
     
     // Second irregular structure
-    M_ASSERT_EQ( complex_multi_dim[2][1][0][0][0][0].get<json::Number>(), 9.5 );
-    M_ASSERT_EQ( complex_multi_dim[2][1][0][0][1][0].get<json::String>(), "final" );
-    M_ASSERT_EQ( complex_multi_dim[2][1][1].get<json::String>(), "single_string_element" );
-    M_ASSERT_EQ( complex_multi_dim[2][1][2].get<json::Number>(), 999 );
-    M_ASSERT_EQ( complex_multi_dim[2][1][3].get<json::Bool>(), true );
+    M_ASSERT_EQ( complex_multi_dim[2][1][0][0][0][0].to<json::Number>(), 9.5 );
+    M_ASSERT_EQ( complex_multi_dim[2][1][0][0][1][0].to<json::String>(), "final" );
+    M_ASSERT_EQ( complex_multi_dim[2][1][1].to<json::String>(), "single_string_element" );
+    M_ASSERT_EQ( complex_multi_dim[2][1][2].to<json::Number>(), 999 );
+    M_ASSERT_EQ( complex_multi_dim[2][1][3].to<json::Bool>(), true );
     
     // Test at() function on complex structure
     M_ASSERT_NO_THROW( std::ignore = complex_multi_dim.at(0).at(0).at(0).at(0) );
-    M_ASSERT_EQ( complex_multi_dim.at(0).at(0).at(0).at(0).get<json::Number>(), 1 );
-    M_ASSERT_EQ( complex_multi_dim.at(1).at(1).at(0).at(0).at(1).get<json::String>(), "y" );
-    M_ASSERT_EQ( complex_multi_dim.at(2).at(0).at(0).at(0).at(0).at(1).get<json::Number>(), 2000 );
+    M_ASSERT_EQ( complex_multi_dim.at(0).at(0).at(0).at(0).to<json::Number>(), 1 );
+    M_ASSERT_EQ( complex_multi_dim.at(1).at(1).at(0).at(0).at(1).to<json::String>(), "y" );
+    M_ASSERT_EQ( complex_multi_dim.at(2).at(0).at(0).at(0).at(0).at(1).to<json::Number>(), 2000 );
     
     // Test bounds checking on complex structure
     M_ASSERT_THROW( std::ignore = complex_multi_dim.at(3), std::out_of_range );
@@ -625,11 +625,11 @@ M_TEST(Value, Array) {
         M_ASSERT_EQ( parsed_complex->type(), json::Type::eArray );
         M_ASSERT_EQ( parsed_complex->size(), 3 );
         // Test a few key elements to ensure structure is preserved
-        M_ASSERT_EQ( (*parsed_complex)[0][0][0][0].get<json::Number>(), 1 );
-        M_ASSERT_EQ( (*parsed_complex)[0][1][1][1].get<json::String>(), "e" );
+        M_ASSERT_EQ( (*parsed_complex)[0][0][0][0].to<json::Number>(), 1 );
+        M_ASSERT_EQ( (*parsed_complex)[0][1][1][1].to<json::String>(), "e" );
         M_ASSERT_EQ( (*parsed_complex)[1][1][0][1][2].type(), json::Type::eNull );
-        M_ASSERT_EQ( (*parsed_complex)[2][0][0][1][0][0].get<json::String>(), "deep" );
-        M_ASSERT_EQ( (*parsed_complex)[2][1][2].get<json::Number>(), 999 );
+        M_ASSERT_EQ( (*parsed_complex)[2][0][0][1][0][0].to<json::String>(), "deep" );
+        M_ASSERT_EQ( (*parsed_complex)[2][1][2].to<json::Number>(), 999 );
         // Test full equality
         M_ASSERT_TRUE( *parsed_complex == complex_multi_dim );
     } else {
@@ -642,14 +642,14 @@ M_TEST(Value, Array) {
     complex_copy[1][1][0][0][0] = json::String("modified");
     complex_copy[2][0][0][0][0][0] = json::Bool(false);
     
-    M_ASSERT_EQ( complex_copy[0][0][0][0].get<json::Number>(), 999 );
-    M_ASSERT_EQ( complex_copy[1][1][0][0][0].get<json::String>(), "modified" );
-    M_ASSERT_EQ( complex_copy[2][0][0][0][0][0].get<json::Bool>(), false );
+    M_ASSERT_EQ( complex_copy[0][0][0][0].to<json::Number>(), 999 );
+    M_ASSERT_EQ( complex_copy[1][1][0][0][0].to<json::String>(), "modified" );
+    M_ASSERT_EQ( complex_copy[2][0][0][0][0][0].to<json::Bool>(), false );
     
     // Original should remain unchanged
-    M_ASSERT_EQ( complex_multi_dim[0][0][0][0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( complex_multi_dim[1][1][0][0][0].get<json::String>(), "x" );
-    M_ASSERT_EQ( complex_multi_dim[2][0][0][0][0][0].get<json::Number>(), 1000 );
+    M_ASSERT_EQ( complex_multi_dim[0][0][0][0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( complex_multi_dim[1][1][0][0][0].to<json::String>(), "x" );
+    M_ASSERT_EQ( complex_multi_dim[2][0][0][0][0][0].to<json::Number>(), 1000 );
     
     // Test that modified and original are different
     M_ASSERT_FALSE( complex_copy == complex_multi_dim );
@@ -666,11 +666,11 @@ M_TEST(Value, Array) {
     ref1 = "modified"; // implicit conversion
     ref4 = true;       // implicit conversion
     
-    M_ASSERT_EQ( ref_modify_test[0].get<json::Number>(), 100 );
-    M_ASSERT_EQ( ref_modify_test[1].get<json::String>(), "modified" );
-    M_ASSERT_EQ( ref_modify_test[2].get<json::Number>(), 3 ); // unchanged
-    M_ASSERT_EQ( ref_modify_test[3].get<json::Number>(), 4 ); // unchanged
-    M_ASSERT_EQ( ref_modify_test[4].get<json::Bool>(), true );
+    M_ASSERT_EQ( ref_modify_test[0].to<json::Number>(), 100 );
+    M_ASSERT_EQ( ref_modify_test[1].to<json::String>(), "modified" );
+    M_ASSERT_EQ( ref_modify_test[2].to<json::Number>(), 3 ); // unchanged
+    M_ASSERT_EQ( ref_modify_test[3].to<json::Number>(), 4 ); // unchanged
+    M_ASSERT_EQ( ref_modify_test[4].to<json::Bool>(), true );
     
     // Test modification through at() reference
     json::Value at_modify_test{json::Array{10, 20, 30, 40, 50}};
@@ -684,10 +684,10 @@ M_TEST(Value, Array) {
     at_ref2 = false;       // implicit conversion
     at_ref4 = nullptr;     // implicit null conversion
     
-    M_ASSERT_EQ( at_modify_test.at(0).get<json::String>(), "first" );
-    M_ASSERT_EQ( at_modify_test.at(1).get<json::Number>(), 20 ); // unchanged
-    M_ASSERT_EQ( at_modify_test.at(2).get<json::Bool>(), false );
-    M_ASSERT_EQ( at_modify_test.at(3).get<json::Number>(), 40 ); // unchanged
+    M_ASSERT_EQ( at_modify_test.at(0).to<json::String>(), "first" );
+    M_ASSERT_EQ( at_modify_test.at(1).to<json::Number>(), 20 ); // unchanged
+    M_ASSERT_EQ( at_modify_test.at(2).to<json::Bool>(), false );
+    M_ASSERT_EQ( at_modify_test.at(3).to<json::Number>(), 40 ); // unchanged
     M_ASSERT_EQ( at_modify_test.at(4).type(), json::Type::eNull );
     
     // Test nested array modification through [] references
@@ -706,12 +706,12 @@ M_TEST(Value, Array) {
     nested_ref11 = true;        // implicit conversion
     nested_ref22 = nullptr;     // implicit null conversion
     
-    M_ASSERT_EQ( nested_ref_modify[0][0].get<json::String>(), "corner1" );
-    M_ASSERT_EQ( nested_ref_modify[0][1].get<json::Number>(), 2 ); // unchanged
-    M_ASSERT_EQ( nested_ref_modify[1][1].get<json::Bool>(), true );
-    M_ASSERT_EQ( nested_ref_modify[1][0].get<json::Number>(), 4 ); // unchanged
+    M_ASSERT_EQ( nested_ref_modify[0][0].to<json::String>(), "corner1" );
+    M_ASSERT_EQ( nested_ref_modify[0][1].to<json::Number>(), 2 ); // unchanged
+    M_ASSERT_EQ( nested_ref_modify[1][1].to<json::Bool>(), true );
+    M_ASSERT_EQ( nested_ref_modify[1][0].to<json::Number>(), 4 ); // unchanged
     M_ASSERT_EQ( nested_ref_modify[2][2].type(), json::Type::eNull );
-    M_ASSERT_EQ( nested_ref_modify[2][1].get<json::Number>(), 8 ); // unchanged
+    M_ASSERT_EQ( nested_ref_modify[2][1].to<json::Number>(), 8 ); // unchanged
     
     // Test nested array modification through at() references
     json::Value nested_at_modify{json::Array{
@@ -729,15 +729,15 @@ M_TEST(Value, Array) {
     nested_at_ref12 = false;          // implicit conversion
     nested_at_ref20 = nullptr;        // implicit null conversion
     
-    M_ASSERT_EQ( nested_at_modify.at(0).at(0).get<json::Number>(), 100 ); // unchanged
-    M_ASSERT_EQ( nested_at_modify.at(0).at(1).get<json::String>(), "at_modified" );
-    M_ASSERT_EQ( nested_at_modify.at(0).at(2).get<json::Number>(), 300 ); // unchanged
-    M_ASSERT_EQ( nested_at_modify.at(1).at(0).get<json::Number>(), 400 ); // unchanged
-    M_ASSERT_EQ( nested_at_modify.at(1).at(1).get<json::Number>(), 500 ); // unchanged
-    M_ASSERT_EQ( nested_at_modify.at(1).at(2).get<json::Bool>(), false );
+    M_ASSERT_EQ( nested_at_modify.at(0).at(0).to<json::Number>(), 100 ); // unchanged
+    M_ASSERT_EQ( nested_at_modify.at(0).at(1).to<json::String>(), "at_modified" );
+    M_ASSERT_EQ( nested_at_modify.at(0).at(2).to<json::Number>(), 300 ); // unchanged
+    M_ASSERT_EQ( nested_at_modify.at(1).at(0).to<json::Number>(), 400 ); // unchanged
+    M_ASSERT_EQ( nested_at_modify.at(1).at(1).to<json::Number>(), 500 ); // unchanged
+    M_ASSERT_EQ( nested_at_modify.at(1).at(2).to<json::Bool>(), false );
     M_ASSERT_EQ( nested_at_modify.at(2).at(0).type(), json::Type::eNull );
-    M_ASSERT_EQ( nested_at_modify.at(2).at(1).get<json::Number>(), 800 ); // unchanged
-    M_ASSERT_EQ( nested_at_modify.at(2).at(2).get<json::Number>(), 900 ); // unchanged
+    M_ASSERT_EQ( nested_at_modify.at(2).at(1).to<json::Number>(), 800 ); // unchanged
+    M_ASSERT_EQ( nested_at_modify.at(2).at(2).to<json::Number>(), 900 ); // unchanged
     
     // Test 3D array modification through mixed [] and at() references
     json::Value mixed_3d_modify{json::Array{
@@ -760,12 +760,12 @@ M_TEST(Value, Array) {
     mixed_ref101 = json::Bool(true);
     mixed_ref112 = nullptr;     // implicit null conversion
     
-    M_ASSERT_EQ( mixed_3d_modify[0][0][0].get<json::String>(), "mixed_000" );
-    M_ASSERT_EQ( mixed_3d_modify[0][0][1].get<json::Number>(), 2 ); // unchanged
-    M_ASSERT_EQ( mixed_3d_modify[1][0][1].get<json::Bool>(), true );
-    M_ASSERT_EQ( mixed_3d_modify[1][0][0].get<json::Number>(), 7 ); // unchanged
+    M_ASSERT_EQ( mixed_3d_modify[0][0][0].to<json::String>(), "mixed_000" );
+    M_ASSERT_EQ( mixed_3d_modify[0][0][1].to<json::Number>(), 2 ); // unchanged
+    M_ASSERT_EQ( mixed_3d_modify[1][0][1].to<json::Bool>(), true );
+    M_ASSERT_EQ( mixed_3d_modify[1][0][0].to<json::Number>(), 7 ); // unchanged
     M_ASSERT_EQ( mixed_3d_modify[1][1][2].type(), json::Type::eNull );
-    M_ASSERT_EQ( mixed_3d_modify[1][1][1].get<json::Number>(), 11 ); // unchanged
+    M_ASSERT_EQ( mixed_3d_modify[1][1][1].to<json::Number>(), 11 ); // unchanged
     
     // Test modification of complex structure through references
     json::Value complex_ref_modify{json::Array{
@@ -789,11 +789,11 @@ M_TEST(Value, Array) {
     complex_ref20 = json::String("was_bool");
     complex_ref211 = json::Bool(false);
     
-    M_ASSERT_EQ( complex_ref_modify[0].get<json::String>(), "replaced_array" );
-    M_ASSERT_EQ( complex_ref_modify[1].get<json::Number>(), 999 );
-    M_ASSERT_EQ( complex_ref_modify[2][0].get<json::String>(), "was_bool" );
-    M_ASSERT_EQ( complex_ref_modify[2][1][0].get<json::Number>(), 4 ); // unchanged
-    M_ASSERT_EQ( complex_ref_modify[2][1][1].get<json::Bool>(), false );
+    M_ASSERT_EQ( complex_ref_modify[0].to<json::String>(), "replaced_array" );
+    M_ASSERT_EQ( complex_ref_modify[1].to<json::Number>(), 999 );
+    M_ASSERT_EQ( complex_ref_modify[2][0].to<json::String>(), "was_bool" );
+    M_ASSERT_EQ( complex_ref_modify[2][1][0].to<json::Number>(), 4 ); // unchanged
+    M_ASSERT_EQ( complex_ref_modify[2][1][1].to<json::Bool>(), false );
     M_ASSERT_EQ( complex_ref_modify[2][2].type(), json::Type::eNull ); // unchanged
     
     // Test reference persistence and multiple modifications
@@ -802,19 +802,19 @@ M_TEST(Value, Array) {
     
     // First modification
     persist_ref = json::String("first_change");
-    M_ASSERT_EQ( persist_test[1].get<json::String>(), "first_change" );
+    M_ASSERT_EQ( persist_test[1].to<json::String>(), "first_change" );
     
     // Second modification through same reference
     persist_ref = json::Bool(true);
-    M_ASSERT_EQ( persist_test[1].get<json::Bool>(), true );
+    M_ASSERT_EQ( persist_test[1].to<json::Bool>(), true );
     
     // Third modification through same reference
     persist_ref = nullptr;      // implicit null conversion
     M_ASSERT_EQ( persist_test[1].type(), json::Type::eNull );
     
     // Verify other elements unchanged
-    M_ASSERT_EQ( persist_test[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( persist_test[2].get<json::Number>(), 3 );
+    M_ASSERT_EQ( persist_test[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( persist_test[2].to<json::Number>(), 3 );
     
     // Test modification through multiple references to same element
     json::Value multi_ref_test{json::Array{100, 200, 300}};
@@ -822,12 +822,12 @@ M_TEST(Value, Array) {
     auto& multi_ref1_again = multi_ref_test.at(1);
     
     multi_ref1 = json::String("ref1_change");
-    M_ASSERT_EQ( multi_ref_test[1].get<json::String>(), "ref1_change" );
-    M_ASSERT_EQ( multi_ref1_again.get<json::String>(), "ref1_change" );
+    M_ASSERT_EQ( multi_ref_test[1].to<json::String>(), "ref1_change" );
+    M_ASSERT_EQ( multi_ref1_again.to<json::String>(), "ref1_change" );
     
     multi_ref1_again = json::Bool(false);
-    M_ASSERT_EQ( multi_ref_test[1].get<json::Bool>(), false );
-    M_ASSERT_EQ( multi_ref1.get<json::Bool>(), false );
+    M_ASSERT_EQ( multi_ref_test[1].to<json::Bool>(), false );
+    M_ASSERT_EQ( multi_ref1.to<json::Bool>(), false );
     
     // Test serialization after reference modifications
     json::Value serial_after_ref{json::Array{1, 2, 3}};
@@ -840,7 +840,7 @@ M_TEST(Value, Array) {
     auto parsed_after = json::parse(serialized_after);
     if (parsed_after.has_value()) {
         M_ASSERT_TRUE( *parsed_after == serial_after_ref );
-        M_ASSERT_EQ( (*parsed_after)[1].get<json::String>(), "modified" );
+        M_ASSERT_EQ( (*parsed_after)[1].to<json::String>(), "modified" );
     } else {
         M_ASSERT_FAIL("Failed to parse after reference modification");
     }
@@ -880,11 +880,11 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ( mixed_types_array[4].type(), json::Type::eNumber );
     
     // Test individual element values
-    M_ASSERT_EQ( mixed_types_array[0].get<json::Number>(), 2 );
-    M_ASSERT_EQ( mixed_types_array[1].get<json::String>(), "12" );
-    M_ASSERT_EQ( mixed_types_array[2].get<json::Bool>(), false );
+    M_ASSERT_EQ( mixed_types_array[0].to<json::Number>(), 2 );
+    M_ASSERT_EQ( mixed_types_array[1].to<json::String>(), "12" );
+    M_ASSERT_EQ( mixed_types_array[2].to<json::Bool>(), false );
     M_ASSERT_EQ( mixed_types_array[3].type(), json::Type::eNull );
-    M_ASSERT_EQ( mixed_types_array[4].get<json::Number>(), 124.231 );
+    M_ASSERT_EQ( mixed_types_array[4].to<json::Number>(), 124.231 );
     
     // Test batch comparison - identical arrays should be equal
     json::Value mixed_types_array_copy{json::Array{
@@ -1002,16 +1002,16 @@ M_TEST(Value, Array) {
     }};
     
     M_ASSERT_EQ( complex_mixed.size(), 10 );
-    M_ASSERT_EQ( complex_mixed[0].get<json::Number>(), -42 );
-    M_ASSERT_EQ( complex_mixed[1].get<json::String>(), "" );
-    M_ASSERT_EQ( complex_mixed[2].get<json::Bool>(), true );
+    M_ASSERT_EQ( complex_mixed[0].to<json::Number>(), -42 );
+    M_ASSERT_EQ( complex_mixed[1].to<json::String>(), "" );
+    M_ASSERT_EQ( complex_mixed[2].to<json::Bool>(), true );
     M_ASSERT_EQ( complex_mixed[3].type(), json::Type::eNull );
-    M_ASSERT_EQ( complex_mixed[4].get<json::Number>(), 0 );
-    M_ASSERT_EQ( complex_mixed[5].get<json::String>(), "null" );
-    M_ASSERT_EQ( complex_mixed[6].get<json::Bool>(), false );
-    M_ASSERT_EQ( complex_mixed[7].get<json::Number>(), 3.14159 );
-    M_ASSERT_EQ( complex_mixed[8].get<json::String>(), "false" );
-    M_ASSERT_EQ( complex_mixed[9].get<json::Number>(), 1e10 );
+    M_ASSERT_EQ( complex_mixed[4].to<json::Number>(), 0 );
+    M_ASSERT_EQ( complex_mixed[5].to<json::String>(), "null" );
+    M_ASSERT_EQ( complex_mixed[6].to<json::Bool>(), false );
+    M_ASSERT_EQ( complex_mixed[7].to<json::Number>(), 3.14159 );
+    M_ASSERT_EQ( complex_mixed[8].to<json::String>(), "false" );
+    M_ASSERT_EQ( complex_mixed[9].to<json::Number>(), 1e10 );
     
     // Test that string representations don't equal actual values
     M_ASSERT_FALSE( complex_mixed[3] == complex_mixed[5] ); // null != "null"
@@ -1046,18 +1046,18 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ( nested_mixed[2].size(), 3 );
     
     // Test nested individual element comparisons
-    M_ASSERT_EQ( nested_mixed[0][0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( nested_mixed[0][1].get<json::String>(), "one" );
-    M_ASSERT_EQ( nested_mixed[0][2].get<json::Bool>(), true );
-    M_ASSERT_EQ( nested_mixed[1][0].get<json::Number>(), 2.5 );
+    M_ASSERT_EQ( nested_mixed[0][0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( nested_mixed[0][1].to<json::String>(), "one" );
+    M_ASSERT_EQ( nested_mixed[0][2].to<json::Bool>(), true );
+    M_ASSERT_EQ( nested_mixed[1][0].to<json::Number>(), 2.5 );
     M_ASSERT_EQ( nested_mixed[1][1].type(), json::Type::eNull );
-    M_ASSERT_EQ( nested_mixed[1][2].get<json::Bool>(), false );
-    M_ASSERT_EQ( nested_mixed[2][0].get<json::String>(), "three" );
-    M_ASSERT_EQ( nested_mixed[2][1].get<json::Number>(), 3 );
+    M_ASSERT_EQ( nested_mixed[1][2].to<json::Bool>(), false );
+    M_ASSERT_EQ( nested_mixed[2][0].to<json::String>(), "three" );
+    M_ASSERT_EQ( nested_mixed[2][1].to<json::Number>(), 3 );
     M_ASSERT_EQ( nested_mixed[2][2].type(), json::Type::eArray );
-    M_ASSERT_EQ( nested_mixed[2][2][0].get<json::Number>(), 3.1 );
-    M_ASSERT_EQ( nested_mixed[2][2][1].get<json::Number>(), 3.2 );
-    M_ASSERT_EQ( nested_mixed[2][2][2].get<json::Number>(), 3.3 );
+    M_ASSERT_EQ( nested_mixed[2][2][0].to<json::Number>(), 3.1 );
+    M_ASSERT_EQ( nested_mixed[2][2][1].to<json::Number>(), 3.2 );
+    M_ASSERT_EQ( nested_mixed[2][2][2].to<json::Number>(), 3.3 );
     
     // Test batch comparison of nested mixed arrays
     json::Value nested_mixed_copy{json::Array{
@@ -1084,11 +1084,11 @@ M_TEST(Value, Array) {
     auto parsed_mixed_types = json::parse(mixed_serialized);
     if (parsed_mixed_types.has_value()) {
         M_ASSERT_TRUE( *parsed_mixed_types == mixed_types_array );
-        M_ASSERT_EQ( (*parsed_mixed_types)[0].get<json::Number>(), 2 );
-        M_ASSERT_EQ( (*parsed_mixed_types)[1].get<json::String>(), "12" );
-        M_ASSERT_EQ( (*parsed_mixed_types)[2].get<json::Bool>(), false );
+        M_ASSERT_EQ( (*parsed_mixed_types)[0].to<json::Number>(), 2 );
+        M_ASSERT_EQ( (*parsed_mixed_types)[1].to<json::String>(), "12" );
+        M_ASSERT_EQ( (*parsed_mixed_types)[2].to<json::Bool>(), false );
         M_ASSERT_EQ( (*parsed_mixed_types)[3].type(), json::Type::eNull );
-        M_ASSERT_EQ( (*parsed_mixed_types)[4].get<json::Number>(), 124.231 );
+        M_ASSERT_EQ( (*parsed_mixed_types)[4].to<json::Number>(), 124.231 );
     } else {
         M_ASSERT_FAIL("Failed to parse mixed type array");
     }
@@ -1098,12 +1098,12 @@ M_TEST(Value, Array) {
     
     // Test iterators
     json::Value iter_test{json::Array{1, 2, 3, 4, 5}};
-    auto& iter_arr = iter_test.get_ref<json::Array>();
+    auto& iter_arr = iter_test.get<json::Array>();
     
     // Test range-based for loop
     int expected_value = 1;
     for (const auto& element : iter_arr) {
-        M_ASSERT_EQ( element.get<json::Number>(), expected_value++ );
+        M_ASSERT_EQ( element.to<json::Number>(), expected_value++ );
     }
     
     // Test iterator access
@@ -1112,22 +1112,22 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ( std::distance(iter_begin, iter_end), 5 );
     
     // Test iterator dereferencing
-    M_ASSERT_EQ( (*iter_begin).get<json::Number>(), 1 );
-    M_ASSERT_EQ( (*(iter_begin + 1)).get<json::Number>(), 2 );
-    M_ASSERT_EQ( (*(iter_end - 1)).get<json::Number>(), 5 );
+    M_ASSERT_EQ( (*iter_begin).to<json::Number>(), 1 );
+    M_ASSERT_EQ( (*(iter_begin + 1)).to<json::Number>(), 2 );
+    M_ASSERT_EQ( (*(iter_end - 1)).to<json::Number>(), 5 );
     
     // Test iterator modification
     *iter_begin = 10;           // implicit conversion
     *(iter_begin + 1) = "two";  // implicit conversion
-    M_ASSERT_EQ( iter_arr[0].get<json::Number>(), 10 );
-    M_ASSERT_EQ( iter_arr[1].get<json::String>(), "two" );
+    M_ASSERT_EQ( iter_arr[0].to<json::Number>(), 10 );
+    M_ASSERT_EQ( iter_arr[1].to<json::String>(), "two" );
     
     // Test const iterators
-    const auto& const_iter_arr = iter_test.get_ref<json::Array>();
+    const auto& const_iter_arr = iter_test.get<json::Array>();
     auto const_iter_begin = const_iter_arr.begin();
     auto const_iter_end = const_iter_arr.end();
     M_ASSERT_EQ( std::distance(const_iter_begin, const_iter_end), 5 );
-    M_ASSERT_EQ( (*const_iter_begin).get<json::Number>(), 10 );
+    M_ASSERT_EQ( (*const_iter_begin).to<json::Number>(), 10 );
     
     // Test cbegin() and cend()
     auto cbegin_iter = iter_arr.cbegin();
@@ -1138,12 +1138,12 @@ M_TEST(Value, Array) {
     auto rbegin_iter = iter_arr.rbegin();
     auto rend_iter = iter_arr.rend();
     M_ASSERT_EQ( std::distance(rbegin_iter, rend_iter), 5 );
-    M_ASSERT_EQ( (*rbegin_iter).get<json::Number>(), 5 );  // last element
-    M_ASSERT_EQ( (*(rbegin_iter + 1)).get<json::Number>(), 4 );  // second to last
+    M_ASSERT_EQ( (*rbegin_iter).to<json::Number>(), 5 );  // last element
+    M_ASSERT_EQ( (*(rbegin_iter + 1)).to<json::Number>(), 4 );  // second to last
     
     // Test push_back and pop_back
     json::Value push_pop_test{json::Array{1, 2, 3}};
-    auto& push_pop_arr = push_pop_test.get_ref<json::Array>();
+    auto& push_pop_arr = push_pop_test.get<json::Array>();
     
     // Test push_back
     push_pop_arr.push_back(4);          // implicit conversion
@@ -1152,95 +1152,95 @@ M_TEST(Value, Array) {
     push_pop_arr.push_back(nullptr);    // implicit conversion
     
     M_ASSERT_EQ( push_pop_arr.size(), 7 );
-    M_ASSERT_EQ( push_pop_arr[3].get<json::Number>(), 4 );
-    M_ASSERT_EQ( push_pop_arr[4].get<json::String>(), "five" );
-    M_ASSERT_EQ( push_pop_arr[5].get<json::Bool>(), true );
+    M_ASSERT_EQ( push_pop_arr[3].to<json::Number>(), 4 );
+    M_ASSERT_EQ( push_pop_arr[4].to<json::String>(), "five" );
+    M_ASSERT_EQ( push_pop_arr[5].to<json::Bool>(), true );
     M_ASSERT_EQ( push_pop_arr[6].type(), json::Type::eNull );
     
     // Test pop_back
     push_pop_arr.pop_back();  // remove null
     push_pop_arr.pop_back();  // remove true
     M_ASSERT_EQ( push_pop_arr.size(), 5 );
-    M_ASSERT_EQ( push_pop_arr[4].get<json::String>(), "five" );
+    M_ASSERT_EQ( push_pop_arr[4].to<json::String>(), "five" );
     
     // Test emplace_back
     push_pop_arr.emplace_back(json::Number(100));
     push_pop_arr.emplace_back(json::String("emplace"));
     M_ASSERT_EQ( push_pop_arr.size(), 7 );
-    M_ASSERT_EQ( push_pop_arr[5].get<json::Number>(), 100 );
-    M_ASSERT_EQ( push_pop_arr[6].get<json::String>(), "emplace" );
+    M_ASSERT_EQ( push_pop_arr[5].to<json::Number>(), 100 );
+    M_ASSERT_EQ( push_pop_arr[6].to<json::String>(), "emplace" );
     
     // Test insert operations
     json::Value insert_test{json::Array{1, 2, 3}};
-    auto& insert_arr = insert_test.get_ref<json::Array>();
+    auto& insert_arr = insert_test.get<json::Array>();
     
     // Test insert at beginning
     auto insert_iter = insert_arr.insert(insert_arr.begin(), 0);  // implicit conversion
     M_ASSERT_EQ( insert_arr.size(), 4 );
-    M_ASSERT_EQ( insert_arr[0].get<json::Number>(), 0 );
-    M_ASSERT_EQ( insert_arr[1].get<json::Number>(), 1 );
-    M_ASSERT_EQ( (*insert_iter).get<json::Number>(), 0 );
+    M_ASSERT_EQ( insert_arr[0].to<json::Number>(), 0 );
+    M_ASSERT_EQ( insert_arr[1].to<json::Number>(), 1 );
+    M_ASSERT_EQ( (*insert_iter).to<json::Number>(), 0 );
     
     // Test insert in middle
     insert_iter = insert_arr.insert(insert_arr.begin() + 2, "middle");  // implicit conversion
     M_ASSERT_EQ( insert_arr.size(), 5 );
-    M_ASSERT_EQ( insert_arr[0].get<json::Number>(), 0 );
-    M_ASSERT_EQ( insert_arr[1].get<json::Number>(), 1 );
-    M_ASSERT_EQ( insert_arr[2].get<json::String>(), "middle" );
-    M_ASSERT_EQ( insert_arr[3].get<json::Number>(), 2 );
-    M_ASSERT_EQ( insert_arr[4].get<json::Number>(), 3 );
+    M_ASSERT_EQ( insert_arr[0].to<json::Number>(), 0 );
+    M_ASSERT_EQ( insert_arr[1].to<json::Number>(), 1 );
+    M_ASSERT_EQ( insert_arr[2].to<json::String>(), "middle" );
+    M_ASSERT_EQ( insert_arr[3].to<json::Number>(), 2 );
+    M_ASSERT_EQ( insert_arr[4].to<json::Number>(), 3 );
     
     // Test insert at end
     insert_iter = insert_arr.insert(insert_arr.end(), true);  // implicit conversion
     M_ASSERT_EQ( insert_arr.size(), 6 );
-    M_ASSERT_EQ( insert_arr[5].get<json::Bool>(), true );
+    M_ASSERT_EQ( insert_arr[5].to<json::Bool>(), true );
     
     // Test insert multiple elements
     insert_iter = insert_arr.insert(insert_arr.begin() + 1, 2, json::String("repeated"));
     M_ASSERT_EQ( insert_arr.size(), 8 );
-    M_ASSERT_EQ( insert_arr[1].get<json::String>(), "repeated" );
-    M_ASSERT_EQ( insert_arr[2].get<json::String>(), "repeated" );
-    M_ASSERT_EQ( insert_arr[3].get<json::Number>(), 1 );
+    M_ASSERT_EQ( insert_arr[1].to<json::String>(), "repeated" );
+    M_ASSERT_EQ( insert_arr[2].to<json::String>(), "repeated" );
+    M_ASSERT_EQ( insert_arr[3].to<json::Number>(), 1 );
     
     // Test insert with range
     json::Array source_arr{json::Number(100), json::Number(200), json::Number(300)};
     insert_iter = insert_arr.insert(insert_arr.end(), source_arr.begin(), source_arr.end());
     M_ASSERT_EQ( insert_arr.size(), 11 );
-    M_ASSERT_EQ( insert_arr[8].get<json::Number>(), 100 );
-    M_ASSERT_EQ( insert_arr[9].get<json::Number>(), 200 );
-    M_ASSERT_EQ( insert_arr[10].get<json::Number>(), 300 );
+    M_ASSERT_EQ( insert_arr[8].to<json::Number>(), 100 );
+    M_ASSERT_EQ( insert_arr[9].to<json::Number>(), 200 );
+    M_ASSERT_EQ( insert_arr[10].to<json::Number>(), 300 );
     
     // Test insert with initializer list
     insert_iter = insert_arr.insert(insert_arr.begin(), {json::String("init1"), json::String("init2")});
     M_ASSERT_EQ( insert_arr.size(), 13 );
-    M_ASSERT_EQ( insert_arr[0].get<json::String>(), "init1" );
-    M_ASSERT_EQ( insert_arr[1].get<json::String>(), "init2" );
+    M_ASSERT_EQ( insert_arr[0].to<json::String>(), "init1" );
+    M_ASSERT_EQ( insert_arr[1].to<json::String>(), "init2" );
     
     // Test emplace
     json::Value emplace_test{json::Array{1, 2, 3}};
-    auto& emplace_arr = emplace_test.get_ref<json::Array>();
+    auto& emplace_arr = emplace_test.get<json::Array>();
     
     auto emplace_iter = emplace_arr.emplace(emplace_arr.begin() + 1, json::String("emplaced"));
     M_ASSERT_EQ( emplace_arr.size(), 4 );
-    M_ASSERT_EQ( emplace_arr[1].get<json::String>(), "emplaced" );
-    M_ASSERT_EQ( (*emplace_iter).get<json::String>(), "emplaced" );
+    M_ASSERT_EQ( emplace_arr[1].to<json::String>(), "emplaced" );
+    M_ASSERT_EQ( (*emplace_iter).to<json::String>(), "emplaced" );
     
     // Test erase operations
     json::Value erase_test{json::Array{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
-    auto& erase_arr = erase_test.get_ref<json::Array>();
+    auto& erase_arr = erase_test.get<json::Array>();
     
     // Test erase single element
     auto erase_iter = erase_arr.erase(erase_arr.begin() + 2);  // erase 3
     M_ASSERT_EQ( erase_arr.size(), 9 );
-    M_ASSERT_EQ( erase_arr[2].get<json::Number>(), 4 );  // 4 moved to position 2
-    M_ASSERT_EQ( (*erase_iter).get<json::Number>(), 4 );
+    M_ASSERT_EQ( erase_arr[2].to<json::Number>(), 4 );  // 4 moved to position 2
+    M_ASSERT_EQ( (*erase_iter).to<json::Number>(), 4 );
     
     // Test erase range
     erase_iter = erase_arr.erase(erase_arr.begin() + 1, erase_arr.begin() + 4);  // erase 2, 4, 5
     M_ASSERT_EQ( erase_arr.size(), 6 );
-    M_ASSERT_EQ( erase_arr[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( erase_arr[1].get<json::Number>(), 6 );  // 6 moved to position 1
-    M_ASSERT_EQ( erase_arr[2].get<json::Number>(), 7 );
+    M_ASSERT_EQ( erase_arr[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( erase_arr[1].to<json::Number>(), 6 );  // 6 moved to position 1
+    M_ASSERT_EQ( erase_arr[2].to<json::Number>(), 7 );
     
     // Test clear
     erase_arr.clear();
@@ -1249,33 +1249,33 @@ M_TEST(Value, Array) {
     
     // Test resize operations
     json::Value resize_test{json::Array{1, 2, 3}};
-    auto& resize_arr = resize_test.get_ref<json::Array>();
+    auto& resize_arr = resize_test.get<json::Array>();
     
     // Test resize to larger size with default value
     resize_arr.resize(5);
     M_ASSERT_EQ( resize_arr.size(), 5 );
-    M_ASSERT_EQ( resize_arr[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( resize_arr[1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( resize_arr[2].get<json::Number>(), 3 );
+    M_ASSERT_EQ( resize_arr[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( resize_arr[1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( resize_arr[2].to<json::Number>(), 3 );
     M_ASSERT_EQ( resize_arr[3].type(), json::Type::eNull );  // default constructed
     M_ASSERT_EQ( resize_arr[4].type(), json::Type::eNull );  // default constructed
     
     // Test resize to larger size with specific value
     resize_arr.resize(7, json::String("resized"));
     M_ASSERT_EQ( resize_arr.size(), 7 );
-    M_ASSERT_EQ( resize_arr[5].get<json::String>(), "resized" );
-    M_ASSERT_EQ( resize_arr[6].get<json::String>(), "resized" );
+    M_ASSERT_EQ( resize_arr[5].to<json::String>(), "resized" );
+    M_ASSERT_EQ( resize_arr[6].to<json::String>(), "resized" );
     
     // Test resize to smaller size
     resize_arr.resize(3);
     M_ASSERT_EQ( resize_arr.size(), 3 );
-    M_ASSERT_EQ( resize_arr[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( resize_arr[1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( resize_arr[2].get<json::Number>(), 3 );
+    M_ASSERT_EQ( resize_arr[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( resize_arr[1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( resize_arr[2].to<json::Number>(), 3 );
     
     // Test reserve and capacity
     json::Value capacity_test{json::Array{}};
-    auto& capacity_arr = capacity_test.get_ref<json::Array>();
+    auto& capacity_arr = capacity_test.get<json::Array>();
     
     capacity_arr.reserve(100);
     M_ASSERT_TRUE( capacity_arr.capacity() >= 100 );
@@ -1290,124 +1290,124 @@ M_TEST(Value, Array) {
     
     // Test front and back
     json::Value front_back_test{json::Array{1, 2, 3, 4, 5}};
-    auto& front_back_arr = front_back_test.get_ref<json::Array>();
+    auto& front_back_arr = front_back_test.get<json::Array>();
     
-    M_ASSERT_EQ( front_back_arr.front().get<json::Number>(), 1 );
-    M_ASSERT_EQ( front_back_arr.back().get<json::Number>(), 5 );
+    M_ASSERT_EQ( front_back_arr.front().to<json::Number>(), 1 );
+    M_ASSERT_EQ( front_back_arr.back().to<json::Number>(), 5 );
     
     // Test modifying through front and back
     front_back_arr.front() = "first";  // implicit conversion
     front_back_arr.back() = "last";    // implicit conversion
-    M_ASSERT_EQ( front_back_arr.front().get<json::String>(), "first" );
-    M_ASSERT_EQ( front_back_arr.back().get<json::String>(), "last" );
+    M_ASSERT_EQ( front_back_arr.front().to<json::String>(), "first" );
+    M_ASSERT_EQ( front_back_arr.back().to<json::String>(), "last" );
     
     // Test const front and back
-    const auto& const_front_back_arr = front_back_test.get_ref<json::Array>();
-    M_ASSERT_EQ( const_front_back_arr.front().get<json::String>(), "first" );
-    M_ASSERT_EQ( const_front_back_arr.back().get<json::String>(), "last" );
+    const auto& const_front_back_arr = front_back_test.get<json::Array>();
+    M_ASSERT_EQ( const_front_back_arr.front().to<json::String>(), "first" );
+    M_ASSERT_EQ( const_front_back_arr.back().to<json::String>(), "last" );
     
     // Test data() method
     json::Value data_test{json::Array{1, 2, 3}};
-    auto& data_arr = data_test.get_ref<json::Array>();
+    auto& data_arr = data_test.get<json::Array>();
     
     auto* data_ptr = data_arr.data();
-    M_ASSERT_EQ( data_ptr[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( data_ptr[1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( data_ptr[2].get<json::Number>(), 3 );
+    M_ASSERT_EQ( data_ptr[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( data_ptr[1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( data_ptr[2].to<json::Number>(), 3 );
     
     // Test modifying through data pointer
     data_ptr[0] = "modified";  // implicit conversion
-    M_ASSERT_EQ( data_arr[0].get<json::String>(), "modified" );
+    M_ASSERT_EQ( data_arr[0].to<json::String>(), "modified" );
     
     // Test assignment operations
     json::Value assign_test{json::Array{}};
-    auto& assign_arr = assign_test.get_ref<json::Array>();
+    auto& assign_arr = assign_test.get<json::Array>();
     
     // Test assign with count and value
     assign_arr.assign(3, json::String("assigned"));
     M_ASSERT_EQ( assign_arr.size(), 3 );
-    M_ASSERT_EQ( assign_arr[0].get<json::String>(), "assigned" );
-    M_ASSERT_EQ( assign_arr[1].get<json::String>(), "assigned" );
-    M_ASSERT_EQ( assign_arr[2].get<json::String>(), "assigned" );
+    M_ASSERT_EQ( assign_arr[0].to<json::String>(), "assigned" );
+    M_ASSERT_EQ( assign_arr[1].to<json::String>(), "assigned" );
+    M_ASSERT_EQ( assign_arr[2].to<json::String>(), "assigned" );
     
     // Test assign with range
     json::Array source_assign{json::Number(100), json::Number(200), json::Number(300)};
     assign_arr.assign(source_assign.begin(), source_assign.end());
     M_ASSERT_EQ( assign_arr.size(), 3 );
-    M_ASSERT_EQ( assign_arr[0].get<json::Number>(), 100 );
-    M_ASSERT_EQ( assign_arr[1].get<json::Number>(), 200 );
-    M_ASSERT_EQ( assign_arr[2].get<json::Number>(), 300 );
+    M_ASSERT_EQ( assign_arr[0].to<json::Number>(), 100 );
+    M_ASSERT_EQ( assign_arr[1].to<json::Number>(), 200 );
+    M_ASSERT_EQ( assign_arr[2].to<json::Number>(), 300 );
     
     // Test assign with initializer list
     assign_arr.assign({json::String("init1"), json::String("init2"), json::String("init3")});
     M_ASSERT_EQ( assign_arr.size(), 3 );
-    M_ASSERT_EQ( assign_arr[0].get<json::String>(), "init1" );
-    M_ASSERT_EQ( assign_arr[1].get<json::String>(), "init2" );
-    M_ASSERT_EQ( assign_arr[2].get<json::String>(), "init3" );
+    M_ASSERT_EQ( assign_arr[0].to<json::String>(), "init1" );
+    M_ASSERT_EQ( assign_arr[1].to<json::String>(), "init2" );
+    M_ASSERT_EQ( assign_arr[2].to<json::String>(), "init3" );
     
     // Test swap
     json::Value swap_test1{json::Array{1, 2, 3}};
     json::Value swap_test2{json::Array{"a", "b", "c"}};
-    auto& swap_arr1 = swap_test1.get_ref<json::Array>();
-    auto& swap_arr2 = swap_test2.get_ref<json::Array>();
+    auto& swap_arr1 = swap_test1.get<json::Array>();
+    auto& swap_arr2 = swap_test2.get<json::Array>();
     
     swap_arr1.swap(swap_arr2);
     M_ASSERT_EQ( swap_arr1.size(), 3 );
-    M_ASSERT_EQ( swap_arr1[0].get<json::String>(), "a" );
-    M_ASSERT_EQ( swap_arr1[1].get<json::String>(), "b" );
-    M_ASSERT_EQ( swap_arr1[2].get<json::String>(), "c" );
+    M_ASSERT_EQ( swap_arr1[0].to<json::String>(), "a" );
+    M_ASSERT_EQ( swap_arr1[1].to<json::String>(), "b" );
+    M_ASSERT_EQ( swap_arr1[2].to<json::String>(), "c" );
     
     M_ASSERT_EQ( swap_arr2.size(), 3 );
-    M_ASSERT_EQ( swap_arr2[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( swap_arr2[1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( swap_arr2[2].get<json::Number>(), 3 );
+    M_ASSERT_EQ( swap_arr2[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( swap_arr2[1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( swap_arr2[2].to<json::Number>(), 3 );
     
     // Test std::algorithms with iterators
     json::Value algo_test{json::Array{5, 2, 8, 1, 9, 3}};
-    auto& algo_arr = algo_test.get_ref<json::Array>();
+    auto& algo_arr = algo_test.get<json::Array>();
     
     // Test std::find
     auto find_iter = std::find_if(algo_arr.begin(), algo_arr.end(), 
-        [](const json::Value& val) { return val.get<json::Number>() == 8; });
+        [](const json::Value& val) { return val.to<json::Number>() == 8; });
     M_ASSERT_TRUE( find_iter != algo_arr.end() );
-    M_ASSERT_EQ( (*find_iter).get<json::Number>(), 8 );
+    M_ASSERT_EQ( (*find_iter).to<json::Number>(), 8 );
     
     // Test std::count
     algo_arr.push_back(2);  // add another 2
     auto count_2 = std::count_if(algo_arr.begin(), algo_arr.end(),
-        [](const json::Value& val) { return val.get<json::Number>() == 2; });
+        [](const json::Value& val) { return val.to<json::Number>() == 2; });
     M_ASSERT_EQ( count_2, 2 );
     
     // Test std::sort (custom comparator needed for json::Value)
     std::sort(algo_arr.begin(), algo_arr.end(), 
         [](const json::Value& a, const json::Value& b) {
-            return a.get<json::Number>() < b.get<json::Number>();
+            return a.to<json::Number>() < b.to<json::Number>();
         });
-    M_ASSERT_EQ( algo_arr[0].get<json::Number>(), 1 );
-    M_ASSERT_EQ( algo_arr[1].get<json::Number>(), 2 );
-    M_ASSERT_EQ( algo_arr[2].get<json::Number>(), 2 );
-    M_ASSERT_EQ( algo_arr[3].get<json::Number>(), 3 );
-    M_ASSERT_EQ( algo_arr[4].get<json::Number>(), 5 );
-    M_ASSERT_EQ( algo_arr[5].get<json::Number>(), 8 );
-    M_ASSERT_EQ( algo_arr[6].get<json::Number>(), 9 );
+    M_ASSERT_EQ( algo_arr[0].to<json::Number>(), 1 );
+    M_ASSERT_EQ( algo_arr[1].to<json::Number>(), 2 );
+    M_ASSERT_EQ( algo_arr[2].to<json::Number>(), 2 );
+    M_ASSERT_EQ( algo_arr[3].to<json::Number>(), 3 );
+    M_ASSERT_EQ( algo_arr[4].to<json::Number>(), 5 );
+    M_ASSERT_EQ( algo_arr[5].to<json::Number>(), 8 );
+    M_ASSERT_EQ( algo_arr[6].to<json::Number>(), 9 );
     
     // Test std::transform
     json::Value transform_test{json::Array{1, 2, 3, 4, 5}};
-    auto& transform_arr = transform_test.get_ref<json::Array>();
+    auto& transform_arr = transform_test.get<json::Array>();
     
     std::transform(transform_arr.begin(), transform_arr.end(), transform_arr.begin(),
         [](const json::Value& val) -> json::Value {
-            return json::Number(val.get<json::Number>() * 2);
+            return json::Number(val.to<json::Number>() * 2);
         });
-    M_ASSERT_EQ( transform_arr[0].get<json::Number>(), 2 );
-    M_ASSERT_EQ( transform_arr[1].get<json::Number>(), 4 );
-    M_ASSERT_EQ( transform_arr[2].get<json::Number>(), 6 );
-    M_ASSERT_EQ( transform_arr[3].get<json::Number>(), 8 );
-    M_ASSERT_EQ( transform_arr[4].get<json::Number>(), 10 );
+    M_ASSERT_EQ( transform_arr[0].to<json::Number>(), 2 );
+    M_ASSERT_EQ( transform_arr[1].to<json::Number>(), 4 );
+    M_ASSERT_EQ( transform_arr[2].to<json::Number>(), 6 );
+    M_ASSERT_EQ( transform_arr[3].to<json::Number>(), 8 );
+    M_ASSERT_EQ( transform_arr[4].to<json::Number>(), 10 );
     
     // Test serialization after vector operations
     json::Value vector_ops_test{json::Array{1, 2, 3}};
-    auto& vector_ops_arr = vector_ops_test.get_ref<json::Array>();
+    auto& vector_ops_arr = vector_ops_test.get<json::Array>();
     
     vector_ops_arr.push_back("four");
     vector_ops_arr.insert(vector_ops_arr.begin() + 1, true);
@@ -1419,15 +1419,15 @@ M_TEST(Value, Array) {
     // Test parsing and vector operations
     auto parsed_for_vector = json::parse("[10,20,30]");
     if (parsed_for_vector.has_value()) {
-        auto& parsed_arr = parsed_for_vector->get_ref<json::Array>();
+        auto& parsed_arr = parsed_for_vector->get<json::Array>();
         parsed_arr.push_back(40);
         parsed_arr.insert(parsed_arr.begin(), 0);
         M_ASSERT_EQ( parsed_arr.size(), 5 );
-        M_ASSERT_EQ( parsed_arr[0].get<json::Number>(), 0 );
-        M_ASSERT_EQ( parsed_arr[1].get<json::Number>(), 10 );
-        M_ASSERT_EQ( parsed_arr[2].get<json::Number>(), 20 );
-        M_ASSERT_EQ( parsed_arr[3].get<json::Number>(), 30 );
-        M_ASSERT_EQ( parsed_arr[4].get<json::Number>(), 40 );
+        M_ASSERT_EQ( parsed_arr[0].to<json::Number>(), 0 );
+        M_ASSERT_EQ( parsed_arr[1].to<json::Number>(), 10 );
+        M_ASSERT_EQ( parsed_arr[2].to<json::Number>(), 20 );
+        M_ASSERT_EQ( parsed_arr[3].to<json::Number>(), 30 );
+        M_ASSERT_EQ( parsed_arr[4].to<json::Number>(), 40 );
     } else {
         M_ASSERT_FAIL("Failed to parse array for vector operations");
     }

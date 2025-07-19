@@ -244,7 +244,7 @@ static std::expected<Value, ParseError> reader(
             // Object type
             ++it;
             json = Object{};
-            auto& object = json.get_ref<Object>(); 
+            auto& object = json.get<Object>(); 
             // Parse the object
             while(it != end_ptr){
                 // Skip spaces
@@ -277,7 +277,7 @@ static std::expected<Value, ParseError> reader(
             // Array type
             ++it;
             json = Array{};
-            auto& array = json.get_ref<Array>();
+            auto& array = json.get<Array>();
             while(it != end_ptr){
                 // Skip spaces
                 while (it != end_ptr && std::isspace(*it)) ++it;

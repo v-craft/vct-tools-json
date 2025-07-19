@@ -15,9 +15,10 @@ project(${package_name}
 # Source file discovery
 # Recursively find all C++23 module files (.cppm and .ixx extensions)
 file(GLOB_RECURSE cxx_module_files "${CMAKE_CURRENT_SOURCE_DIR}/modules/*.cppm" "${CMAKE_CURRENT_SOURCE_DIR}/modules/*.ixx")
-# Recursively find all C/C++ source files in the src directory
+# Recursively find all C/C++ source files in the `src` directory
 file(GLOB_RECURSE cxx_cpp_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-
+# Recursively find all C/C++ header files in the `include` directory
+file(GLOB_RECURSE cxx_header_files "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 
 # Library target creation
 # Create the main library target that can be built as either static or shared
@@ -46,6 +47,19 @@ target_sources(${lib_name} PUBLIC
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/modules # Base directory for module resolution
         FILES ${cxx_module_files}                     # List of module files to include
 )
+# Add header files as INTERFACE sources (header-only, not compiled)
+target_sources(${lib_name} INTERFACE
+    FILE_SET cxx_headers                              # Define a file set for headers
+    TYPE HEADERS                                      # Specify this is a headers file set
+    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include    # Base directory for header resolution
+    FILES ${cxx_header_files}                        # List of header files to include
+)
+# Include directories configuration
+# Set up include paths for both build and install configurations
+target_include_directories(${lib_name} INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>   # Path during build
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>         # Path after installation
+)
 
 # Dynamic library configuration (optional)
 # Configure additional properties when building as a shared library
@@ -70,6 +84,9 @@ install(TARGETS ${lib_name}
     FILE_SET cxx_modules
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}     # Install modules to include directory
                                                     # Note: vct prefix is already included in module paths
+    FILE_SET cxx_headers
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}     # Install headers to include directory
+                                                    # Note: vct prefix is already included in header paths
 )
 
 # Export targets for find_package() support

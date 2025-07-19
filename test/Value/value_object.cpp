@@ -12,7 +12,7 @@ M_TEST(Value, Object) {
     M_ASSERT_NO_THROW( json::Value obj_default{json::Type::eObject} );
     M_ASSERT_EQ( json::Value{json::Type::eObject}.type(), json::Type::eObject );
     M_ASSERT_EQ( json::Value{json::Type::eObject}.size(), 0 );
-    M_ASSERT_TRUE( json::Value{json::Type::eObject}.get<json::Object>().empty() );
+    M_ASSERT_TRUE( json::Value{json::Type::eObject}.to<json::Object>().empty() );
     
     // Test construction with explicit Object wrapper
     M_ASSERT_NO_THROW( json::Value obj_explicit{json::Object{}} );
@@ -22,7 +22,7 @@ M_TEST(Value, Object) {
     json::Value obj_direct{json::Object{{"name", "John"}, {"age", 30}, {"active", true}}};
     M_ASSERT_EQ( obj_direct.type(), json::Type::eObject );
     M_ASSERT_EQ( obj_direct.size(), 3 );
-    M_ASSERT_FALSE( obj_direct.get<json::Object>().empty() );
+    M_ASSERT_FALSE( obj_direct.to<json::Object>().empty() );
     
     // Test object with mixed types
     json::Value mixed_obj{json::Object{
@@ -56,18 +56,18 @@ M_TEST(Value, Object) {
     // Test size() function
     json::Value size_test{json::Object{{"a", 1}, {"b", 2}, {"c", 3}, {"d", 4}, {"e", 5}}};
     M_ASSERT_EQ( size_test.size(), 5 );
-    M_ASSERT_EQ( size_test.get<json::Object>().size(), 5 );
+    M_ASSERT_EQ( size_test.to<json::Object>().size(), 5 );
     
     json::Value empty_size_test{json::Object{}};
     M_ASSERT_EQ( empty_size_test.size(), 0 );
-    M_ASSERT_EQ( empty_size_test.get<json::Object>().size(), 0 );
-    M_ASSERT_TRUE( empty_size_test.get<json::Object>().empty() );
+    M_ASSERT_EQ( empty_size_test.to<json::Object>().size(), 0 );
+    M_ASSERT_TRUE( empty_size_test.to<json::Object>().empty() );
     
     // Test [] operator (key access)
     json::Value subscript_test{json::Object{{"first", 10}, {"second", 20}, {"third", 30}}};
-    M_ASSERT_EQ( subscript_test["first"].get<json::Number>(), 10 );
-    M_ASSERT_EQ( subscript_test["second"].get<json::Number>(), 20 );
-    M_ASSERT_EQ( subscript_test["third"].get<json::Number>(), 30 );
+    M_ASSERT_EQ( subscript_test["first"].to<json::Number>(), 10 );
+    M_ASSERT_EQ( subscript_test["second"].to<json::Number>(), 20 );
+    M_ASSERT_EQ( subscript_test["third"].to<json::Number>(), 30 );
     
     // Test [] operator with mixed types
     json::Value mixed_subscript{json::Object{
@@ -76,9 +76,9 @@ M_TEST(Value, Object) {
         {"flag", true},     // implicit bool conversion
         {"empty", nullptr}  // implicit null conversion
     }};
-    M_ASSERT_EQ( mixed_subscript["number"].get<json::Number>(), 42 );
-    M_ASSERT_EQ( mixed_subscript["text"].get<json::String>(), "test" );
-    M_ASSERT_EQ( mixed_subscript["flag"].get<json::Bool>(), true );
+    M_ASSERT_EQ( mixed_subscript["number"].to<json::Number>(), 42 );
+    M_ASSERT_EQ( mixed_subscript["text"].to<json::String>(), "test" );
+    M_ASSERT_EQ( mixed_subscript["flag"].to<json::Bool>(), true );
     M_ASSERT_EQ( mixed_subscript["empty"].type(), json::Type::eNull );
     
     // Test [] operator modification
@@ -87,22 +87,22 @@ M_TEST(Value, Object) {
     modify_test["b"] = "modified";  // implicit string conversion
     modify_test["c"] = false;       // implicit bool conversion
     
-    M_ASSERT_EQ( modify_test["a"].get<json::Number>(), 100 );
-    M_ASSERT_EQ( modify_test["b"].get<json::String>(), "modified" );
-    M_ASSERT_EQ( modify_test["c"].get<json::Bool>(), false );
+    M_ASSERT_EQ( modify_test["a"].to<json::Number>(), 100 );
+    M_ASSERT_EQ( modify_test["b"].to<json::String>(), "modified" );
+    M_ASSERT_EQ( modify_test["c"].to<json::Bool>(), false );
     
     // Test [] operator with new keys
     json::Value new_key_test{json::Object{{"existing", 1}}};
     new_key_test["new_key"] = "new_value";  // implicit conversion
     M_ASSERT_EQ( new_key_test.size(), 2 );
-    M_ASSERT_EQ( new_key_test["existing"].get<json::Number>(), 1 );
-    M_ASSERT_EQ( new_key_test["new_key"].get<json::String>(), "new_value" );
+    M_ASSERT_EQ( new_key_test["existing"].to<json::Number>(), 1 );
+    M_ASSERT_EQ( new_key_test["new_key"].to<json::String>(), "new_value" );
     
     // Test const [] operator
     const json::Value const_obj{json::Object{{"x", 1}, {"y", 2}, {"z", 3}}};
-    M_ASSERT_EQ( const_obj["x"].get<json::Number>(), 1 );
-    M_ASSERT_EQ( const_obj["y"].get<json::Number>(), 2 );
-    M_ASSERT_EQ( const_obj["z"].get<json::Number>(), 3 );
+    M_ASSERT_EQ( const_obj["x"].to<json::Number>(), 1 );
+    M_ASSERT_EQ( const_obj["y"].to<json::Number>(), 2 );
+    M_ASSERT_EQ( const_obj["z"].to<json::Number>(), 3 );
     
     // Test at() function
     json::Value at_test{json::Object{{"alpha", 100}, {"beta", 200}, {"gamma", 300}}};
@@ -110,9 +110,9 @@ M_TEST(Value, Object) {
     M_ASSERT_NO_THROW( std::ignore = at_test.at("beta") );
     M_ASSERT_NO_THROW( std::ignore = at_test.at("gamma") );
     
-    M_ASSERT_EQ( at_test.at("alpha").get<json::Number>(), 100 );
-    M_ASSERT_EQ( at_test.at("beta").get<json::Number>(), 200 );
-    M_ASSERT_EQ( at_test.at("gamma").get<json::Number>(), 300 );
+    M_ASSERT_EQ( at_test.at("alpha").to<json::Number>(), 100 );
+    M_ASSERT_EQ( at_test.at("beta").to<json::Number>(), 200 );
+    M_ASSERT_EQ( at_test.at("gamma").to<json::Number>(), 300 );
     
     // Test at() with non-existent keys (should throw)
     M_ASSERT_THROW( std::ignore = at_test.at("nonexistent"), std::out_of_range );
@@ -127,57 +127,57 @@ M_TEST(Value, Object) {
     // Test const at() function
     const json::Value const_at_test{json::Object{{"one", 1}, {"two", 2}, {"three", 3}}};
     M_ASSERT_NO_THROW( std::ignore = const_at_test.at("one") );
-    M_ASSERT_EQ( const_at_test.at("one").get<json::Number>(), 1 );
-    M_ASSERT_EQ( const_at_test.at("two").get<json::Number>(), 2 );
-    M_ASSERT_EQ( const_at_test.at("three").get<json::Number>(), 3 );
+    M_ASSERT_EQ( const_at_test.at("one").to<json::Number>(), 1 );
+    M_ASSERT_EQ( const_at_test.at("two").to<json::Number>(), 2 );
+    M_ASSERT_EQ( const_at_test.at("three").to<json::Number>(), 3 );
     M_ASSERT_THROW( std::ignore = const_at_test.at("four"), std::out_of_range );
     
     // Test get<T>() method
     json::Value get_test{json::Object{{"key1", 1}, {"key2", 2}, {"key3", 3}}};
-    M_ASSERT_NO_THROW( std::ignore = get_test.get<json::Object>() );
-    auto obj = get_test.get<json::Object>();
+    M_ASSERT_NO_THROW( std::ignore = get_test.to<json::Object>() );
+    auto obj = get_test.to<json::Object>();
     M_ASSERT_EQ( obj.size(), 3 );
-    M_ASSERT_EQ( obj["key1"].get<json::Number>(), 1 );
-    M_ASSERT_EQ( obj["key2"].get<json::Number>(), 2 );
-    M_ASSERT_EQ( obj["key3"].get<json::Number>(), 3 );
+    M_ASSERT_EQ( obj["key1"].to<json::Number>(), 1 );
+    M_ASSERT_EQ( obj["key2"].to<json::Number>(), 2 );
+    M_ASSERT_EQ( obj["key3"].to<json::Number>(), 3 );
     
     // Test get_ref<T>() method
     json::Value ref_test{json::Object{{"data1", 10}, {"data2", 20}, {"data3", 30}}};
-    M_ASSERT_NO_THROW( auto& ref = ref_test.get_ref<json::Object>() );
-    auto& obj_ref = ref_test.get_ref<json::Object>();
+    M_ASSERT_NO_THROW( auto& ref = ref_test.get<json::Object>() );
+    auto& obj_ref = ref_test.get<json::Object>();
     M_ASSERT_EQ( obj_ref.size(), 3 );
     
     // Test reference modification
     obj_ref["data1"] = 100;  // implicit number conversion
     obj_ref["new_data"] = "added";  // implicit string conversion
     M_ASSERT_EQ( ref_test.size(), 4 );
-    M_ASSERT_EQ( ref_test["data1"].get<json::Number>(), 100 );
-    M_ASSERT_EQ( ref_test["new_data"].get<json::String>(), "added" );
+    M_ASSERT_EQ( ref_test["data1"].to<json::Number>(), 100 );
+    M_ASSERT_EQ( ref_test["new_data"].to<json::String>(), "added" );
     
     // Test const get_ref
     const json::Value const_ref_test{json::Object{{"item1", 1}, {"item2", 2}, {"item3", 3}}};
-    M_ASSERT_NO_THROW( auto& const_ref = const_ref_test.get_ref<json::Object>() );
-    const auto& const_obj_ref = const_ref_test.get_ref<json::Object>();
+    M_ASSERT_NO_THROW( auto& const_ref = const_ref_test.get<json::Object>() );
+    const auto& const_obj_ref = const_ref_test.get<json::Object>();
     M_ASSERT_EQ( const_obj_ref.size(), 3 );
-    M_ASSERT_EQ( const_obj_ref.at("item1").get<json::Number>(), 1 );
+    M_ASSERT_EQ( const_obj_ref.at("item1").to<json::Number>(), 1 );
     
     // Test get_ref type safety - wrong type should throw
     json::Value wrong_type_val{42};
-    M_ASSERT_THROW( std::ignore = wrong_type_val.get_ref<json::Object>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = wrong_type_val.get<json::Object>(), std::runtime_error );
     
     json::Value string_val{"not object"};
-    M_ASSERT_THROW( std::ignore = string_val.get_ref<json::Object>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = string_val.get<json::Object>(), std::runtime_error );
     
     // Test assignment operations
     json::Value assign_val{json::Type::eObject};
     M_ASSERT_NO_THROW( assign_val = json::Object{{"key1", 1}, {"key2", 2}, {"key3", 3}} );
     M_ASSERT_EQ( assign_val.size(), 3 );
-    M_ASSERT_EQ( assign_val["key1"].get<json::Number>(), 1 );
+    M_ASSERT_EQ( assign_val["key1"].to<json::Number>(), 1 );
     
     M_ASSERT_NO_THROW( assign_val = json::Object{{"newkey1", 10}, {"newkey2", 20}} );
     M_ASSERT_EQ( assign_val.size(), 2 );
-    M_ASSERT_EQ( assign_val["newkey1"].get<json::Number>(), 10 );
-    M_ASSERT_EQ( assign_val["newkey2"].get<json::Number>(), 20 );
+    M_ASSERT_EQ( assign_val["newkey1"].to<json::Number>(), 10 );
+    M_ASSERT_EQ( assign_val["newkey2"].to<json::Number>(), 20 );
     
     // Test nested objects
     json::Value nested_obj{json::Object{
@@ -203,23 +203,23 @@ M_TEST(Value, Object) {
     // Test accessing nested object elements
     M_ASSERT_EQ( nested_obj["person"].type(), json::Type::eObject );
     M_ASSERT_EQ( nested_obj["person"].size(), 3 );
-    M_ASSERT_EQ( nested_obj["person"]["name"].get<json::String>(), "John" );
-    M_ASSERT_EQ( nested_obj["person"]["age"].get<json::Number>(), 30 );
-    M_ASSERT_EQ( nested_obj["person"]["active"].get<json::Bool>(), true );
+    M_ASSERT_EQ( nested_obj["person"]["name"].to<json::String>(), "John" );
+    M_ASSERT_EQ( nested_obj["person"]["age"].to<json::Number>(), 30 );
+    M_ASSERT_EQ( nested_obj["person"]["active"].to<json::Bool>(), true );
     
-    M_ASSERT_EQ( nested_obj["company"]["name"].get<json::String>(), "TechCorp" );
-    M_ASSERT_EQ( nested_obj["company"]["employees"].get<json::Number>(), 100 );
-    M_ASSERT_EQ( nested_obj["company"]["public"].get<json::Bool>(), false );
+    M_ASSERT_EQ( nested_obj["company"]["name"].to<json::String>(), "TechCorp" );
+    M_ASSERT_EQ( nested_obj["company"]["employees"].to<json::Number>(), 100 );
+    M_ASSERT_EQ( nested_obj["company"]["public"].to<json::Bool>(), false );
     
-    M_ASSERT_EQ( nested_obj["metadata"]["version"].get<json::String>(), "1.0" );
-    M_ASSERT_EQ( nested_obj["metadata"]["timestamp"].get<json::Number>(), 1234567890 );
-    M_ASSERT_EQ( nested_obj["metadata"]["valid"].get<json::Bool>(), true );
+    M_ASSERT_EQ( nested_obj["metadata"]["version"].to<json::String>(), "1.0" );
+    M_ASSERT_EQ( nested_obj["metadata"]["timestamp"].to<json::Number>(), 1234567890 );
+    M_ASSERT_EQ( nested_obj["metadata"]["valid"].to<json::Bool>(), true );
     
     // Test nested objects with at()
     M_ASSERT_NO_THROW( std::ignore = nested_obj.at("person").at("name") );
-    M_ASSERT_EQ( nested_obj.at("person").at("name").get<json::String>(), "John" );
-    M_ASSERT_EQ( nested_obj.at("company").at("employees").get<json::Number>(), 100 );
-    M_ASSERT_EQ( nested_obj.at("metadata").at("valid").get<json::Bool>(), true );
+    M_ASSERT_EQ( nested_obj.at("person").at("name").to<json::String>(), "John" );
+    M_ASSERT_EQ( nested_obj.at("company").at("employees").to<json::Number>(), 100 );
+    M_ASSERT_EQ( nested_obj.at("metadata").at("valid").to<json::Bool>(), true );
     
     // Test nested objects bounds checking
     M_ASSERT_THROW( std::ignore = nested_obj.at("nonexistent"), std::out_of_range );
@@ -242,12 +242,12 @@ M_TEST(Value, Object) {
     M_ASSERT_EQ( deep_nested["level1"]["level2"].size(), 1 );
     M_ASSERT_EQ( deep_nested["level1"]["level2"]["level3"].size(), 2 );
     
-    M_ASSERT_EQ( deep_nested["level1"]["level2"]["level3"]["data1"].get<json::String>(), "deep_value1" );
-    M_ASSERT_EQ( deep_nested["level1"]["level2"]["level3"]["data2"].get<json::String>(), "deep_value2" );
+    M_ASSERT_EQ( deep_nested["level1"]["level2"]["level3"]["data1"].to<json::String>(), "deep_value1" );
+    M_ASSERT_EQ( deep_nested["level1"]["level2"]["level3"]["data2"].to<json::String>(), "deep_value2" );
     
     // Test deeply nested objects with at()
-    M_ASSERT_EQ( deep_nested.at("level1").at("level2").at("level3").at("data1").get<json::String>(), "deep_value1" );
-    M_ASSERT_EQ( deep_nested.at("level1").at("level2").at("level3").at("data2").get<json::String>(), "deep_value2" );
+    M_ASSERT_EQ( deep_nested.at("level1").at("level2").at("level3").at("data1").to<json::String>(), "deep_value1" );
+    M_ASSERT_EQ( deep_nested.at("level1").at("level2").at("level3").at("data2").to<json::String>(), "deep_value2" );
     M_ASSERT_THROW( std::ignore = deep_nested.at("level1").at("level2").at("level3").at("nonexistent"), std::out_of_range );
     
     // Test complex nested objects structure
@@ -290,29 +290,29 @@ M_TEST(Value, Object) {
     
     // Test database config
     M_ASSERT_EQ( complex_nested["config"]["database"].size(), 3 );
-    M_ASSERT_EQ( complex_nested["config"]["database"]["host"].get<json::String>(), "localhost" );
-    M_ASSERT_EQ( complex_nested["config"]["database"]["port"].get<json::Number>(), 5432 );
-    M_ASSERT_EQ( complex_nested["config"]["database"]["name"].get<json::String>(), "mydb" );
+    M_ASSERT_EQ( complex_nested["config"]["database"]["host"].to<json::String>(), "localhost" );
+    M_ASSERT_EQ( complex_nested["config"]["database"]["port"].to<json::Number>(), 5432 );
+    M_ASSERT_EQ( complex_nested["config"]["database"]["name"].to<json::String>(), "mydb" );
     
     // Test cache config
-    M_ASSERT_EQ( complex_nested["config"]["cache"]["enabled"].get<json::Bool>(), true );
-    M_ASSERT_EQ( complex_nested["config"]["cache"]["ttl"].get<json::Number>(), 3600 );
-    M_ASSERT_EQ( complex_nested["config"]["cache"]["size"].get<json::Number>(), 1000 );
+    M_ASSERT_EQ( complex_nested["config"]["cache"]["enabled"].to<json::Bool>(), true );
+    M_ASSERT_EQ( complex_nested["config"]["cache"]["ttl"].to<json::Number>(), 3600 );
+    M_ASSERT_EQ( complex_nested["config"]["cache"]["size"].to<json::Number>(), 1000 );
     
     // Test logging config
-    M_ASSERT_EQ( complex_nested["config"]["logging"]["level"].get<json::String>(), "INFO" );
-    M_ASSERT_EQ( complex_nested["config"]["logging"]["file"].get<json::String>(), "/var/log/app.log" );
-    M_ASSERT_EQ( complex_nested["config"]["logging"]["rotation"].get<json::Bool>(), true );
+    M_ASSERT_EQ( complex_nested["config"]["logging"]["level"].to<json::String>(), "INFO" );
+    M_ASSERT_EQ( complex_nested["config"]["logging"]["file"].to<json::String>(), "/var/log/app.log" );
+    M_ASSERT_EQ( complex_nested["config"]["logging"]["rotation"].to<json::Bool>(), true );
     
     // Test auth features
-    M_ASSERT_EQ( complex_nested["features"]["auth"]["enabled"].get<json::Bool>(), true );
-    M_ASSERT_EQ( complex_nested["features"]["auth"]["provider"].get<json::String>(), "oauth2" );
-    M_ASSERT_EQ( complex_nested["features"]["auth"]["timeout"].get<json::Number>(), 300 );
+    M_ASSERT_EQ( complex_nested["features"]["auth"]["enabled"].to<json::Bool>(), true );
+    M_ASSERT_EQ( complex_nested["features"]["auth"]["provider"].to<json::String>(), "oauth2" );
+    M_ASSERT_EQ( complex_nested["features"]["auth"]["timeout"].to<json::Number>(), 300 );
     
     // Test api features
-    M_ASSERT_EQ( complex_nested["features"]["api"]["version"].get<json::String>(), "v1" );
-    M_ASSERT_EQ( complex_nested["features"]["api"]["rate_limit"].get<json::Number>(), 1000 );
-    M_ASSERT_EQ( complex_nested["features"]["api"]["cors"].get<json::Bool>(), false );
+    M_ASSERT_EQ( complex_nested["features"]["api"]["version"].to<json::String>(), "v1" );
+    M_ASSERT_EQ( complex_nested["features"]["api"]["rate_limit"].to<json::Number>(), 1000 );
+    M_ASSERT_EQ( complex_nested["features"]["api"]["cors"].to<json::Bool>(), false );
     
     // Test Value-to-Value comparison
     json::Value obj_cmp1{json::Object{{"a", 1}, {"b", 2}, {"c", 3}}};
@@ -382,9 +382,9 @@ M_TEST(Value, Object) {
     if (parsed_simple.has_value()) {
         M_ASSERT_EQ( parsed_simple->type(), json::Type::eObject );
         M_ASSERT_EQ( parsed_simple->size(), 3 );
-        M_ASSERT_EQ( (*parsed_simple)["key1"].get<json::Number>(), 1 );
-        M_ASSERT_EQ( (*parsed_simple)["key2"].get<json::Number>(), 2 );
-        M_ASSERT_EQ( (*parsed_simple)["key3"].get<json::Number>(), 3 );
+        M_ASSERT_EQ( (*parsed_simple)["key1"].to<json::Number>(), 1 );
+        M_ASSERT_EQ( (*parsed_simple)["key2"].to<json::Number>(), 2 );
+        M_ASSERT_EQ( (*parsed_simple)["key3"].to<json::Number>(), 3 );
         
         // Compare with code-created object
         json::Value code_created{json::Object{{"key1", 1}, {"key2", 2}, {"key3", 3}}};
@@ -410,8 +410,8 @@ M_TEST(Value, Object) {
         M_ASSERT_EQ( parsed_nested->type(), json::Type::eObject );
         M_ASSERT_EQ( parsed_nested->size(), 1 );
         M_ASSERT_EQ( (*parsed_nested)["outer"].size(), 2 );
-        M_ASSERT_EQ( (*parsed_nested)["outer"]["inner1"].get<json::Number>(), 1 );
-        M_ASSERT_EQ( (*parsed_nested)["outer"]["inner2"].get<json::Number>(), 2 );
+        M_ASSERT_EQ( (*parsed_nested)["outer"]["inner1"].to<json::Number>(), 1 );
+        M_ASSERT_EQ( (*parsed_nested)["outer"]["inner2"].to<json::Number>(), 2 );
         
         // Compare with code-created nested object
         json::Value nested_code{json::Object{
@@ -427,9 +427,9 @@ M_TEST(Value, Object) {
     if (parsed_mixed.has_value()) {
         M_ASSERT_EQ( parsed_mixed->type(), json::Type::eObject );
         M_ASSERT_EQ( parsed_mixed->size(), 4 );
-        M_ASSERT_EQ( (*parsed_mixed)["number"].get<json::Number>(), 42 );
-        M_ASSERT_EQ( (*parsed_mixed)["string"].get<json::String>(), "test" );
-        M_ASSERT_EQ( (*parsed_mixed)["boolean"].get<json::Bool>(), true );
+        M_ASSERT_EQ( (*parsed_mixed)["number"].to<json::Number>(), 42 );
+        M_ASSERT_EQ( (*parsed_mixed)["string"].to<json::String>(), "test" );
+        M_ASSERT_EQ( (*parsed_mixed)["boolean"].to<json::Bool>(), true );
         M_ASSERT_EQ( (*parsed_mixed)["null_val"].type(), json::Type::eNull );
         
         // Compare with code-created mixed object
@@ -465,18 +465,18 @@ M_TEST(Value, Object) {
     }
     
     // Test type safety - wrong type access should throw
+    M_ASSERT_THROW( std::ignore = obj_val.to<json::Number>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = obj_val.to<json::String>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = obj_val.to<json::Bool>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = obj_val.to<json::Array>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = obj_val.to<std::nullptr_t>(), std::runtime_error );
+    
+    // Test Object get_ref type safety
     M_ASSERT_THROW( std::ignore = obj_val.get<json::Number>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = obj_val.get<json::String>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = obj_val.get<json::Bool>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = obj_val.get<json::Array>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = obj_val.get<std::nullptr_t>(), std::runtime_error );
-    
-    // Test Object get_ref type safety
-    M_ASSERT_THROW( std::ignore = obj_val.get_ref<json::Number>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = obj_val.get_ref<json::String>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = obj_val.get_ref<json::Bool>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = obj_val.get_ref<json::Array>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = obj_val.get_ref<std::nullptr_t>(), std::runtime_error );
     
     // Test object consistency across different construction methods
     json::Value consistency_obj1{json::Object{{"x", 1}, {"y", 2}, {"z", 3}}};
@@ -514,9 +514,9 @@ M_TEST(Value, Object) {
     ref_b = "modified"; // implicit conversion
     ref_c = true;       // implicit conversion
     
-    M_ASSERT_EQ( ref_modify_test["a"].get<json::Number>(), 100 );
-    M_ASSERT_EQ( ref_modify_test["b"].get<json::String>(), "modified" );
-    M_ASSERT_EQ( ref_modify_test["c"].get<json::Bool>(), true );
+    M_ASSERT_EQ( ref_modify_test["a"].to<json::Number>(), 100 );
+    M_ASSERT_EQ( ref_modify_test["b"].to<json::String>(), "modified" );
+    M_ASSERT_EQ( ref_modify_test["c"].to<json::Bool>(), true );
     
     // Test modification through at() reference
     json::Value at_modify_test{json::Object{{"first", 10}, {"second", 20}, {"third", 30}}};
@@ -530,8 +530,8 @@ M_TEST(Value, Object) {
     at_ref_second = false;     // implicit conversion
     at_ref_third = nullptr;    // implicit null conversion
     
-    M_ASSERT_EQ( at_modify_test.at("first").get<json::String>(), "one" );
-    M_ASSERT_EQ( at_modify_test.at("second").get<json::Bool>(), false );
+    M_ASSERT_EQ( at_modify_test.at("first").to<json::String>(), "one" );
+    M_ASSERT_EQ( at_modify_test.at("second").to<json::Bool>(), false );
     M_ASSERT_EQ( at_modify_test.at("third").type(), json::Type::eNull );
     
     // Test nested object modification through [] references
@@ -547,10 +547,10 @@ M_TEST(Value, Object) {
     nested_ref_item1 = "modified1";  // implicit conversion
     nested_ref_item3 = true;         // implicit conversion
     
-    M_ASSERT_EQ( nested_ref_modify["section1"]["item1"].get<json::String>(), "modified1" );
-    M_ASSERT_EQ( nested_ref_modify["section1"]["item2"].get<json::Number>(), 2 ); // unchanged
-    M_ASSERT_EQ( nested_ref_modify["section2"]["item3"].get<json::Bool>(), true );
-    M_ASSERT_EQ( nested_ref_modify["section2"]["item4"].get<json::Number>(), 4 ); // unchanged
+    M_ASSERT_EQ( nested_ref_modify["section1"]["item1"].to<json::String>(), "modified1" );
+    M_ASSERT_EQ( nested_ref_modify["section1"]["item2"].to<json::Number>(), 2 ); // unchanged
+    M_ASSERT_EQ( nested_ref_modify["section2"]["item3"].to<json::Bool>(), true );
+    M_ASSERT_EQ( nested_ref_modify["section2"]["item4"].to<json::Number>(), 4 ); // unchanged
     
     // Test nested object modification through at() references
     json::Value nested_at_modify{json::Object{
@@ -565,9 +565,9 @@ M_TEST(Value, Object) {
     nested_at_ref_val1 = "at_modified";  // implicit conversion
     nested_at_ref_val4 = nullptr;        // implicit null conversion
     
-    M_ASSERT_EQ( nested_at_modify.at("group1").at("val1").get<json::String>(), "at_modified" );
-    M_ASSERT_EQ( nested_at_modify.at("group1").at("val2").get<json::Number>(), 200 ); // unchanged
-    M_ASSERT_EQ( nested_at_modify.at("group2").at("val3").get<json::Number>(), 300 ); // unchanged
+    M_ASSERT_EQ( nested_at_modify.at("group1").at("val1").to<json::String>(), "at_modified" );
+    M_ASSERT_EQ( nested_at_modify.at("group1").at("val2").to<json::Number>(), 200 ); // unchanged
+    M_ASSERT_EQ( nested_at_modify.at("group2").at("val3").to<json::Number>(), 300 ); // unchanged
     M_ASSERT_EQ( nested_at_modify.at("group2").at("val4").type(), json::Type::eNull );
     
     // Test serialization after reference modifications
@@ -579,7 +579,7 @@ M_TEST(Value, Object) {
     auto parsed_after = json::parse(serialized_after);
     if (parsed_after.has_value()) {
         M_ASSERT_TRUE( *parsed_after == serial_after_ref );
-        M_ASSERT_EQ( (*parsed_after)["key2"].get<json::String>(), "modified" );
+        M_ASSERT_EQ( (*parsed_after)["key2"].to<json::String>(), "modified" );
     } else {
         M_ASSERT_FAIL("Failed to parse after reference modification");
     }

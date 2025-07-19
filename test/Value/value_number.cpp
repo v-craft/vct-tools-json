@@ -10,7 +10,7 @@ using namespace vct::tools;
 M_TEST(Value, Number) {
     // Test default number construction
     M_ASSERT_NO_THROW( json::Value num_default{json::Type::eNumber} );
-    M_ASSERT_EQ( json::Value{json::Type::eNumber}.get<json::Number>(), 0.0 );
+    M_ASSERT_EQ( json::Value{json::Type::eNumber}.to<json::Number>(), 0.0 );
     M_ASSERT_EQ( json::Value{json::Type::eNumber}.type(), json::Type::eNumber );
     
     // Test construction with various integer types
@@ -60,78 +60,78 @@ M_TEST(Value, Number) {
     M_EXPECT_STREQ( zero_val.type_name(), "Number" );
     
     // Test get<T>() method
-    M_ASSERT_EQ( int_val.get<json::Number>(), 42.0 );
-    M_ASSERT_EQ( float_val.get<json::Number>(), 3.14 );
-    M_ASSERT_EQ( neg_val.get<json::Number>(), -123.456 );
-    M_ASSERT_EQ( zero_val.get<json::Number>(), 0.0 );
+    M_ASSERT_EQ( int_val.to<json::Number>(), 42.0 );
+    M_ASSERT_EQ( float_val.to<json::Number>(), 3.14 );
+    M_ASSERT_EQ( neg_val.to<json::Number>(), -123.456 );
+    M_ASSERT_EQ( zero_val.to<json::Number>(), 0.0 );
     
     // Test get_ref<T>() method
-    M_ASSERT_NO_THROW( auto& ref = int_val.get_ref<json::Number>() );
-    M_ASSERT_EQ( int_val.get_ref<json::Number>(), 42.0 );
-    M_ASSERT_EQ( float_val.get_ref<json::Number>(), 3.14 );
+    M_ASSERT_NO_THROW( auto& ref = int_val.get<json::Number>() );
+    M_ASSERT_EQ( int_val.get<json::Number>(), 42.0 );
+    M_ASSERT_EQ( float_val.get<json::Number>(), 3.14 );
     
     // Test get_ref with different numeric types
     json::Value ref_test_int{123};
     json::Value ref_test_float{456.789f};
     json::Value ref_test_double{987.654321};
     
-    M_ASSERT_NO_THROW( auto& ref_int = ref_test_int.get_ref<json::Number>() );
-    M_ASSERT_NO_THROW( auto& ref_float = ref_test_float.get_ref<json::Number>() );
-    M_ASSERT_NO_THROW( auto& ref_double = ref_test_double.get_ref<json::Number>() );
+    M_ASSERT_NO_THROW( auto& ref_int = ref_test_int.get<json::Number>() );
+    M_ASSERT_NO_THROW( auto& ref_float = ref_test_float.get<json::Number>() );
+    M_ASSERT_NO_THROW( auto& ref_double = ref_test_double.get<json::Number>() );
     
-    M_ASSERT_EQ( ref_test_int.get_ref<json::Number>(), 123.0 );
-    M_ASSERT_EQ( ref_test_float.get_ref<json::Number>(), 456.789f );
-    M_ASSERT_EQ( ref_test_double.get_ref<json::Number>(), 987.654321 );
+    M_ASSERT_EQ( ref_test_int.get<json::Number>(), 123.0 );
+    M_ASSERT_EQ( ref_test_float.get<json::Number>(), 456.789f );
+    M_ASSERT_EQ( ref_test_double.get<json::Number>(), 987.654321 );
     
     // Test const get_ref
     const json::Value const_num{42.5};
-    M_ASSERT_NO_THROW( auto& const_ref = const_num.get_ref<json::Number>() );
-    M_ASSERT_EQ( const_num.get_ref<json::Number>(), 42.5 );
+    M_ASSERT_NO_THROW( auto& const_ref = const_num.get<json::Number>() );
+    M_ASSERT_EQ( const_num.get<json::Number>(), 42.5 );
     
     // Test get_ref type safety - wrong type should throw
     json::Value wrong_type_val{json::String("not a number")};
-    M_ASSERT_THROW( std::ignore = wrong_type_val.get_ref<json::Number>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = wrong_type_val.get<json::Number>(), std::runtime_error );
     
     json::Value bool_val_for_ref{true};
-    M_ASSERT_THROW( std::ignore = bool_val_for_ref.get_ref<json::Number>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = bool_val_for_ref.get<json::Number>(), std::runtime_error );
     
     json::Value null_val_for_ref{nullptr};
-    M_ASSERT_THROW( std::ignore = null_val_for_ref.get_ref<json::Number>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val_for_ref.get<json::Number>(), std::runtime_error );
     
     // Test assignment operations
     json::Value assign_val{json::Type::eNumber};
     M_ASSERT_NO_THROW( assign_val = json::Number(99.5) );
-    M_ASSERT_EQ( assign_val.get<json::Number>(), 99.5 );
+    M_ASSERT_EQ( assign_val.to<json::Number>(), 99.5 );
     M_ASSERT_EQ( assign_val.type(), json::Type::eNumber );
     
     // Test assignment with different numeric types
     M_ASSERT_NO_THROW( assign_val = json::Number(100) );
-    M_ASSERT_EQ( assign_val.get<json::Number>(), 100.0 );
+    M_ASSERT_EQ( assign_val.to<json::Number>(), 100.0 );
     
     M_ASSERT_NO_THROW( assign_val = json::Number(-50.25f) );
-    M_ASSERT_EQ( assign_val.get<json::Number>(), -50.25 );
+    M_ASSERT_EQ( assign_val.to<json::Number>(), -50.25 );
     
     // Test reference modification
     json::Value mod_val{json::Number(10.0)};
-    auto& num_ref = mod_val.get_ref<json::Number>();
+    auto& num_ref = mod_val.get<json::Number>();
     num_ref = 20.0;
-    M_ASSERT_EQ( mod_val.get<json::Number>(), 20.0 );
+    M_ASSERT_EQ( mod_val.to<json::Number>(), 20.0 );
     
     // Test edge cases and precision
     json::Value precise_val{json::Number(0.1 + 0.2)};
-    M_ASSERT_TRUE( std::abs(precise_val.get<json::Number>() - 0.3) < 1e-15 );
+    M_ASSERT_TRUE( std::abs(precise_val.to<json::Number>() - 0.3) < 1e-15 );
     
     // Test very large numbers
     json::Value large_pos{json::Number(1.7976931348623157e+308)};
     json::Value large_neg{json::Number(-1.7976931348623157e+308)};
-    M_ASSERT_NO_THROW( std::ignore = large_pos.get<json::Number>() );
-    M_ASSERT_NO_THROW( std::ignore = large_neg.get<json::Number>() );
+    M_ASSERT_NO_THROW( std::ignore = large_pos.to<json::Number>() );
+    M_ASSERT_NO_THROW( std::ignore = large_neg.to<json::Number>() );
     
     // Test very small numbers
     json::Value small_pos{json::Number(2.2250738585072014e-308)};
     json::Value small_neg{json::Number(-2.2250738585072014e-308)};
-    M_ASSERT_NO_THROW( std::ignore = small_pos.get<json::Number>() );
-    M_ASSERT_NO_THROW( std::ignore = small_neg.get<json::Number>() );
+    M_ASSERT_NO_THROW( std::ignore = small_pos.to<json::Number>() );
+    M_ASSERT_NO_THROW( std::ignore = small_neg.to<json::Number>() );
     
     // Test serialization
     M_ASSERT_NO_THROW( int_val.serialize() );
@@ -205,36 +205,36 @@ M_TEST(Value, Number) {
     json::Value negative_num{-1.5};
     json::Value neg_zero_num{-0.0}; // -0.0 == 0.0 in IEEE 754
     
-    M_ASSERT_NO_THROW( auto bool_val = zero_num.get<json::Bool>() );
-    M_ASSERT_FALSE( zero_num.get<json::Bool>() );  // 0.0 -> false
-    M_ASSERT_TRUE( nonzero_num.get<json::Bool>() ); // 3.14 -> true
-    M_ASSERT_TRUE( negative_num.get<json::Bool>() ); // -1.5 -> true
-    M_ASSERT_FALSE( neg_zero_num.get<json::Bool>() ); // -0.0 -> false
+    M_ASSERT_NO_THROW( auto bool_val = zero_num.to<json::Bool>() );
+    M_ASSERT_FALSE( zero_num.to<json::Bool>() );  // 0.0 -> false
+    M_ASSERT_TRUE( nonzero_num.to<json::Bool>() ); // 3.14 -> true
+    M_ASSERT_TRUE( negative_num.to<json::Bool>() ); // -1.5 -> true
+    M_ASSERT_FALSE( neg_zero_num.to<json::Bool>() ); // -0.0 -> false
     
     // Test other invalid type conversions that should throw
-    M_ASSERT_THROW( std::ignore = int_val.get<json::String>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = neg_val.get<json::Array>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = zero_val.get<json::Object>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = float_val.get<std::nullptr_t>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = int_val.to<json::String>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = neg_val.to<json::Array>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = zero_val.to<json::Object>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = float_val.to<std::nullptr_t>(), std::runtime_error );
     
     // Test Number get_ref type safety - only exact JSON type match should work
-    M_ASSERT_THROW( std::ignore = int_val.get_ref<json::Bool>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = float_val.get_ref<json::String>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = neg_val.get_ref<json::Array>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = zero_val.get_ref<json::Object>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = int_val.get_ref<std::nullptr_t>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = int_val.get<json::Bool>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = float_val.get<json::String>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = neg_val.get<json::Array>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = zero_val.get<json::Object>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = int_val.get<std::nullptr_t>(), std::runtime_error );
     
     // Test Number to various numeric types conversion (should work due to arithmetic conversion)
     json::Value num_convert_test{42.7};
-    M_ASSERT_NO_THROW( auto int_conv = num_convert_test.get<int>() );
-    M_ASSERT_NO_THROW( auto float_conv = num_convert_test.get<float>() );
-    M_ASSERT_NO_THROW( auto double_conv = num_convert_test.get<double>() );
-    M_ASSERT_NO_THROW( auto long_conv = num_convert_test.get<long>() );
+    M_ASSERT_NO_THROW( auto int_conv = num_convert_test.to<int>() );
+    M_ASSERT_NO_THROW( auto float_conv = num_convert_test.to<float>() );
+    M_ASSERT_NO_THROW( auto double_conv = num_convert_test.to<double>() );
+    M_ASSERT_NO_THROW( auto long_conv = num_convert_test.to<long>() );
     
-    M_ASSERT_EQ( num_convert_test.get<int>(), 43 );      // nearest integer
-    M_ASSERT_EQ( num_convert_test.get<float>(), 42.7f ); // conversion
-    M_ASSERT_EQ( num_convert_test.get<double>(), 42.7 ); // exact match
-    M_ASSERT_EQ( num_convert_test.get<long>(), 43L );    // nearest integer
+    M_ASSERT_EQ( num_convert_test.to<int>(), 43 );      // nearest integer
+    M_ASSERT_EQ( num_convert_test.to<float>(), 42.7f ); // conversion
+    M_ASSERT_EQ( num_convert_test.to<double>(), 42.7 ); // exact match
+    M_ASSERT_EQ( num_convert_test.to<long>(), 43L );    // nearest integer
     
     // Test round-trip serialization/parsing
     json::Value original{json::Number(123.456789)};
@@ -273,13 +273,13 @@ M_TEST(Value, Number) {
     M_ASSERT_EQ( implicit_float.type(), json::Type::eNumber );
     M_ASSERT_EQ( implicit_double.type(), json::Type::eNumber );
     
-    M_ASSERT_EQ( implicit_int.get<json::Number>(), 42.0 );
-    M_ASSERT_EQ( implicit_long.get<json::Number>(), 1234567890.0 );
-    M_ASSERT_EQ( implicit_longlong.get<json::Number>(), 123456789012345.0 );
-    M_ASSERT_EQ( implicit_uint.get<json::Number>(), 4294967295.0 );
-    M_ASSERT_EQ( implicit_ulong.get<json::Number>(), 123456789012345.0 );
-    M_ASSERT_EQ( implicit_float.get<json::Number>(), 3.14f );
-    M_ASSERT_EQ( implicit_double.get<json::Number>(), 2.718281828459045 );
+    M_ASSERT_EQ( implicit_int.to<json::Number>(), 42.0 );
+    M_ASSERT_EQ( implicit_long.to<json::Number>(), 1234567890.0 );
+    M_ASSERT_EQ( implicit_longlong.to<json::Number>(), 123456789012345.0 );
+    M_ASSERT_EQ( implicit_uint.to<json::Number>(), 4294967295.0 );
+    M_ASSERT_EQ( implicit_ulong.to<json::Number>(), 123456789012345.0 );
+    M_ASSERT_EQ( implicit_float.to<json::Number>(), 3.14f );
+    M_ASSERT_EQ( implicit_double.to<json::Number>(), 2.718281828459045 );
     
     // Test copy initialization with different forms
     json::Value copy_init_int = 99;
@@ -292,54 +292,54 @@ M_TEST(Value, Number) {
     M_ASSERT_EQ( copy_init_double.type(), json::Type::eNumber );
     M_ASSERT_EQ( copy_init_wrapper.type(), json::Type::eNumber );
     
-    M_ASSERT_EQ( copy_init_int.get<json::Number>(), 99.0 );
-    M_ASSERT_EQ( copy_init_float.get<json::Number>(), 1.23f );
-    M_ASSERT_EQ( copy_init_double.get<json::Number>(), 4.56789 );
-    M_ASSERT_EQ( copy_init_wrapper.get<json::Number>(), 777.888 );
+    M_ASSERT_EQ( copy_init_int.to<json::Number>(), 99.0 );
+    M_ASSERT_EQ( copy_init_float.to<json::Number>(), 1.23f );
+    M_ASSERT_EQ( copy_init_double.to<json::Number>(), 4.56789 );
+    M_ASSERT_EQ( copy_init_wrapper.to<json::Number>(), 777.888 );
     
     // Test direct numeric assignment (without json::Number wrapper)
     json::Value numeric_assign{};
     M_ASSERT_NO_THROW( numeric_assign = 42 );
     M_ASSERT_EQ( numeric_assign.type(), json::Type::eNumber );
-    M_ASSERT_EQ( numeric_assign.get<json::Number>(), 42.0 );
+    M_ASSERT_EQ( numeric_assign.to<json::Number>(), 42.0 );
     
     M_ASSERT_NO_THROW( numeric_assign = 1234567890L );
-    M_ASSERT_EQ( numeric_assign.get<json::Number>(), 1234567890.0 );
+    M_ASSERT_EQ( numeric_assign.to<json::Number>(), 1234567890.0 );
     
     M_ASSERT_NO_THROW( numeric_assign = 3.14159f );
-    M_ASSERT_EQ( numeric_assign.get<json::Number>(), 3.14159f );
+    M_ASSERT_EQ( numeric_assign.to<json::Number>(), 3.14159f );
     
     M_ASSERT_NO_THROW( numeric_assign = 2.718281828459045 );
-    M_ASSERT_EQ( numeric_assign.get<json::Number>(), 2.718281828459045 );
+    M_ASSERT_EQ( numeric_assign.to<json::Number>(), 2.718281828459045 );
     
     // Test implicit numeric assignment (copy assignment)
     json::Value implicit_numeric_assign{};
     implicit_numeric_assign = 99;
     M_ASSERT_EQ( implicit_numeric_assign.type(), json::Type::eNumber );
-    M_ASSERT_EQ( implicit_numeric_assign.get<json::Number>(), 99.0 );
+    M_ASSERT_EQ( implicit_numeric_assign.to<json::Number>(), 99.0 );
     
     implicit_numeric_assign = 123.456f;
-    M_ASSERT_EQ( implicit_numeric_assign.get<json::Number>(), 123.456f );
+    M_ASSERT_EQ( implicit_numeric_assign.to<json::Number>(), 123.456f );
     
     implicit_numeric_assign = 987.654321;
-    M_ASSERT_EQ( implicit_numeric_assign.get<json::Number>(), 987.654321 );
+    M_ASSERT_EQ( implicit_numeric_assign.to<json::Number>(), 987.654321 );
     
     // Test large integer types (use EXPECT for >15 digits due to double precision limits)
     json::Value large_int{123456789012345LL}; // 15 digits - safe with ASSERT
     M_ASSERT_EQ( large_int.type(), json::Type::eNumber );
-    M_ASSERT_EQ( large_int.get<json::Number>(), 123456789012345.0 );
+    M_ASSERT_EQ( large_int.to<json::Number>(), 123456789012345.0 );
     
     json::Value very_large_int{1234567890123456789LL}; // 19 digits - use EXPECT
     M_ASSERT_EQ( very_large_int.type(), json::Type::eNumber );
-    M_EXPECT_DOUBLE_EQ_DEFAULT( very_large_int.get<json::Number>(), 1234567890123456789.0 );
+    M_EXPECT_DOUBLE_EQ_DEFAULT( very_large_int.to<json::Number>(), 1234567890123456789.0 );
     
     json::Value large_uint{123456789012345UL}; // 15 digits - safe with ASSERT
     M_ASSERT_EQ( large_uint.type(), json::Type::eNumber );
-    M_ASSERT_EQ( large_uint.get<json::Number>(), 123456789012345.0 );
+    M_ASSERT_EQ( large_uint.to<json::Number>(), 123456789012345.0 );
     
     json::Value very_large_uint{1234567890123456789UL}; // 19 digits - use EXPECT
     M_ASSERT_EQ( very_large_uint.type(), json::Type::eNumber );
-    M_EXPECT_DOUBLE_EQ_DEFAULT( very_large_uint.get<json::Number>(), 1234567890123456789.0 );
+    M_EXPECT_DOUBLE_EQ_DEFAULT( very_large_uint.to<json::Number>(), 1234567890123456789.0 );
     
     // Test Value-to-Value comparison
     json::Value val1{42.0};
@@ -374,15 +374,15 @@ M_TEST(Value, Number) {
     // Test precision comparisons using EXPECT for high precision
     json::Value precise1{0.1 + 0.2};
     json::Value precise2{0.3};
-    M_EXPECT_TRUE( std::abs(precise1.get<json::Number>() - 0.3) < 1e-15 );
+    M_EXPECT_TRUE( std::abs(precise1.to<json::Number>() - 0.3) < 1e-15 );
     M_EXPECT_FALSE( precise1 == precise2 ); // Exact equality may fail due to floating-point precision
     
     // Test using DEFAULT comparison macros for floating point (percentage-based)
     json::Value float1{3.14159265358979323846};
     json::Value float2{3.14159265358979323847}; // Tiny difference
-    M_EXPECT_DOUBLE_EQ_DEFAULT( float1.get<json::Number>(), 3.14159265358979323846 );
+    M_EXPECT_DOUBLE_EQ_DEFAULT( float1.to<json::Number>(), 3.14159265358979323846 );
     // Use the actual float value that results from double->float conversion
-    M_EXPECT_FLOAT_EQ_DEFAULT( static_cast<float>(float1.get<json::Number>()), static_cast<float>(3.14159265358979323846) );
+    M_EXPECT_FLOAT_EQ_DEFAULT( static_cast<float>(float1.to<json::Number>()), static_cast<float>(3.14159265358979323846) );
     
     // Test special numeric values
     json::Value zero_pos{0.0};
@@ -486,10 +486,10 @@ M_TEST(Value, Number) {
     M_ASSERT_EQ( short_val.type(), json::Type::eNumber );
     M_ASSERT_EQ( ushort_val.type(), json::Type::eNumber );
     
-    M_ASSERT_EQ( char_val.get<json::Number>(), 65.0 );  // 'A' = 65
-    M_ASSERT_EQ( uchar_val.get<json::Number>(), 255.0 );
-    M_ASSERT_EQ( short_val.get<json::Number>(), -32768.0 );
-    M_ASSERT_EQ( ushort_val.get<json::Number>(), 65535.0 );
+    M_ASSERT_EQ( char_val.to<json::Number>(), 65.0 );  // 'A' = 65
+    M_ASSERT_EQ( uchar_val.to<json::Number>(), 255.0 );
+    M_ASSERT_EQ( short_val.to<json::Number>(), -32768.0 );
+    M_ASSERT_EQ( ushort_val.to<json::Number>(), 65535.0 );
     
     // Test direct comparison with different numeric types
     json::Value int_42{42};
@@ -511,20 +511,20 @@ M_TEST(Value, Number) {
     
     // Test precision limits
     json::Value precision_test{0.123456789012345};
-    M_EXPECT_DOUBLE_EQ_DEFAULT( precision_test.get<json::Number>(), 0.123456789012345 );
+    M_EXPECT_DOUBLE_EQ_DEFAULT( precision_test.to<json::Number>(), 0.123456789012345 );
     
     // Test that exact equality may fail for computed values
     json::Value computed{0.1 + 0.2};
     json::Value literal{0.3};
     M_EXPECT_FALSE( computed == literal ); // Exact equality likely fails
-    M_EXPECT_TRUE( std::abs(computed.get<json::Number>() - 0.3) < 1e-15 ); // But close enough
+    M_EXPECT_TRUE( std::abs(computed.to<json::Number>() - 0.3) < 1e-15 ); // But close enough
     
     // Test serialization consistency
     json::Value serialize_test{123.456789};
     auto serialized_str = serialize_test.serialize();
     auto parsed_back_test = json::parse(serialized_str);
     if (parsed_back_test.has_value()) {
-        M_EXPECT_DOUBLE_EQ_DEFAULT( serialize_test.get<json::Number>(), 
+        M_EXPECT_DOUBLE_EQ_DEFAULT( serialize_test.to<json::Number>(), 
                                    parsed_back_test->get<json::Number>() );
     } else {
         M_ASSERT_FAIL("Failed to parse back serialized number for consistency test");

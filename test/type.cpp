@@ -26,6 +26,7 @@ M_TEST(Type, enum) {
     M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedObject), 6 ) );
     M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedArray),  7 ) );
     M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnknownFormat),  8 ) );
+    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eRedundentText),  9 ) );
 }
 
 // Test the Object type

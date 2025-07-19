@@ -33,9 +33,9 @@ M_TEST(Value, Null) {
     M_ASSERT_EQ( copy_init_default.type(), json::Type::eNull );
     M_ASSERT_EQ( copy_init_explicit.type(), json::Type::eNull );
     
-    M_ASSERT_EQ( copy_init_null.get<std::nullptr_t>(), nullptr );
-    M_ASSERT_EQ( copy_init_default.get<std::nullptr_t>(), nullptr );
-    M_ASSERT_EQ( copy_init_explicit.get<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( copy_init_null.to<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( copy_init_default.to<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( copy_init_explicit.to<std::nullptr_t>(), nullptr );
     
     // Test type checking
     json::Value null_val{nullptr};
@@ -57,53 +57,53 @@ M_TEST(Value, Null) {
     M_EXPECT_STREQ( null_val2.type_name(), "Null" );
     
     // Test get<Null>() method (Null is std::nullptr_t)
-    M_ASSERT_NO_THROW( std::ignore = null_val.get<std::nullptr_t>() );
-    M_ASSERT_EQ( null_val.get<std::nullptr_t>(), nullptr );
-    M_ASSERT_EQ( null_val2.get<std::nullptr_t>(), nullptr );
+    M_ASSERT_NO_THROW( std::ignore = null_val.to<std::nullptr_t>() );
+    M_ASSERT_EQ( null_val.to<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( null_val2.to<std::nullptr_t>(), nullptr );
     
     // Test get_ref<Null>() method
-    M_ASSERT_NO_THROW( auto& ref = null_val.get_ref<std::nullptr_t>() );
-    M_ASSERT_EQ( null_val.get_ref<std::nullptr_t>(), nullptr );
+    M_ASSERT_NO_THROW( auto& ref = null_val.get<std::nullptr_t>() );
+    M_ASSERT_EQ( null_val.get<std::nullptr_t>(), nullptr );
     
     // Test get_ref with different null values
     json::Value ref_test_null{nullptr};
     json::Value ref_test_default{};
     json::Value ref_test_explicit{json::Type::eNull};
     
-    M_ASSERT_NO_THROW( auto& ref_null = ref_test_null.get_ref<std::nullptr_t>() );
-    M_ASSERT_NO_THROW( auto& ref_default = ref_test_default.get_ref<std::nullptr_t>() );
-    M_ASSERT_NO_THROW( auto& ref_explicit = ref_test_explicit.get_ref<std::nullptr_t>() );
+    M_ASSERT_NO_THROW( auto& ref_null = ref_test_null.get<std::nullptr_t>() );
+    M_ASSERT_NO_THROW( auto& ref_default = ref_test_default.get<std::nullptr_t>() );
+    M_ASSERT_NO_THROW( auto& ref_explicit = ref_test_explicit.get<std::nullptr_t>() );
     
-    M_ASSERT_EQ( ref_test_null.get_ref<std::nullptr_t>(), nullptr );
-    M_ASSERT_EQ( ref_test_default.get_ref<std::nullptr_t>(), nullptr );
-    M_ASSERT_EQ( ref_test_explicit.get_ref<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( ref_test_null.get<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( ref_test_default.get<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( ref_test_explicit.get<std::nullptr_t>(), nullptr );
     
     // Test const get_ref
     const json::Value const_null{nullptr};
-    M_ASSERT_NO_THROW( auto& const_ref = const_null.get_ref<std::nullptr_t>() );
-    M_ASSERT_EQ( const_null.get_ref<std::nullptr_t>(), nullptr );
+    M_ASSERT_NO_THROW( auto& const_ref = const_null.get<std::nullptr_t>() );
+    M_ASSERT_EQ( const_null.get<std::nullptr_t>(), nullptr );
     
     // Test get_ref type safety - wrong type should throw
     json::Value wrong_type_val{json::String("not null")};
-    M_ASSERT_THROW( std::ignore = wrong_type_val.get_ref<std::nullptr_t>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = wrong_type_val.get<std::nullptr_t>(), std::runtime_error );
     
     json::Value num_val_for_ref{42.0};
-    M_ASSERT_THROW( std::ignore = num_val_for_ref.get_ref<std::nullptr_t>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = num_val_for_ref.get<std::nullptr_t>(), std::runtime_error );
     
     json::Value bool_val_for_ref{true};
-    M_ASSERT_THROW( std::ignore = bool_val_for_ref.get_ref<std::nullptr_t>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = bool_val_for_ref.get<std::nullptr_t>(), std::runtime_error );
     
     // Test assignment operations
     json::Value assign_val{json::Type::eBool}; // Start with different type
     M_ASSERT_NO_THROW( assign_val = nullptr );
     M_ASSERT_EQ( assign_val.type(), json::Type::eNull );
-    M_ASSERT_EQ( assign_val.get<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( assign_val.to<std::nullptr_t>(), nullptr );
     
     // Test implicit assignment (copy assignment)
     json::Value implicit_assign{true}; // Start with different type
     implicit_assign = nullptr;
     M_ASSERT_EQ( implicit_assign.type(), json::Type::eNull );
-    M_ASSERT_EQ( implicit_assign.get<std::nullptr_t>(), nullptr );
+    M_ASSERT_EQ( implicit_assign.to<std::nullptr_t>(), nullptr );
     
     // Test Value-to-Value comparison
     json::Value null_cmp1{nullptr};
@@ -174,42 +174,42 @@ M_TEST(Value, Null) {
     json::Value null_for_pointers{nullptr};
     
     // Test various pointer types that should all return nullptr
-    M_ASSERT_NO_THROW( std::ignore = null_for_pointers.get<int*>() );
-    M_ASSERT_NO_THROW( std::ignore = null_for_pointers.get<char*>() );
-    M_ASSERT_NO_THROW( std::ignore = null_for_pointers.get<void*>() );
-    M_ASSERT_NO_THROW( std::ignore = null_for_pointers.get<double*>() );
+    M_ASSERT_NO_THROW( std::ignore = null_for_pointers.to<int*>() );
+    M_ASSERT_NO_THROW( std::ignore = null_for_pointers.to<char*>() );
+    M_ASSERT_NO_THROW( std::ignore = null_for_pointers.to<void*>() );
+    M_ASSERT_NO_THROW( std::ignore = null_for_pointers.to<double*>() );
     
-    M_ASSERT_EQ( null_for_pointers.get<int*>(), nullptr );
-    M_ASSERT_EQ( null_for_pointers.get<char*>(), nullptr );
-    M_ASSERT_EQ( null_for_pointers.get<void*>(), nullptr );
-    M_ASSERT_EQ( null_for_pointers.get<double*>(), nullptr );
+    M_ASSERT_EQ( null_for_pointers.to<int*>(), nullptr );
+    M_ASSERT_EQ( null_for_pointers.to<char*>(), nullptr );
+    M_ASSERT_EQ( null_for_pointers.to<void*>(), nullptr );
+    M_ASSERT_EQ( null_for_pointers.to<double*>(), nullptr );
     
     // Test that non-null values cannot be converted to pointer types
     json::Value non_null_val{42};
-    M_ASSERT_THROW( std::ignore = non_null_val.get<int*>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = non_null_val.get<char*>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = non_null_val.get<void*>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = non_null_val.to<int*>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = non_null_val.to<char*>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = non_null_val.to<void*>(), std::runtime_error );
     
     // Test type safety - wrong type access should throw (except pointer types)
+    M_ASSERT_THROW( std::ignore = null_val.to<json::String>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<json::Number>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<json::Bool>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<json::Array>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<json::Object>(), std::runtime_error );
+    
+    // Test Null get_ref type safety - only exact type match should work
     M_ASSERT_THROW( std::ignore = null_val.get<json::String>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = null_val.get<json::Number>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = null_val.get<json::Bool>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = null_val.get<json::Array>(), std::runtime_error );
     M_ASSERT_THROW( std::ignore = null_val.get<json::Object>(), std::runtime_error );
     
-    // Test Null get_ref type safety - only exact type match should work
-    M_ASSERT_THROW( std::ignore = null_val.get_ref<json::String>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = null_val.get_ref<json::Number>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = null_val.get_ref<json::Bool>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = null_val.get_ref<json::Array>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = null_val.get_ref<json::Object>(), std::runtime_error );
-    
     // Test Null to non-pointer types should throw
-    M_ASSERT_THROW( std::ignore = null_val.get<int>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = null_val.get<float>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = null_val.get<double>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = null_val.get<bool>(), std::runtime_error );
-    M_ASSERT_THROW( std::ignore = null_val.get<std::string>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<int>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<float>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<double>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<bool>(), std::runtime_error );
+    M_ASSERT_THROW( std::ignore = null_val.to<std::string>(), std::runtime_error );
     
     // Test null consistency
     json::Value consistency_null1{};
