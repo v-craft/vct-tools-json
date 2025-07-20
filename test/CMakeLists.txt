@@ -15,6 +15,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(vct-test-unit)
 
 file(GLOB_RECURSE test_cpp_files ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+# file(GLOB_RECURSE example_cpp_files ${CMAKE_CURRENT_SOURCE_DIR}/../examples/*.cpp)
 
 add_executable(test_json ${test_cpp_files})
 target_link_libraries(test_json PRIVATE ${prev_name}::${lib_name})

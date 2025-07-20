@@ -14,25 +14,23 @@ struct MyData{
     bool active{false};
     double m_value{};
 
-    MyData() = default; // 请额外提供默认构造
+    MyData() = default; // default constructor is needed
 
-    M_JSON_CS_FUN( MyData,
-        M_JSON_CS_MEM( id );
-        M_JSON_CS_MAP( name, m_name );
-        M_JSON_CS_MEM_OR( active, true ); // 默认值为true
-        M_JSON_CS_MAP_OR( value, m_value, 64.0 ); // 默认值为0.0
+    M_JSON_CV_FUN( MyData,  // Conversion constructor, must in public section
+        M_JSON_CV_MEM( id );    // `;` is optional, but can not be `,`
+        M_JSON_CV_MAP( name, m_name )
+        M_JSON_CV_MEM( active )
+        M_JSON_CV_MAP( value, m_value )
     )
-
-    M_JSON_CV_FUN( MyData,
-        M_JSON_CV_MEM( id );
-        M_JSON_CV_MAP( name, m_name );
-        M_JSON_CV_MEM( active );
-        M_JSON_CV_MAP( value, m_value );
+    M_JSON_CS_FUN( MyData,  // Conversion constructor, must in public section
+        M_JSON_CS_MEM( id )
+        M_JSON_CS_MAP( name, m_name )
+        M_JSON_CS_MEM_OR( active, true, nullptr ) // default value is `true`, nullptr means no range value
+        M_JSON_CS_MAP_OR( value, m_value, 64.0, nullptr ) // default value is `true`, nullptr means no range value
     )
-
 };
 
-M_TEST(JSON, Macros) {
+M_TEST(Macros, Simple) {
 
     {
         json::Value v_null;
