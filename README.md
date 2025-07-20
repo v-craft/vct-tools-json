@@ -17,7 +17,7 @@
 
 vct-tools-json 是一个 C++23 的 JSON 库，它提供简洁、高效的 JSON 解析、操作和序列化功能。
 
-作为 README ，这里只进行粗略介绍，详细说明请参考 `examples` 下的 [文档](./examples/docs.md) 和示例代码。
+你可以在本仓库的 github-pages 页面找到详细的文档。
 
 ## **导入库**
 
@@ -66,7 +66,6 @@ JSON 标准中定义了六种类型，本库中将它们映射为了 C++ 中类�
 注意到这里有一个特殊类型 `Value` ，它也由本库定义，内部包含一个 `Type` 枚举值和一个 `std::variant` ，后者可以存储上述任一类型的值。
 
 > 选用 `map` 而非 `unordered_map` 是为了保证序列化结果的一致性和时间的稳定性。
-> 但你可以参考 [文档](./examples/docs.md) ，通过宏定义显式选用 `unordered_map` 。
 
 ## **基础操作**
 
@@ -144,7 +143,7 @@ if(opt_str) std::cout << *opt_str << std::endl; // 如果转换成功，输出�
 std::string or_str = smp_val["key1"].to_or<std::string>("default"); // 如果转换失败，返回 "default"
 ```
 
-转换具有非常准确的规则与测试顺序，详细内容请参考 [文档](./examples/docs.md) 。
+转换具有非常准确的规则与测试顺序，详细内容请参考 github-pages 文档，或源码注释。
 
 ### 3. 序列化与反序列化
 
@@ -162,7 +161,7 @@ std::cout << val1[1].to<bool>() << std::endl; // 输出 0 （没有指定 boolap
 这里需要要说明三件事。
 
 首先，JSON 文件解析失败在实际应用中很常见且难以预料，因为很容易有一些垃圾数据或格式错误问题。
-因此本库的反序列化函数返回 `std::expected<Value, ParseError>` ，从而避免使用异常机制，减小开销。后者是一个描述错误类型的枚举，可以在 [文档](./examples/docs.md) 中找到相关信息。
+因此本库的反序列化函数返回 `std::expected<Value, ParseError>` ，从而避免使用异常机制，减小开销。后者是一个描述错误类型的枚举。
 
 其次，此函数还具有一个可选参数 `max_depth`（默认是 256），用于限制解析的最大深度。
 本库虽然保证总解析耗时是 `O(n)` 的（严格单次遍历），但使用了递归来处理嵌套结构，因此需要用它避免某些垃圾数据的问题（比如过长的 `[[[[[[[[]]]]]]]]` 在递归时可能导致栈溢出）。
@@ -213,9 +212,9 @@ val_arr_1 == val_arr_2; // true
 val_arr_1 == val_arr_3; // false
 ```
 
-更加特殊的是， `Value` 还通过模板函数实现了和其他任意类型的 `==` 比较，可以在 [文档](./examples/docs.md) 中找到详细说明。
+更加特殊的是， `Value` 还通过模板函数实现了和其他任意类型的 `==` 比较。
 
-简单的说，不兼容的类型直接返回 `false` ，如果目标是六种 JSON 类型之一，则先测试类型是否匹配，然后比较具体值。
+不兼容的类型直接返回 `false` ，如果目标是六种 JSON 类型之一，则先测试类型是否匹配，然后比较具体值。
 否则，尝试将对象转换为 `Value` ，或者将 `Value` 转换为目标类型然后比较。都不匹配则返回 `false` 。
 
 此比较保证成功，不会抛出异常。
@@ -412,7 +411,7 @@ xxx = val.to_or<std::vector<MyData>>( std::vector<MyData>{} , MyData{} );
 
 ## **最后**
 
-以上就是本库的基本使用，虽然自定义类型序列化的部分比较复杂，但你可以自行阅读 [文档](./examples/docs.md) 和源码，本库的源码的有效行数其实非常少（不足 2000 行）。
+以上就是本库的基本使用，虽然自定义类型序列化的部分比较复杂，但你可以自行阅读文档和源码，本库的源码的有效行数其实非常少（不足 2000 行）。
 重点观察 `to` 和 `move` 的实现，以及头文件中的宏定义，你应该能很快上手。
 
 如果你发现的本库的任何问题，或者可优化的地方，欢迎提交 issue 或 PR。
@@ -466,14 +465,14 @@ using namespace vct::tools; // Use the namespace for convenience
 
 The JSON standard defines six types, mapped in this library to C++ types in the `vht::tools::json` namespace:
 
-| JSON Type | Library Type | C++ Type | Enum Value |
-|-----------|-------------|----------|------------|
-| `null`    | `Null`      | `std::nullptr_t`               | `Type::eNull`   |
-| `bool`    | `Bool`      | `bool`                         | `Type::eBool`   |
-| `number`  | `Double`    | `double`                       | `Type::eNumber` |
-| `string`  | `String`    | `std::string`                  | `Type::eString` |
-| `array`   | `Array`     | `std::vector<Value>`           | `Type::eArray`  |
-| `object`  | `Object`    | `std::map<std::string, Value>` | `Type::eObject` |
+| JSON Type | Library Type | C++ Type                       | Enum Value      |
+|-----------|--------------|--------------------------------|-----------------|
+| `null`    | `Null`       | `std::nullptr_t`               | `Type::eNull`   |
+| `bool`    | `Bool`       | `bool`                         | `Type::eBool`   |
+| `number`  | `Double`     | `double`                       | `Type::eNumber` |
+| `string`  | `String`     | `std::string`                  | `Type::eString` |
+| `array`   | `Array`      | `std::vector<Value>`           | `Type::eArray`  |
+| `object`  | `Object`     | `std::map<std::string, Value>` | `Type::eObject` |
 
 Note the special type `Value`, defined by this library, which contains a `Type` enum and a `std::variant` holding any of the above types.
 

@@ -11,7 +11,7 @@ struct MyData{
     bool active{false};
     double m_value{};
 
-    MyData() = default; // default constructor is needed
+    MyData() = default; // 默认构造函数是必须的
 
     M_JSON_CV_FUN( MyData,  // 转换函数，必须在 public 作用域
         M_JSON_CV_MEM( id );    // 注意，MyData 后面必须有 `,`
@@ -22,8 +22,8 @@ struct MyData{
     M_JSON_CS_FUN( MyData,  // 构造函数，必须在 public 作用域
         M_JSON_CS_MEM( id )
         M_JSON_CS_MAP( name, m_name )
-        M_JSON_CS_MEM_OR( active, true, nullptr ) // default value is `true`, nullptr means no range value
-        M_JSON_CS_MAP_OR( value, m_value, 64.0, nullptr ) // default value is `true`, nullptr means no range value
+        M_JSON_CS_MEM_OR( active, true, nullptr ) // 默认值为 `true`, nullptr 表示没有子元素
+        M_JSON_CS_MAP_OR( value, m_value, 64.0, nullptr ) // nullptr 表示没有子元素
     )
 };
 

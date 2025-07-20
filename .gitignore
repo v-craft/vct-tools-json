@@ -3,6 +3,7 @@
 .vs/
 .vscode/
 
-build/
-CMakePresets.json
+/build/
+/html/
+CMakeUserPresets.json
 

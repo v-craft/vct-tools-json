@@ -3,12 +3,40 @@ export module vct.tools.json;
 import std;
 
 /**
- * @namespace vct::tools::json
+ * @file json.ixx
+ * @brief JSON parsing and manipulation library module
+ * @author Mysvac
+ * @date 2025-07-17
+ * @version 1.0
+ * @copyright Copyright (c) 2025 Mysvac. All rights reserved.
+ *
+ * This module provides a comprehensive JSON parsing, serialization and manipulation library
+ * that supports all standard JSON data types and provides type-safe operations with modern C++ features.
+ *
+ * Features:
+ * - Type-safe JSON value storage using std::variant
+ * - Flexible type conversion system with multiple conversion strategies
+ * - Support for both compact and pretty-printed JSON serialization
+ * - Template-based generic programming with concepts for type safety
+ * - STL-compatible container operations
+ * - Exception-safe operations with noexcept guarantees where appropriate
+ */
+
+/**
+ * \~chinese @namespace vct::tools::json
  * @brief Core namespace for JSON parsing library
  * 
  * Provides comprehensive JSON data parsing, serialization and manipulation functionality.
  * Supports all standard JSON data types: objects, arrays, strings, numbers, booleans and null.
  * 
+ * Key features:
+ * - Type-safe JSON value storage using std::variant
+ * - Flexible type conversion system with multiple conversion strategies
+ * - Support for both compact and pretty-printed JSON serialization
+ * - Template-based generic programming with concepts for type safety
+ * - STL-compatible container operations
+ * - Exception-safe operations with noexcept guarantees where appropriate
+ *
  * Default use std::map
  * If you want to use std::unordered_map instead, define M_VCT_TOOLS_JSON_UNORDERED_MAP by CMakeLists.txt.
  * 
@@ -21,33 +49,38 @@ export namespace vct::tools::json{
     /**
      * @enum Type
      * @brief JSON data type enumeration
+     *
+     * Defines the six fundamental JSON data types as specified in RFC 7159.
+     * Used internally for type identification and validation.
      */
     enum class Type{
-        eNull = 0,  ///< JSON null type, null value
-        eBool,      ///< JSON boolean type, true or false value
-        eNumber,    ///< JSON number type, integer or floating-point value
-        eString,    ///< JSON string type, Unicode character sequence enclosed in double quotes
-        eArray,     ///< JSON array type, ordered list of values
-        eObject     ///< JSON object type, unordered collection of key-value pairs
+        eNull = 0,  ///< JSON null type, represents null value
+        eBool,      ///< JSON boolean type, represents true or false value
+        eNumber,    ///< JSON number type, represents integer or floating-point value
+        eString,    ///< JSON string type, represents Unicode character sequence enclosed in double quotes
+        eArray,     ///< JSON array type, represents ordered list of values
+        eObject     ///< JSON object type, represents unordered collection of key-value pairs
     };
 
     /**
      * @enum ParseError
      * @brief Enumeration of possible JSON parsing errors
+     *
+     * Comprehensive error codes for JSON parsing operations.
+     * Used to provide detailed error information when parsing fails.
      */
     enum class ParseError {
-        eNone = 0,          ///< No error occurred
+        eNone = 0,          ///< No error occurred, parsing was successful
         eEmptyData,         ///< Empty data provided for parsing
-        eDepthExceeded,     ///< Maximum depth exceeded during parsing
-        eIllegalEscape,     ///< Illegal escape sequence in string literal
+        eDepthExceeded,     ///< Maximum nesting depth exceeded during parsing
+        eIllegalEscape,     ///< Illegal escape sequence encountered in string literal
         eInvalidNumber,     ///< Invalid number format encountered
         eUnclosedString,    ///< Unclosed string literal in JSON data
         eUnclosedObject,    ///< Unclosed object literal in JSON data
         eUnclosedArray,     ///< Unclosed array literal in JSON data
         eUnknownFormat,     ///< Invalid JSON format encountered
-        eRedundantText      ///< Redundant text after valid JSON data
+        eRedundantText      ///< Redundant text found after valid JSON data
     };
-
 
     // Forward declaration
     class Value;
@@ -55,6 +88,8 @@ export namespace vct::tools::json{
     /**
      * @typedef String
      * @brief JSON string type definition, using std::string
+     *
+     * Standard string type for JSON string values. UTF-8 encoded by default.
      */
     using String = std::string;
     static_assert(std::is_same_v<String, std::string>, "String type must be std::string");
@@ -65,6 +100,9 @@ export namespace vct::tools::json{
     /**
      * @typedef Object
      * @brief JSON object type definition, using std::map for key-value pairs
+     *
+     * Ordered map implementation for JSON objects. Provides deterministic iteration order.
+     * Keys are sorted lexicographically for consistent serialization output.
      */
     using Object = std::map<String,Value>;
     static_assert(std::is_same_v<Object, std::map<String,Value>>, "Object type must be std::map<String,Value>");
@@ -74,6 +112,9 @@ export namespace vct::tools::json{
     /**
      * @typedef Object
      * @brief JSON object type definition, using std::unordered_map for key-value pairs
+     *
+     * Hash map implementation for JSON objects. Provides O(1) average lookup time
+     * but iteration order is not guaranteed. Enable by defining M_VCT_TOOLS_JSON_UNORDERED_MAP.
      */
     using Object = std::unordered_map<String,Value>;
     static_assert(std::is_same_v<Object, std::unordered_map<String,Value>>, "Object type must be std::unordered_map<String,Value>");
@@ -83,6 +124,9 @@ export namespace vct::tools::json{
     /**
      * @typedef Array
      * @brief JSON array type definition, using std::vector
+     *
+     * Dynamic array implementation for JSON arrays. Provides O(1) random access
+     * and efficient push_back operations for array construction.
      */
     using Array = std::vector<Value>;
     static_assert(std::is_same_v<Array, std::vector<Value>>, "Array type must be std::vector");
@@ -90,6 +134,10 @@ export namespace vct::tools::json{
     /**
      * @typedef Number
      * @brief JSON number type definition, using double for precision
+     *
+     * Uses IEEE 754 double-precision floating-point for maximum compatibility
+     * with JSON number specification. Can represent integers up to 2^53 exactly.
+     *
      * @note Number type could be cast to Bool by `to/move` function in this library, but not equal in `==` operator.
      */
     using Number = double;
@@ -99,6 +147,9 @@ export namespace vct::tools::json{
     /**
      * @typedef Bool
      * @brief JSON boolean type definition, using bool
+     *
+     * Standard boolean type for JSON true/false values.
+     *
      * @note Bool type could be cast to Number by `to/move` function in this library, but not equal in `==` operator.
      */
     using Bool = bool;
@@ -108,6 +159,10 @@ export namespace vct::tools::json{
     /**
      * @typedef Null
      * @brief JSON null type definition, using std::nullptr_t
+     *
+     * Represents JSON null values using the standard null pointer type.
+     * Provides type safety and distinguishes from other "empty" values.
+     *
      * @note Null type could not cast to false or 0 in this library,
      */
     using Null = std::nullptr_t;
@@ -115,7 +170,13 @@ export namespace vct::tools::json{
     static_assert( Null{} == nullptr, "Null type must be nullptr");
 
     /**
+     * @concept json_types
      * @brief Concept to constrain template types to valid JSON types
+     *
+     * Ensures that template parameters are one of the six fundamental JSON types.
+     * Used throughout the library for type safety and clear error messages.
+     *
+     * @tparam T Type to check for JSON compatibility
      */
     template<typename T>
     concept json_types = std::disjunction_v<
@@ -128,7 +189,14 @@ export namespace vct::tools::json{
     >;
 
     /**
+     * @concept convertible_types
      * @brief The available types for 'to/move' function, must include 'json types'
+     *
+     * Includes JSON types plus additional types that can be safely converted
+     * to or from JSON representation, including arithmetic types, enums,
+     * and types with appropriate conversion constructors.
+     *
+     * @tparam T Type to check for conversion compatibility
      */
     template<typename T>
     concept convertible_types = json_types<T> || std::disjunction_v<
@@ -144,7 +212,15 @@ export namespace vct::tools::json{
     >;
 
     /**
+     * @concept convertible_map_types
      * @brief Convertable k-v type, D is default mapped type
+     *
+     * Defines requirements for types that can be converted to/from JSON Objects.
+     * The type must be a range with key_type and mapped_type, where keys can be
+     * converted to/from String and values can be converted to/from Value.
+     *
+     * @tparam T Map-like type to check
+     * @tparam D Default mapped type for failed conversions
      */
     template<typename T, typename D>
     concept convertible_map_types = std::ranges::range<T> && requires {
@@ -160,7 +236,14 @@ export namespace vct::tools::json{
     };
 
     /**
+     * @concept convertible_array_types
      * @brief Convertable array type, D is default value type
+     *
+     * Defines requirements for types that can be converted to/from JSON Arrays.
+     * The type must be a range with value_type that can be converted to/from Value.
+     *
+     * @tparam T Array-like type to check
+     * @tparam D Default value type for failed conversions
      */
     template<typename T, typename D>
     concept convertible_array_types =  std::ranges::range<T> && requires {
@@ -177,6 +260,18 @@ export namespace vct::tools::json{
      * @class Value
      * @brief Universal container class for JSON values
      * 
+     * The core class of the JSON library that can store and manipulate any JSON value type.
+     * Uses std::variant internally for type-safe storage and provides comprehensive
+     * type conversion, serialization, and manipulation capabilities.
+     *
+     * Features:
+     * - Type-safe storage using std::variant
+     * - Flexible conversion system with multiple strategies (to, to_if, to_or, move variants)
+     * - STL-compatible container access for objects and arrays
+     * - Comprehensive comparison operators
+     * - Exception-safe operations with noexcept guarantees where possible
+     * - Support for both compact and pretty-printed serialization
+     *
      * Stores and manipulates JSON values of any type using std::variant for type-safe storage.
      * Supports all JSON data types: objects, arrays, strings, numbers, booleans and null.
      * 
@@ -763,7 +858,7 @@ export namespace vct::tools::json{
          * 15. Null -> implicit convertible types (Null is not convertible to bool !!!!!)
          * 16. Object -> Try copy to `range && String->key_type && Value->mapped_type types && have default_range_value`
          * 17. Array -> Try copy to `range && Value->value_type types && have default_range_value`
-         * 16. throw std::runtime_error
+         * 18. throw std::runtime_error
          */
         template<typename T, typename D = Null>
         requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
@@ -962,7 +1057,7 @@ export namespace vct::tools::json{
         template<typename T, typename D = Null>
         requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
         [[nodiscard]]
-        T  to_or( T default_result,  D default_range_value = D{} ) const noexcept {
+        T  to_or( T default_result, D default_range_value = D{} ) const noexcept {
             if constexpr (std::is_same_v<T, Null>) {
                 if (m_type == Type::eNull) return Null{};
             } else if constexpr (std::is_same_v<T, Object>) {
@@ -1227,6 +1322,7 @@ export namespace vct::tools::json{
             return std::nullopt; // return nullopt if conversion fails
         }
 
+
         /**
          * @brief type conversion, Move or Copy inner value to specified type
          * @tparam T The target type to convert to
@@ -1258,7 +1354,7 @@ export namespace vct::tools::json{
          * 15. Null -> implicit convertible types (Null is not convertible to bool !!!!!)
          * 16. Object -> Try copy to `range && String->key_type && Value->mapped_type types && have default_range_value`  (try Move)
          * 17. Array -> Try copy to `range && Value->value_type types && have default_range_value`  (try Move)
-         * 18. return default_value
+         * 18. return default_result;
          */
         template<typename T, typename D = Null>
         requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
