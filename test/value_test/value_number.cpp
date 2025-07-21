@@ -27,8 +27,8 @@ M_TEST(Value, Number) {
     // --- Type checking ---
     json::Value v_int{42}, v_float{3.14f}, v_neg{-123.456}, v_zero{0.0};
     M_ASSERT_EQ(v_int.type(), json::Type::eNumber);
-    M_ASSERT_TRUE(v_int.is(json::Type::eNumber));
-    M_ASSERT_FALSE(v_int.is(json::Type::eString));
+    M_ASSERT_TRUE(v_int.is<json::Number>());
+    M_ASSERT_FALSE(v_int.is<json::String>());
     M_EXPECT_STREQ(v_int.type_name(), "Number");
 
     // --- Reference access ---

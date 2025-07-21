@@ -64,12 +64,11 @@ concept char_iterator =  std::disjunction_v<
 
 /**
  * @brief Parse 4 hexadecimal characters into a 32-bit value
- * @param it_ref Iterator positioned at first hex character
+ * @param it Iterator positioned at first hex character
  * @param end_ptr End iterator
  * @return Parsed value or max uint32_t on error
  */
-static std::uint32_t hex4_next(char_iterator auto& it_ref, const char_iterator auto end_ptr) noexcept {
-    auto it = it_ref;
+static std::uint32_t hex4_next(char_iterator auto& it, const char_iterator auto end_ptr) noexcept {
     // `it` wat in `\uABCD`'s A position, and not be end_ptr
     std::uint32_t result{ 0 };
     
@@ -96,21 +95,19 @@ static std::uint32_t hex4_next(char_iterator auto& it_ref, const char_iterator a
     result = (result << 4) | d4;
 
     // `it` wat in `\uABCD`'s D position
-    it_ref = it; // Update the original iterator
     return result;
 }
 
 /**
  * @brief Convert Unicode escape sequence to UTF-8 string
- * @param it_ref Iterator positioned at 'u' in \uXXXX
+ * @param it Iterator positioned at 'u' in \uXXXX
  * @param end_ptr End iterator
  * @return UTF-8 encoded string or null-opt on error
  */
 static std::optional<String> unescape_unicode_next(
-    char_iterator auto& it_ref, 
+    char_iterator auto& it,
     const char_iterator auto end_ptr
 ) noexcept {
-    auto it = it_ref;
     // it was in `\uABCD`'s `u` position
     String out;
     out.reserve( 4 );
@@ -169,21 +166,19 @@ static std::optional<String> unescape_unicode_next(
         out += static_cast<char>(0x80 | (code_point & 0x3F));
     } else return std::nullopt;
 
-    it_ref = it; // Update the original iterator
     return out;
 }
 
 /**
  * @brief Parse and unescape JSON string
- * @param it_ref Iterator positioned at opening quote
+ * @param it Iterator positioned at opening quote
  * @param end_ptr End iterator
  * @return Unescaped string or ParseError
  */
 static std::expected<std::string, ParseError> unescape_next(
-    char_iterator auto& it_ref, 
+    char_iterator auto& it,
     const char_iterator auto end_ptr
 ) noexcept {
-    auto it = it_ref; // Make a copy of the iterator, Accelerate operation speed
     std::string res;
 
     for (++it; it != end_ptr && *it != '\"'; ++it) {
@@ -214,25 +209,23 @@ static std::expected<std::string, ParseError> unescape_next(
     }
     if(it == end_ptr) return std::unexpected( ParseError::eUnclosedString );
     ++it;
-    it_ref = it; // Update the original iterator
     return res;
 }
 
 /**
  * @brief Recursive JSON value parser
- * @param it_ref Current iterator position
+ * @param it Current iterator position
  * @param end_ptr End iterator
  * @param max_depth Maximum recursion depth
  * @return Parsed JSON value or ParseError
  */
 static std::expected<Value, ParseError> reader(
-    char_iterator auto& it_ref, 
+    char_iterator auto& it,
     const char_iterator auto end_ptr, 
     const std::int32_t max_depth
 ) noexcept {
     // Check for maximum depth
     if(max_depth < 0) return std::unexpected( ParseError::eDepthExceeded );
-    auto it = it_ref; // Make a copy of the iterator, Accelerate operation speed
     // Skip spaces
     while(it != end_ptr && std::isspace(*it)) ++it;
     if(it == end_ptr) return std::unexpected( ParseError::eEmptyData );
@@ -331,31 +324,29 @@ static std::expected<Value, ParseError> reader(
             ++it;
         } break;
         default: {
-            if(* it == 'e' || *it == 'E' ) {
-                return std::unexpected( ParseError::eUnknownFormat );
-            } // begin with e/E is invalid, other invalid type will be handled after
+            if(* it == 'e' || *it == 'E' ) return std::unexpected( ParseError::eUnknownFormat );
+            // begin with e/E is invalid, other invalid type will be handled after
 
             // number
             std::uint8_t buffer_len = 0;
-            std::array<char, 24> buffer; // Reserve enough space for typical numbers
+            char buffer[24];    // Reserve enough space for typical numbers
+            // std::array<char, 24> buffer;
 
             while(buffer_len < 24 && it != end_ptr && 
                 (std::isdigit(*it)  || *it=='-' || *it=='.' || *it=='e' || *it=='E' || *it=='+')
             ) buffer[buffer_len++] = *(it++);
             
-            if( buffer_len == 0  ) return std::unexpected( ParseError::eInvalidNumber );
-            if( buffer_len == 24 ) return std::unexpected( ParseError::eInvalidNumber );
+            if( buffer_len == 0 || buffer_len == 24 ) return std::unexpected( ParseError::eInvalidNumber );
             if( it != end_ptr && !std::isspace(*it) && *it != '}' && *it != ']' && *it != ',' ) return std::unexpected( ParseError::eInvalidNumber );
 
             Number value;
-            if(const auto [ptr, ec] = std::from_chars(&*buffer.cbegin(), &*buffer.cbegin() + buffer_len, value);
-                ec != std::errc{} || ptr != &*buffer.cbegin() + buffer_len
+            if(const auto [ptr, ec] = std::from_chars(buffer, buffer + buffer_len, value);
+                ec != std::errc{} || ptr != buffer + buffer_len
             ) return std::unexpected( ParseError::eInvalidNumber );
 
             json = value;
         } break;
     }
-    it_ref = it; // Update the original iterator
     return json;
 }
 

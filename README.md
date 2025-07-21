@@ -100,7 +100,7 @@ json::Value smp_val = json::Object{
 ```cpp
 smp_val.type();        // 返回 Type::eObject
 smp_val.type_name();  // 返回 "Object" ,没有前缀 `e`
-smp_val.is(json::Type::eArray); // 返回 false
+smp_val.is<json::Array>(); // 返回 false
 ```
 
 可以用 `reset()` 将内容重置为 `Null` ，或者使用 `clear_data()` 仅清理内部数据而不改变类型（比如数组将变成空数组）。 
@@ -121,7 +121,7 @@ double i_42 = vi_42.get<json::Number>(); // 获取内部值, json::Number 等价
 ```cpp
 smp_val["arr"][2].get<json::Number>(); // 返回 3.14
 smp_val.at("obj").at("nested_k") = nullptr; // 修改对象，变为 Null 类型
-smp_val["obj"].at("nested_k").is(json::Type::eNull); // 返回true, [] 和 at 可以随意混合使用
+smp_val["obj"].at("nested_k").is<json::Null>(); // 返回true, [] 和 at 可以随意混合使用
 ```
 
 `get` 只能获取六种类型的引用，这很不方便。所以本库还提供了 `to` 和 `move` 模板来获取内部的值，并强制转换类型。前者必然是拷贝，后者是移动或拷贝（简单类型，或者无需移动时进行拷贝）。
@@ -511,7 +511,7 @@ Check types with `type()` or `is()`, or get the type name string (for debugging)
 ```cpp
 smp_val.type();        // Returns Type::eObject
 smp_val.type_name();   // Returns "Object" (no `e` prefix)
-smp_val.is(json::Type::eArray); // Returns false
+smp_val.is<json::Array>(); // Returns false
 ```
 
 Use `reset()` to reset to Null, or `clear_data()` to clear internal data without changing type (e.g., array becomes empty).
@@ -532,7 +532,7 @@ double i_42 = vi_42.get<json::Number>();
 ```cpp
 smp_val["arr"][2].get<json::Number>(); // Returns 3.14
 smp_val.at("obj").at("nested_k") = nullptr; // Modify object to Null
-smp_val["obj"].at("nested_k").is(json::Type::eNull); // true, [] and at can be mixed
+smp_val["obj"].at("nested_k").is<json::Null>(); // true, [] and at can be mixed
 ```
 
 `get` only works for the six types, which can be inconvenient. The library also provides `to` and `move` templates to get or convert the value. `to` always copies, `move` moves or copies as needed:

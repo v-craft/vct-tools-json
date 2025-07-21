@@ -58,7 +58,7 @@ M_TEST( README, readme ) {
         {"obj", json::Object{ {"nested_k", "nested_v"} } }
     };
     M_EXPECT_EQ(smp_val.type() , json::Type::eObject); // 返回 Type::eObject
-    M_EXPECT_FALSE(smp_val.is(json::Type::eArray));
+    M_EXPECT_FALSE(smp_val.is<json::Array>());
     M_EXPECT_EQ(smp_val.type_name(), "Object");        // 返回 "Object" ,没有前缀 `e`
 
     json::Value vi_42 = smp_val.get<json::Object>()["key1"]; // 注意 Object 的 mapped 值依然是 Value 类型

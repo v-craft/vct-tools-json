@@ -33,8 +33,8 @@ M_TEST(Value, Object) {
     // Type checking
     json::Value obj_val{json::Object{{"a", 1}, {"b", 2}, {"c", 3}}};
     json::Value empty_obj{json::Object{}};
-    M_ASSERT_TRUE(obj_val.is(json::Type::eObject));
-    M_ASSERT_FALSE(obj_val.is(json::Type::eString));
+    M_ASSERT_TRUE(obj_val.is<json::Object>());
+    M_ASSERT_FALSE(obj_val.is<json::String>());
     M_EXPECT_STREQ(obj_val.type_name(), "Object");
 
     // --- Size and Empty Checks ---

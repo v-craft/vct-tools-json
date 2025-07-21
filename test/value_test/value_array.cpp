@@ -15,8 +15,8 @@ M_TEST(Value, Array) {
     M_ASSERT_NO_THROW(json::Value arr_explicit{json::Array{{}}});
     M_ASSERT_NO_THROW(json::Value arr_init{json::Array{{1, 2, 3}}});
     json::Value arr_val{json::Array{{1, 2, 3}}};
-    M_ASSERT_TRUE(arr_val.is(json::Type::eArray));
-    M_ASSERT_FALSE(arr_val.is(json::Type::eString));
+    M_ASSERT_TRUE(arr_val.is<json::Array>());
+    M_ASSERT_FALSE(arr_val.is<json::String>());
     M_EXPECT_STREQ(arr_val.type_name(), "Array");
 
 

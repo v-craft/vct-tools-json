@@ -309,36 +309,22 @@ export namespace vct::tools::json{
         [[nodiscard]]
         Type type() const noexcept { return m_type; }
 
-        /**
-         * @brief Check if Value matches specified type
-         * @param type The JSON type to check against
-         * @return True if Value's type matches the specified type, false otherwise
-         */
+        template<json_types T>
         [[nodiscard]]
-        Bool is(const Type type) const noexcept { return m_type == type; }
-
-        /**
-         * @brief Get the size of container types ( Object, Array )
-         * @return Size of the container, or 0 for non-container types (including string)
-         */
-        [[nodiscard]]
-        std::size_t size() const noexcept {
-            switch (m_type) {
-                case Type::eObject: return std::get<Object>(m_data).size();
-                case Type::eArray:  return std::get<Array>(m_data).size();
-                default: return 0;
+        bool is() const noexcept {
+            if constexpr (std::is_same_v<T, Bool>) {
+                return m_type == Type::eBool;
+            } else if constexpr (std::is_same_v<T, Number>) {
+                return m_type == Type::eNumber;
+            } else if constexpr (std::is_same_v<T, Object>) {
+                return m_type == Type::eObject;
+            } else if constexpr (std::is_same_v<T, Array>) {
+                return m_type == Type::eArray;
+            } else if constexpr (std::is_same_v<T, String>) {
+                return m_type == Type::eString;
+            } else {
+                return m_type == Type::eNull;
             }
-        }
-        
-        /**
-         * @brief Check if object contains a key
-         * @param key The key to check for
-         * @return True if the type is object and key exists in object, false otherwise
-         */
-        [[nodiscard]]
-        Bool contains(const String& key) const noexcept {
-            if (m_type != Type::eObject) return false;
-            return std::get<Object>(m_data).contains(key);
         }
 
         /**
@@ -1431,6 +1417,7 @@ export namespace vct::tools::json{
          * @param other The value to compare with
          * @return True if values are equal, false otherwise
          */
+        [[nodiscard]]
         bool operator==(const Value& other) const noexcept {
             if (m_type != other.m_type) return false; // Different types cannot be equal
             switch (m_type) {
@@ -1501,6 +1488,156 @@ export namespace vct::tools::json{
                 return static_cast<Value>(other) == *this; // Use Value's operator==
             }
             return false;
+        }
+
+        /**
+         * @brief Get the size of container types ( Object, Array )
+         * @return Size of the container, or 0 for non-container types (including string)
+         */
+        [[nodiscard]]
+        std::size_t size() const noexcept {
+            switch (m_type) {
+                case Type::eObject: return std::get<Object>(m_data).size();
+                case Type::eArray:  return std::get<Array>(m_data).size();
+                default: return 0;
+            }
+        }
+
+        /**
+         * @brief Check if the Value is empty
+         * @return True if the Value is empty (Object or Array), false otherwise
+         */
+        [[nodiscard]]
+        bool empty() const noexcept {
+            if (m_type == Type::eObject) return std::get<Object>(m_data).empty();
+            if (m_type == Type::eArray) return std::get<Array>(m_data).empty();
+            return false;
+        }
+
+        /**
+         * @brief Push an element to the back of the array
+         * @param value The value to push
+         * @return True if the element was pushed, false if the Value is not an array
+         */
+        bool push_back(const Value& value) noexcept {
+            if (m_type != Type::eArray) return false;
+            std::get<Array>(m_data).emplace_back(value);
+            return true;
+        }
+
+        /**
+         * @brief Push an element to the back of the array
+         * @param value The value to push
+         * @return True if the element was pushed, false if the Value is not an array
+         */
+        bool push_back(Value&& value) noexcept {
+            if (m_type != Type::eArray) return false;
+            std::get<Array>(m_data).emplace_back(std::move(value));
+            return true;
+        }
+
+        /**
+         * @brief Pop an element from the back of the array
+         * @return True if the element was popped, false if the Value is not an array or is empty
+         */
+        bool pop_back() noexcept {
+            if (m_type != Type::eArray || std::get<Array>(m_data).empty()) return false;
+            std::get<Array>(m_data).pop_back();
+            return true;
+        }
+
+        /**
+         * @brief Insert an element into the array by index
+         * @param index The index to insert at
+         * @param value The value to insert
+         * @return True if the element was inserted, false if the Value is not an array or index is out of bounds
+         */
+        bool insert(const std::size_t index, const Value& value) noexcept {
+            if (m_type != Type::eArray || index > std::get<Array>(m_data).size()) return false;
+            auto& arr = std::get<Array>(m_data);
+            arr.emplace(arr.begin() + index, value);
+            return true;
+        }
+
+        /**
+         * @brief Insert an element into the array by index
+         * @param index The index to insert at
+         * @param value The value to insert
+         * @return True if the element was inserted, false if the Value is not an array or index is out of bounds
+         */
+        bool insert(const std::size_t index, Value&& value) noexcept {
+            if (m_type != Type::eArray || index > std::get<Array>(m_data).size()) return false;
+            auto& arr = std::get<Array>(m_data);
+            arr.emplace(arr.begin() + index, std::move(value));
+            return true;
+        }
+
+        /**
+         * @brief Insert multiple elements into the array by index
+         * @param index The index to insert at
+         * @param count The number of elements to insert
+         * @param value The value to insert
+         * @return True if the elements were inserted, false if the Value is not an array or index is out of bounds
+         */
+        bool insert(const std::size_t index,const std::size_t count, const Value& value) noexcept {
+            if (m_type != Type::eArray || index > std::get<Array>(m_data).size()) return false;
+            auto& arr = std::get<Array>(m_data);
+            arr.insert(arr.begin() + index, count, value);
+            return true;
+        }
+
+        /**
+         * @brief Erase an element from the array by index
+         * @param index The index of the element to erase
+         * @return True if the element was erased, false if the Value is not an array or index is out of bounds
+         */
+        bool erase(const std::size_t index) noexcept {
+            if (m_type != Type::eArray || index >= std::get<Array>(m_data).size()) return false;
+            auto& arr = std::get<Array>(m_data);
+            arr.erase(arr.begin() + index);
+            return true;
+        }
+        /**
+         * @brief Insert a key-value pair into the object
+         * @param key The key to insert
+         * @param value The value to insert
+         * @return True if the key was inserted, false if the Value is not an object
+         */
+        bool insert(String key, const Value& value) noexcept {
+            if (m_type != Type::eObject) return false;
+            std::get<Object>(m_data).emplace(std::move(key), value);
+            return true;
+        }
+        /**
+         * @brief Insert a key-value pair into the object
+         * @param key The key to insert
+         * @param value The value to insert
+         * @return True if the key was inserted, false if the Value is not an object
+         */
+        bool insert(String key, Value&& value) noexcept {
+            if (m_type != Type::eObject) return false;
+            std::get<Object>(m_data).emplace(std::move(key), std::move(value));
+            return true;
+        }
+        /**
+         * @brief Erase a key from the object
+         * @param key The key to erase
+         * @return True if the key was erased, false if the Value is not an object or the key does not exist
+         */
+        bool erase(const String& key) noexcept {
+            if (m_type != Type::eObject) return false;
+            return std::get<Object>(m_data).erase(key);
+        }
+
+        /**
+         * @brief Check if object contains a key
+         * @param key The key to check for
+         * @return True if the type is object and key exists in object, false otherwise
+         */
+        [[nodiscard]]
+        bool contains(const String& key) const noexcept {
+            if (m_type != Type::eObject) return false;
+            return std::get<Object>(m_data).contains(key);
         }
 
     };

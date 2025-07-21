@@ -33,10 +33,10 @@ M_TEST(Value, Bool) {
     // --- Type checking ---
     json::Value true_val{true};
     json::Value false_val{false};
-    M_ASSERT_TRUE(true_val.is(json::Type::eBool));
-    M_ASSERT_TRUE(false_val.is(json::Type::eBool));
-    M_ASSERT_FALSE(true_val.is(json::Type::eString));
-    M_ASSERT_FALSE(false_val.is(json::Type::eNumber));
+    M_ASSERT_TRUE(true_val.is<json::Bool>());
+    M_ASSERT_TRUE(false_val.is<json::Bool>());
+    M_ASSERT_FALSE(true_val.is<json::String>());
+    M_ASSERT_FALSE(false_val.is<json::Number>());
     M_EXPECT_STREQ(true_val.type_name(), "Bool");
     M_EXPECT_STREQ(false_val.type_name(), "Bool");
 

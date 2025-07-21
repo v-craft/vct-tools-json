@@ -39,8 +39,8 @@ M_TEST(Value, String) {
     // --- Type checking ---
     json::Value str_val{"test string"};
     json::Value empty_val{""};
-    M_ASSERT_TRUE(str_val.is(json::Type::eString));
-    M_ASSERT_FALSE(str_val.is(json::Type::eNumber));
+    M_ASSERT_TRUE(str_val.is<json::String>());
+    M_ASSERT_FALSE(str_val.is<json::Number>());
     M_EXPECT_STREQ(str_val.type_name(), "String");
 
     // --- Reference access ---
