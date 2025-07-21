@@ -65,7 +65,13 @@ M_TEST(File, senior_1) {
     json::Value value = json::parse(ifs).value_or( nullptr );
     M_ASSERT_NE( value.type(), json::Type::eNull );
     std::string pretty_str = read_file("files/senior_1.json");
+
+    const auto bein = std::chrono::system_clock::now();
     json::Value pretty_value = json::parse(pretty_str).value_or( nullptr );
+    const auto end = std::chrono::system_clock::now();
+    const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
+    std::println("--------------------------------------------------------------parse_senior_1 time: {} us", time);
+
     M_ASSERT_NE( pretty_value.type(), json::Type::eNull );
     M_ASSERT_EQ( value, pretty_value );
 }
@@ -76,7 +82,13 @@ M_TEST(File, senior_2) {
     json::Value value = json::parse(ifs).value_or( nullptr );
     M_ASSERT_NE( value.type(), json::Type::eNull );
     std::string pretty_str = read_file("files/senior_2.json");
+
+    const auto bein = std::chrono::system_clock::now();
     json::Value pretty_value = json::parse(pretty_str).value_or( nullptr );
+    const auto end = std::chrono::system_clock::now();
+    const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
+    std::println("-------------------------------------------------------------parse_senior_2 time: {} us", time);
+
     M_ASSERT_NE( pretty_value.type(), json::Type::eNull );
     M_ASSERT_EQ( value, pretty_value );
 }
@@ -126,8 +138,14 @@ M_TEST(File, ordered_senior_1) {
     json::Value value = json::parse(ifs).value_or( nullptr );
     M_ASSERT_NE( value.type(), json::Type::eNull );
     std::string plain = read_file("files/senior_1_plain.json");
-    std::ignore = value.serialize();
-    M_EXPECT_EQ(  value.serialize(), plain );
+
+    const auto bein = std::chrono::system_clock::now();
+    std::string str = value.serialize();
+    const auto end = std::chrono::system_clock::now();
+    const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
+    std::println("-------------------------------------------------------------serialize_senior_1 time: {} us", time);
+
+    M_EXPECT_EQ(  str, plain );
 }
 
 M_TEST(File, ordered_senior_2) {
@@ -136,7 +154,14 @@ M_TEST(File, ordered_senior_2) {
     json::Value value = json::parse(ifs).value_or( nullptr );
     M_ASSERT_NE( value.type(), json::Type::eNull );
     std::string plain = read_file("files/senior_2_plain.json");
-    M_EXPECT_EQ(  value.serialize(), plain );
+
+    const auto bein = std::chrono::system_clock::now();
+    std::string str = value.serialize();
+    const auto end = std::chrono::system_clock::now();
+    const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
+    std::println("-------------------------------------------------------------serialize_senior_2 time: {} us", time);
+
+    M_EXPECT_EQ(  str, plain );
 }
 
 #endif // M_VCT_TOOLS_JSON_UNORDERED_MAP

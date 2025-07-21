@@ -6,7 +6,7 @@ set(package_name "${prev_name}-${lib_name}")
 
 # Project declaration with metadata
 project(${package_name}
-    VERSION 0.1.0                                     # Semantic versioning (MAJOR.MINOR.PATCH)
+    VERSION 0.2.0                                     # Semantic versioning (MAJOR.MINOR.PATCH)
     HOMEPAGE_URL "https://github.com/v-craft/vct-test-unit"
     DESCRIPTION "V-Craft Unit Test Library - A modern C++23 testing framework"
     LANGUAGES CXX                                     # C++ only project

@@ -11,34 +11,55 @@ import std;
 namespace vct::tools::json{
 
 /**
- * @brief Escape special characters in JSON string
- * @param str String to escape
- * @return Escaped string with quotes
+ * @brief Escape a string to JSON format
+ * @param out Output string to append the escaped result
+ * @param str Input string to escape
  */
-static String escape(const std::string_view str) noexcept {
-    String result;
-    result.reserve(str.size() + (str.size() >> 1) + 3);
-    
-    result.push_back('"');
+static void escape_to(String& out, const std::string_view str) noexcept {
+    out.push_back('\"');
     for (const char c : str) {
         switch (c) {
-            case '\\': result.append(R"(\\)"); break;
-            case '"':  result.append(R"(\")"); break;
-            case '\r': result.append(R"(\r)"); break;
-            case '\n': result.append(R"(\n)"); break;
-            case '\f': result.append(R"(\f)"); break;
-            case '\t': result.append(R"(\t)"); break;
-            case '\b': result.append(R"(\b)"); break;
+            case '\\': out.append(R"(\\)"); break;
+            case '\"': out.append(R"(\")"); break;
+            case '\r': out.append(R"(\r)"); break;
+            case '\n': out.append(R"(\n)"); break;
+            case '\f': out.append(R"(\f)"); break;
+            case '\t': out.append(R"(\t)"); break;
+            case '\b': out.append(R"(\b)"); break;
             default: {
                 if (static_cast<unsigned char>(c) < 0x20) {
-                    // Handle control characters (0x00-0x1F except already handled ones)
-                    result.append(std::format("\\u{:04x}", static_cast<unsigned char>(c)));
-                } else result.push_back(c);
+                    out.append(std::format("\\u{:04x}", static_cast<unsigned char>(c)));
+                } else out.push_back(c);
             } break;
         }
     }
-    result.push_back('"');
-    return result;
+    out.push_back('"');
+}
+
+/**
+ * @brief Escape a string to JSON format and write to output stream
+ * @param out Output stream to write the escaped result
+ * @param str Input string to escape
+ */
+static void escape_to(std::ostream& out, const std::string_view str) noexcept {
+    out.put('\"');
+    for (const char c : str) {
+        switch (c) {
+            case '\\': out << R"(\\)"; break;
+            case '\"': out << R"(\")"; break;
+            case '\r': out << R"(\r)"; break;
+            case '\n': out << R"(\n)"; break;
+            case '\f': out << R"(\f)"; break;
+            case '\t': out << R"(\t)"; break;
+            case '\b': out << R"(\b)"; break;
+            default: {
+                if (static_cast<unsigned char>(c) < 0x20) {
+                    out << std::format("\\u{:04x}", static_cast<unsigned char>(c));
+                } else out.put(c);
+            } break;
+        }
+    }
+    out.put('\"');
 }
 
 /**
@@ -102,23 +123,22 @@ static std::uint32_t hex4_next(char_iterator auto& it, const char_iterator auto 
  * @brief Convert Unicode escape sequence to UTF-8 string
  * @param it Iterator positioned at 'u' in \uXXXX
  * @param end_ptr End iterator
- * @return UTF-8 encoded string or null-opt on error
+ * @param out Output string to append the result
+ * @return true if successful, false if invalid sequence
  */
-static std::optional<String> unescape_unicode_next(
+static bool unescape_unicode_next(
+    String& out,
     char_iterator auto& it,
     const char_iterator auto end_ptr
 ) noexcept {
     // it was in `\uABCD`'s `u` position
-    String out;
-    out.reserve( 4 );
-
     ++it;
-    if (it == end_ptr) return std::nullopt;
+    if (it == end_ptr) return false;
     // `it` was in `\uXXXX`'s A position
 
     // move to \uABCD's D position and get hex4 value
     std::uint32_t code_point = hex4_next( it , end_ptr);
-    if(code_point > 0xFFFF) return std::nullopt;
+    if(code_point > 0xFFFF) return false;
     // `it` was in `\uXXXX`'s D position and not be `end_ptr`, if hex4_next successful
 
     // [0xD800 , 0xE000) is agent pair, which is two consecutive \u encoding
@@ -128,21 +148,20 @@ static std::optional<String> unescape_unicode_next(
         // low agent [\uDC00, \uDFFF]
 
         // first char must be high agent
-        if (code_point >= 0xDC00) return std::nullopt;
+        if (code_point >= 0xDC00) return false;
 
         // second char must be low agent
         ++it;
-        if(it == end_ptr || *it != '\\') return std::nullopt;
+        if(it == end_ptr || *it != '\\') return false;
         ++it;
-        if(it == end_ptr || *it != 'u') return std::nullopt;
+        if(it == end_ptr || *it != 'u') return false;
         ++it;
-        if(it == end_ptr) return std::nullopt;
-
-        // `it` was in `\uXXXX`'s A position, and note be end_ptr
+        if(it == end_ptr) return false;
+        // `it` was in `\uXXXX`'s A position, and be not end_ptr
 
         // move to \uABCD's D position and get hex4 value
         const std::uint32_t low_code_point = hex4_next( it, end_ptr );
-        if( 0xDFFF < low_code_point ||  low_code_point < 0xDC00 ) return std::nullopt;
+        if( 0xDFFF < low_code_point ||  low_code_point < 0xDC00 ) return false;
         // `it` was in `\uXXXX`'s D position and not be `end_ptr`, if hex4_next successful
 
         // combine the agent pair into a single code point
@@ -151,22 +170,21 @@ static std::optional<String> unescape_unicode_next(
 
     // encode the code point to UTF-8
     if (code_point <= 0x7F) {
-        out += static_cast<char>(code_point);
+        out.push_back(static_cast<char>(code_point));
     } else if (code_point <= 0x7FF) {
-        out += static_cast<char>(0xC0 | (code_point >> 6));
-        out += static_cast<char>(0x80 | (code_point & 0x3F));
+        out.push_back(static_cast<char>(code_point >> 6 | 0xC0));
+        out.push_back(static_cast<char>(code_point & 0x3F | 0x80));
     } else if (code_point <= 0xFFFF) {
-        out += static_cast<char>(0xE0 | (code_point >> 12));
-        out += static_cast<char>(0x80 | ((code_point >> 6) & 0x3F));
-        out += static_cast<char>(0x80 | (code_point & 0x3F));
+        out.push_back(static_cast<char>(code_point >> 12 | 0xE0));
+        out.push_back(static_cast<char>(code_point >> 6 & 0x3F | 0x80));
+        out.push_back(static_cast<char>(code_point & 0x3F | 0x80));
     } else if (code_point <= 0x10FFFF) {
-        out += static_cast<char>(0xF0 | (code_point >> 18));
-        out += static_cast<char>(0x80 | ((code_point >> 12) & 0x3F));
-        out += static_cast<char>(0x80 | ((code_point >> 6) & 0x3F));
-        out += static_cast<char>(0x80 | (code_point & 0x3F));
-    } else return std::nullopt;
-
-    return out;
+        out.push_back(static_cast<char>(code_point >> 18 | 0xF0));
+        out.push_back(static_cast<char>(code_point >> 12 & 0x3F | 0x80));
+        out.push_back(static_cast<char>(code_point >> 6 & 0x3F | 0x80));
+        out.push_back(static_cast<char>(code_point & 0x3F | 0x80));
+    } else return false;
+    return true;
 }
 
 /**
@@ -183,8 +201,6 @@ static std::expected<std::string, ParseError> unescape_next(
 
     for (++it; it != end_ptr && *it != '\"'; ++it) {
         switch (*it) {
-            case '\t': case '\n': case '\f': case '\b': case '\r':
-                return std::unexpected( ParseError::eIllegalEscape );
             case '\\': {
                 ++it;
                 if (it == end_ptr) return std::unexpected( ParseError::eUnclosedString );
@@ -196,14 +212,14 @@ static std::expected<std::string, ParseError> unescape_next(
                     case 't':  res.push_back('\t'); break;
                     case 'f':  res.push_back('\f'); break;
                     case 'b':  res.push_back('\b'); break;
-                    case 'u': case 'U': {
-                        const auto str = unescape_unicode_next(it, end_ptr);
-                        if (!str) return std::unexpected( ParseError::eIllegalEscape );
-                        res.append( *str );
-                    } break;
+                    case 'u': case 'U':
+                        if (!unescape_unicode_next(res, it, end_ptr)) return std::unexpected( ParseError::eIllegalEscape );
+                        break;
                     default: return std::unexpected( ParseError::eIllegalEscape );
                 }
             } break;
+            case '\t': case '\n': case '\f': case '\b': case '\r':
+                return std::unexpected( ParseError::eIllegalEscape );
             default: res.push_back( *it ); break;
         }
     }
@@ -221,14 +237,11 @@ static std::expected<std::string, ParseError> unescape_next(
  */
 static std::expected<Value, ParseError> reader(
     char_iterator auto& it,
-    const char_iterator auto end_ptr, 
+    const char_iterator auto end_ptr,
     const std::int32_t max_depth
 ) noexcept {
     // Check for maximum depth
     if(max_depth < 0) return std::unexpected( ParseError::eDepthExceeded );
-    // Skip spaces
-    while(it != end_ptr && std::isspace(*it)) ++it;
-    if(it == end_ptr) return std::unexpected( ParseError::eEmptyData );
     // return value
     Value json; 
     // Check the first character to determine the type
@@ -253,8 +266,9 @@ static std::expected<Value, ParseError> reader(
                 ++it;
                 // find value
                 while (it != end_ptr && std::isspace(*it)) ++it;
+                if (it == end_ptr) break;
                 auto value = reader(it, end_ptr, max_depth - 1);
-                if(!value) return std::unexpected( value.error() );
+                if(!value) return value;
                 // add to object
                 object.emplace(std::move(*key), std::move(*value));
 
@@ -277,7 +291,7 @@ static std::expected<Value, ParseError> reader(
                 if(it == end_ptr || *it == ']') break;
                 // find value
                 auto value = reader(it, end_ptr, max_depth - 1);
-                if(!value) return std::unexpected( value.error() );
+                if(!value) return value;
                 // add to array
                 array.emplace_back(std::move(*value));
 
@@ -292,7 +306,7 @@ static std::expected<Value, ParseError> reader(
         case '\"': {
             // String type
             auto str = unescape_next(it, end_ptr);
-            if(!str) return std::unexpected( str.error() );
+            if(!str) return str;
             json = std::move(*str);
         } break;
         case 't': {
@@ -328,23 +342,24 @@ static std::expected<Value, ParseError> reader(
             // begin with e/E is invalid, other invalid type will be handled after
 
             // number
-            std::uint8_t buffer_len = 0;
-            char buffer[24];    // Reserve enough space for typical numbers
+            std::uint8_t buffer_len{};
+            char buffer[25];    // Reserve enough space for typical numbers
             // std::array<char, 24> buffer;
 
-            while(buffer_len < 24 && it != end_ptr && 
+            while(buffer_len < 25 && it != end_ptr &&
                 (std::isdigit(*it)  || *it=='-' || *it=='.' || *it=='e' || *it=='E' || *it=='+')
             ) buffer[buffer_len++] = *(it++);
-            
-            if( buffer_len == 0 || buffer_len == 24 ) return std::unexpected( ParseError::eInvalidNumber );
-            if( it != end_ptr && !std::isspace(*it) && *it != '}' && *it != ']' && *it != ',' ) return std::unexpected( ParseError::eInvalidNumber );
+
+            if( buffer_len == 0 || buffer_len == 25 ) return std::unexpected( ParseError::eInvalidNumber );
 
             Number value;
+
             if(const auto [ptr, ec] = std::from_chars(buffer, buffer + buffer_len, value);
                 ec != std::errc{} || ptr != buffer + buffer_len
             ) return std::unexpected( ParseError::eInvalidNumber );
 
             json = value;
+
         } break;
     }
     return json;
@@ -359,8 +374,13 @@ static std::expected<Value, ParseError> reader(
 std::expected<Value, ParseError> deserialize(const std::string_view text, const std::int32_t max_depth) noexcept{
     auto it = text.begin();
     const auto end_ptr = text.end();
+    // Skip spaces
+    while(it != end_ptr && std::isspace(*it)) ++it;
+    if(it == end_ptr) return std::unexpected( ParseError::eEmptyData );
+    // Parse the JSON
     const auto result = reader(it, end_ptr, max_depth-1);
-    if(!result) return std::unexpected( result.error() );
+    if(!result) return result;
+    // check for trailing spaces
     while(it != end_ptr && std::isspace(*it)) ++it;
     if(it != end_ptr) return std::unexpected( ParseError::eRedundantText );
     return result;
@@ -375,8 +395,13 @@ std::expected<Value, ParseError> deserialize(const std::string_view text, const 
 std::expected<Value, ParseError> deserialize(std::istream& is_test, const std::int32_t max_depth) noexcept{
     auto it = std::istreambuf_iterator<char>(is_test);
     constexpr auto end_ptr = std::istreambuf_iterator<char>();
+    // Skip spaces
+    while(it != end_ptr && std::isspace(*it)) ++it;
+    if(it == end_ptr) return std::unexpected( ParseError::eEmptyData );
+    // Parse the JSON
     const auto result = reader(it, end_ptr, max_depth-1);
-    if(!result) return std::unexpected( result.error() );
+    if(!result) return result;
+    // check for trailing spaces
     while(it != end_ptr && std::isspace(*it)) ++it;
     if(it != end_ptr) return std::unexpected( ParseError::eRedundantText );
     return result;
@@ -391,7 +416,8 @@ void Value::serialize_to(String& out) const noexcept {
         case Type::eObject: {
             out.push_back('{');
             for (const auto& [key, val] : std::get<Object>(m_data)) {
-                out.append(escape(key));
+                // out.append(escape(key));
+                escape_to(out, key);
                 out.push_back(':');
                 val.serialize_to(out);
                 out.push_back(',');
@@ -415,7 +441,8 @@ void Value::serialize_to(String& out) const noexcept {
             out.append("null");
             break;
         case Type::eString:
-            out.append(escape(std::get<String>(m_data)));
+            // out.append(escape(std::get<String>(m_data)));
+            escape_to(out, std::get<String>(m_data));
             break;
         case Type::eNumber:
             out.append(std::format("{:.17}",std::get<Number>(m_data)));
@@ -437,7 +464,7 @@ void Value::serialize_to(std::ostream& out) const noexcept {
             ) {
                 if(!first) out.put(',');
                 else first = false;
-                out << escape(key);
+                escape_to(out, key);
                 out.put(':');
                 val.serialize_to(out);
                 if(out.fail()) return;
@@ -463,7 +490,7 @@ void Value::serialize_to(std::ostream& out) const noexcept {
             out << "null";
             break;
         case Type::eString:
-            out << escape(std::get<String>(m_data));
+            escape_to(out, std::get<String>(m_data));
             break;
         case Type::eNumber:
             out << std::format("{:.17}",std::get<Number>(m_data));
@@ -495,7 +522,8 @@ Bool Value::serialize_pretty_to(
             for (const auto& [key, val] : std::get<Object>(m_data)) {
                 out.push_back('\n');
                 out.append(tabs, ' ');
-                out.append(escape(key));
+                // out.append(escape(key));
+                escape_to(out, key);
                 out.append(": ");
                 if(!val.serialize_pretty_to(out, space_num, depth + 1, max_space)) return false;
                 out.push_back(',');
@@ -527,7 +555,8 @@ Bool Value::serialize_pretty_to(
             out.append("null");
             break;
         case Type::eString:
-            out.append(escape(std::get<String>(m_data)));
+            // out.append(escape(std::get<String>(m_data)));
+            escape_to(out, std::get<String>(m_data));
             break;
         case Type::eNumber:
             out.append(std::format("{:.17}",std::get<Number>(m_data)));
@@ -563,7 +592,7 @@ Bool Value::serialize_pretty_to(
                 else first = false;
                 out.put('\n');
                 out << std::setfill(' ') << std::setw(tabs) << "";
-                out << escape(key);
+                escape_to(out, key);
                 out.put(':');
                 out.put(' ');
                 if(!val.serialize_pretty_to(out, space_num, depth + 1, max_space)) return false;
@@ -603,7 +632,7 @@ Bool Value::serialize_pretty_to(
             out << "null";
             break;
         case Type::eString:
-            out << escape(std::get<String>(m_data));
+            escape_to(out, std::get<String>(m_data));
             break;
         case Type::eNumber:
             out << std::format("{:.17}",std::get<Number>(m_data));

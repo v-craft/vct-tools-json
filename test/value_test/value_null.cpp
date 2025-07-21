@@ -26,7 +26,7 @@ M_TEST(Value, Null) {
 
     // --- Type checking ---
     json::Value null_val{nullptr};
-    M_ASSERT_TRUE(null_val.is<json::Number>());
+    M_ASSERT_TRUE(null_val.is<json::Null>());
     M_ASSERT_FALSE(null_val.is<json::String>());
     M_EXPECT_STREQ(null_val.type_name(), "Null");
 
