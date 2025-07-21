@@ -493,7 +493,7 @@ void Value::serialize_to(std::ostream& out) const noexcept {
             escape_to(out, std::get<String>(m_data));
             break;
         case Type::eNumber:
-            out << std::format("{:.17}",std::get<Number>(m_data));
+            std::print(out, "{:.17}", std::get<Number>(m_data));
             break;
     }
     if (out.fail()) return;
@@ -635,7 +635,7 @@ Bool Value::serialize_pretty_to(
             escape_to(out, std::get<String>(m_data));
             break;
         case Type::eNumber:
-            out << std::format("{:.17}",std::get<Number>(m_data));
+            std::print( out, "{:.17}", std::get<Number>(m_data) );
             break;
     }
     if(out.fail()) return false;
