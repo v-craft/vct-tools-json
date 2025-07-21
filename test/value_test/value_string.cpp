@@ -9,9 +9,25 @@ using namespace vct::tools;
 // --- Construction tests ---
 M_TEST(Value, String) {
     // Default construction
-    M_ASSERT_NO_THROW(json::Value str_default{json::Type::eString});
-    M_ASSERT_EQ(json::Value{json::Type::eString}.to<json::String>(), "");
-    M_ASSERT_EQ(json::Value{json::Type::eString}.type(), json::Type::eString);
+    M_ASSERT_NO_THROW(json::Value str_default{ json::Type::eString });
+    M_ASSERT_EQ(json::Value{json::Type::eString}.is_num(), true);
+    M_ASSERT_EQ(json::Value{json::Type::eString}.is_nul(), false);
+    M_ASSERT_EQ(json::Value{json::Type::eString}.is_arr(), false);
+    M_ASSERT_EQ(json::Value{json::Type::eString}.is_obj(), false);
+    M_ASSERT_EQ(json::Value{json::Type::eString}.is_bol(), false);
+    M_ASSERT_EQ(json::Value{json::Type::eString}.is_str(), false);
+    M_ASSERT_EQ(json::Value{json::Type::eString}.type(), json::Type::eNumber);
+
+    M_ASSERT_NO_THROW(json::Value str_default{json::String{}});
+    M_ASSERT_EQ(json::Value{json::String{}}.to<json::String>(), "");
+    M_ASSERT_EQ(json::Value{json::String{}}.type(), json::Type::eString);
+
+    M_ASSERT_EQ(json::Value{json::String{}}.is_num(), false);
+    M_ASSERT_EQ(json::Value{json::String{}}.is_nul(), false);
+    M_ASSERT_EQ(json::Value{json::String{}}.is_arr(), false);
+    M_ASSERT_EQ(json::Value{json::String{}}.is_obj(), false);
+    M_ASSERT_EQ(json::Value{json::String{}}.is_bol(), false);
+    M_ASSERT_EQ(json::Value{json::String{}}.is_str(), true);
 
     // Construction with explicit String wrapper
     M_ASSERT_NO_THROW(json::Value str_hello{json::String("hello")});
@@ -39,8 +55,8 @@ M_TEST(Value, String) {
     // --- Type checking ---
     json::Value str_val{"test string"};
     json::Value empty_val{""};
-    M_ASSERT_TRUE(str_val.is<json::String>());
-    M_ASSERT_FALSE(str_val.is<json::Number>());
+    M_ASSERT_TRUE(str_val.is_str());
+    M_ASSERT_FALSE(str_val.is_num());
     M_EXPECT_STREQ(str_val.type_name(), "String");
 
     // --- Reference access ---
@@ -51,7 +67,7 @@ M_TEST(Value, String) {
     M_ASSERT_THROW(std::ignore = json::Value{42}.get<json::String>(), std::runtime_error);
 
     // --- Assignment tests ---
-    json::Value assign_val{json::Type::eString};
+    json::Value assign_val{json::String{}};
     assign_val = json::String("assigned");
     M_ASSERT_EQ(assign_val.to<json::String>(), "assigned");
     assign_val = "reassigned";
@@ -88,8 +104,8 @@ M_TEST(Value, String) {
     M_ASSERT_EQ(json::Value{"simple"}.serialize(), "\"simple\"");
 
     // Pretty serialization
-    M_ASSERT_EQ(json::Value{"pretty"}.serialize_pretty(), "\"pretty\"");
-    M_ASSERT_EQ(json::Value{""}.serialize_pretty(), "\"\"");
+    M_ASSERT_EQ(json::Value{"pretty"}.prettify(), "\"pretty\"");
+    M_ASSERT_EQ(json::Value{""}.prettify(), "\"\"");
 
     // Escape sequences serialization
     M_ASSERT_EQ(json::Value{"line1\nline2"}.serialize(), "\"line1\\nline2\"");

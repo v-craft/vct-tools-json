@@ -11,8 +11,17 @@ M_TEST(Value, Bool) {
     // --- Construction tests ---
     // Default bool construction
     M_ASSERT_NO_THROW(json::Value bool_default{json::Type::eBool});
-    M_ASSERT_EQ(json::Value{json::Type::eBool}.to<json::Bool>(), false);
-    M_ASSERT_EQ(json::Value{json::Type::eBool}.type(), json::Type::eBool);
+    M_EXPECT_EQ(json::Value{json::Type::eBool}.to<json::Bool>(), true);
+    M_ASSERT_EQ(json::Value{json::Type::eBool}.type(), json::Type::eNumber);
+    M_ASSERT_EQ(json::Value{json::Type::eBool}.is_num(), true);
+    M_ASSERT_EQ(json::Value{json::Type::eBool}.is_bol(), false);
+
+    // Default bool construction
+    M_ASSERT_NO_THROW(json::Value bool_default{json::Bool{}});
+    M_ASSERT_EQ(json::Value{json::Bool{}}.to<json::Bool>(), false);
+    M_ASSERT_EQ(json::Value{json::Bool{}}.type(), json::Type::eBool);
+    M_ASSERT_EQ(json::Value{json::Bool{}}.is_num(), false);
+    M_ASSERT_EQ(json::Value{json::Bool{}}.is_bol(), true);
 
     // Explicit construction with json::Bool
     M_ASSERT_NO_THROW(json::Value bool_true{json::Bool(true)});
@@ -33,10 +42,10 @@ M_TEST(Value, Bool) {
     // --- Type checking ---
     json::Value true_val{true};
     json::Value false_val{false};
-    M_ASSERT_TRUE(true_val.is<json::Bool>());
-    M_ASSERT_TRUE(false_val.is<json::Bool>());
-    M_ASSERT_FALSE(true_val.is<json::String>());
-    M_ASSERT_FALSE(false_val.is<json::Number>());
+    M_ASSERT_TRUE(true_val.is_bol());
+    M_ASSERT_TRUE(false_val.is_bol());
+    M_ASSERT_FALSE(true_val.is_str());
+    M_ASSERT_FALSE(false_val.is_num());
     M_EXPECT_STREQ(true_val.type_name(), "Bool");
     M_EXPECT_STREQ(false_val.type_name(), "Bool");
 
@@ -48,7 +57,7 @@ M_TEST(Value, Bool) {
     M_ASSERT_THROW(std::ignore = json::Value{json::String("not a bool")}.get<json::Bool>(), std::runtime_error);
 
     // --- Assignment tests ---
-    json::Value assign_val{json::Type::eBool};
+    json::Value assign_val{json::Bool{}};
     assign_val = json::Bool(true);
     M_ASSERT_EQ(assign_val.to<json::Bool>(), true);
     assign_val = false;
@@ -93,8 +102,8 @@ M_TEST(Value, Bool) {
     // --- Serialization tests ---
     M_ASSERT_EQ(json::Value{true}.serialize(), "true");
     M_ASSERT_EQ(json::Value{false}.serialize(), "false");
-    M_ASSERT_EQ(json::Value{true}.serialize_pretty(), "true");
-    M_ASSERT_EQ(json::Value{false}.serialize_pretty(), "false");
+    M_ASSERT_EQ(json::Value{true}.prettify(), "true");
+    M_ASSERT_EQ(json::Value{false}.prettify(), "false");
 
     // --- Parsing tests ---
     auto parsed_true = json::parse("true");

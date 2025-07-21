@@ -17,35 +17,24 @@ M_TEST(Type, enum) {
     M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::Type::eObject),   5 ) );
     
 
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eNone),           0 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eEmptyData),      1 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eDepthExceeded),  2 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eIllegalEscape),  3 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eInvalidNumber),  4 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedString), 5 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedObject), 6 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedArray),  7 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnknownFormat),  8 ) );
-    M_ASSERT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eRedundantText),  9 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eNone),           0 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eEmptyData),      1 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eRedundantText),  2 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eDepthExceeded),  3 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eIllegalEscape),  4 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eInvalidNumber),  5 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedString), 6 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedObject), 7 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedArray),  8 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnknownFormat),  9 ) );
 }
 
 // Test the Object type
 M_TEST(Type, Object) {
 
-    #ifndef  M_VCT_TOOLS_JSON_UNORDERED_MAP
-
     M_ASSERT_TRUE( (std::is_same_v<json::Object, std::map<json::String, json::Value>>) );
     M_ASSERT_EQ( json::Object{}, (std::map<json::String, json::Value> {} ));
     M_ASSERT_EQ( json::Object(), (std::map<json::String, json::Value> {} ));
-
-    #else
-
-    M_ASSERT_TRUE((std::is_same_v<json::Object, std::unordered_map<json::String, json::Value>>));
-    M_ASSERT_EQ(json::Object{}, (std::unordered_map<json::String, json::Value> {}));
-    M_ASSERT_EQ(json::Object(), (std::unordered_map<json::String, json::Value> {}));
-
-    #endif
-
 }
 
 // Test the Number type
@@ -85,12 +74,12 @@ M_TEST(Type, Null) {
 
 // Test the json_types concept
 M_TEST(Type, concept) {
-    M_ASSERT_TRUE( requires { requires json::json_types<json::Object>; } );
-    M_ASSERT_TRUE( requires { requires json::json_types<json::Array>; }  );
-    M_ASSERT_TRUE( requires { requires json::json_types<json::Number>; } );
-    M_ASSERT_TRUE( requires { requires json::json_types<json::String>; } );
-    M_ASSERT_TRUE( requires { requires json::json_types<json::Bool>; }   );
-    M_ASSERT_TRUE( requires { requires json::json_types<json::Null>; }   );
+    M_ASSERT_TRUE( requires { requires json::json_type<json::Object>; } );
+    M_ASSERT_TRUE( requires { requires json::json_type<json::Array>; }  );
+    M_ASSERT_TRUE( requires { requires json::json_type<json::Number>; } );
+    M_ASSERT_TRUE( requires { requires json::json_type<json::String>; } );
+    M_ASSERT_TRUE( requires { requires json::json_type<json::Bool>; }   );
+    M_ASSERT_TRUE( requires { requires json::json_type<json::Null>; }   );
 }
 
 M_TEST(Type, value) {

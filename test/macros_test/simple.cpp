@@ -1,5 +1,5 @@
 #include <vct/test_unit_macros.hpp>
-#define M_VCT_JSON_SIMPLIFY_MACROS
+#define M_VCT_TOOLS_JSON_SIMPLIFY_MACROS
 #include <vct/tools/json_macros.hpp>
 import std;
 import vct.test.unit;
@@ -42,7 +42,7 @@ M_TEST(Macros, Simple) {
     }
 
     {
-        json::Value v_object{ json::Type::eObject };
+        json::Value v_object{ json::Object{} };
         v_object["id"] = 42;
         v_object["name"] = "Test User";
         v_object["active"] = false;
@@ -68,7 +68,7 @@ M_TEST(Macros, Simple) {
     }
 
     {
-        json::Value v_mover{ json::Type::eObject };
+        json::Value v_mover{ json::Object{} };
         v_mover["name"] = "Test move xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
         MyData d_recipient{ std::move(v_mover) };
         M_ASSERT_EQ(d_recipient.m_name, "Test move xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");

@@ -30,7 +30,7 @@ M_TEST(Value, Insert) {
     // 3. size() & empty() for non-container
     Value str = String{"abc"};
     M_ASSERT_EQ(str.size(), 0);
-    M_ASSERT_FALSE(str.empty());
+    M_ASSERT_TRUE(str.empty());
     // 4. push_back(const Value&) & push_back(Value&&)
     Value arr2 = json::Array{};
     Value v1 = 10;

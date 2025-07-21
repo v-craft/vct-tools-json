@@ -10,10 +10,10 @@ using namespace vct::tools;
 // --- Object Construction and Type Checks ---
 M_TEST(Value, Object) {
     // Default and explicit construction
-    M_ASSERT_NO_THROW(json::Value obj_default{json::Type::eObject});
-    M_ASSERT_EQ(json::Value{json::Type::eObject}.type(), json::Type::eObject);
-    M_ASSERT_EQ(json::Value{json::Type::eObject}.size(), 0);
-    M_ASSERT_TRUE(json::Value{json::Type::eObject}.to<json::Object>().empty());
+    M_ASSERT_NO_THROW(json::Value obj_default{json::Object{}});
+    M_ASSERT_EQ(json::Value{json::Object{}}.type(), json::Type::eObject);
+    M_ASSERT_EQ(json::Value{json::Object{}}.size(), 0);
+    M_ASSERT_TRUE(json::Value{json::Object{}}.to<json::Object>().empty());
 
     M_ASSERT_NO_THROW(json::Value obj_explicit{json::Object{}});
     M_ASSERT_NO_THROW(json::Value obj_init{json::Object{{"key1", 1}, {"key2", 2}}});
@@ -33,8 +33,8 @@ M_TEST(Value, Object) {
     // Type checking
     json::Value obj_val{json::Object{{"a", 1}, {"b", 2}, {"c", 3}}};
     json::Value empty_obj{json::Object{}};
-    M_ASSERT_TRUE(obj_val.is<json::Object>());
-    M_ASSERT_FALSE(obj_val.is<json::String>());
+    M_ASSERT_TRUE(obj_val.is_obj());
+    M_ASSERT_FALSE(obj_val.is_str());
     M_EXPECT_STREQ(obj_val.type_name(), "Object");
 
     // --- Size and Empty Checks ---
@@ -86,7 +86,7 @@ M_TEST(Value, Object) {
     M_ASSERT_EQ(ref_test.size(), 3);
 
     // --- Assignment Operations ---
-    json::Value assign_val{json::Type::eObject};
+    json::Value assign_val{json::Object{}};
     assign_val = json::Object{{"key1", 1}, {"key2", 2}};
     M_ASSERT_EQ(assign_val.size(), 2);
 
@@ -121,7 +121,7 @@ M_TEST(Value, Object) {
     // --- Serialization and Parsing ---
     json::Value serial_test{json::Object{{"key1", 1}, {"key2", 2}}};
     M_ASSERT_NO_THROW(std::ignore = serial_test.serialize());
-    M_ASSERT_NO_THROW(std::ignore = serial_test.serialize_pretty());
+    M_ASSERT_NO_THROW(std::ignore = serial_test.prettify());
 
     auto parsed_simple = json::parse(R"({"key1":1,"key2":2})");
     if (parsed_simple.has_value()) {

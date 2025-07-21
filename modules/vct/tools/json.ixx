@@ -1,13 +1,8 @@
-export module vct.tools.json;
-
-import std;
-
 /**
  * @file json.ixx
  * @brief JSON parsing and manipulation library module
  * @author Mysvac
- * @date 2025-07-17
- * @version 1.0
+ * @date 2025-07-21
  * @copyright Copyright (c) 2025 Mysvac. All rights reserved.
  *
  * This module provides a comprehensive JSON parsing, serialization and manipulation library
@@ -22,8 +17,13 @@ import std;
  * - Exception-safe operations with noexcept guarantees where appropriate
  */
 
+export module vct.tools.json;
+
+import std;
+
+
 /**
- * \~chinese @namespace vct::tools::json
+ * @namespace vct::tools::json
  * @brief Core namespace for JSON parsing library
  * 
  * Provides comprehensive JSON data parsing, serialization and manipulation functionality.
@@ -36,13 +36,9 @@ import std;
  * - Template-based generic programming with concepts for type safety
  * - STL-compatible container operations
  * - Exception-safe operations with noexcept guarantees where appropriate
- *
- * Default use std::map
- * If you want to use std::unordered_map instead, define M_VCT_TOOLS_JSON_UNORDERED_MAP by CMakeLists.txt.
  * 
  * @author Mysvac
- * @date 2025-07-17
- * @version 1.0
+ * @date 2025-07-21
  */
 export namespace vct::tools::json{
 
@@ -72,14 +68,14 @@ export namespace vct::tools::json{
     enum class ParseError {
         eNone = 0,          ///< No error occurred, parsing was successful
         eEmptyData,         ///< Empty data provided for parsing
+        eRedundantText,     ///< Redundant text found after valid JSON data
         eDepthExceeded,     ///< Maximum nesting depth exceeded during parsing
         eIllegalEscape,     ///< Illegal escape sequence encountered in string literal
         eInvalidNumber,     ///< Invalid number format encountered
         eUnclosedString,    ///< Unclosed string literal in JSON data
         eUnclosedObject,    ///< Unclosed object literal in JSON data
         eUnclosedArray,     ///< Unclosed array literal in JSON data
-        eUnknownFormat,     ///< Invalid JSON format encountered
-        eRedundantText      ///< Redundant text found after valid JSON data
+        eUnknownFormat      ///< Invalid JSON format encountered
     };
 
     // Forward declaration
@@ -92,10 +88,9 @@ export namespace vct::tools::json{
      * Standard string type for JSON string values. UTF-8 encoded by default.
      */
     using String = std::string;
-    static_assert(std::is_same_v<String, std::string>, "String type must be std::string");
+    static_assert( String{} == "", R"(deafult String type must be equal to "")");
+    // static_assert( std::is_same_v<String, std::string>, "String type must be std::string" );
 
-#ifndef M_VCT_TOOLS_JSON_UNORDERED_MAP
-    // default to std::map
 
     /**
      * @typedef Object
@@ -105,21 +100,7 @@ export namespace vct::tools::json{
      * Keys are sorted lexicographically for consistent serialization output.
      */
     using Object = std::map<String,Value>;
-    static_assert(std::is_same_v<Object, std::map<String,Value>>, "Object type must be std::map<String,Value>");
-
-#else // define M_VCT_TOOLS_JSON_UNORDERED_MAP to use std::unordered_map
-
-    /**
-     * @typedef Object
-     * @brief JSON object type definition, using std::unordered_map for key-value pairs
-     *
-     * Hash map implementation for JSON objects. Provides O(1) average lookup time
-     * but iteration order is not guaranteed. Enable by defining M_VCT_TOOLS_JSON_UNORDERED_MAP.
-     */
-    using Object = std::unordered_map<String,Value>;
-    static_assert(std::is_same_v<Object, std::unordered_map<String,Value>>, "Object type must be std::unordered_map<String,Value>");
-
-#endif  // M_VCT_TOOLS_JSON_UNORDERED_MAP
+    // static_assert(std::is_same_v<Object, std::map<String,Value>>, "Object type must be std::map<String,Value>");
 
     /**
      * @typedef Array
@@ -129,7 +110,7 @@ export namespace vct::tools::json{
      * and efficient push_back operations for array construction.
      */
     using Array = std::vector<Value>;
-    static_assert(std::is_same_v<Array, std::vector<Value>>, "Array type must be std::vector");
+    // static_assert( std::is_same_v<Array, std::vector<Value>>, "Array type must be std::vector" );
 
     /**
      * @typedef Number
@@ -141,8 +122,9 @@ export namespace vct::tools::json{
      * @note Number type could be cast to Bool by `to/move` function in this library, but not equal in `==` operator.
      */
     using Number = double;
-    static_assert(std::is_same_v<Number, double>, "Number type must be double");
-    static_assert( Number{} == 0.0, "Number type must be 0.0");
+    static_assert( Number{} == 0.0, "deafult Number type must be 0.0");
+    // static_assert( std::is_same_v<Number, double>, "Number type must be double" );
+
 
     /**
      * @typedef Bool
@@ -153,10 +135,11 @@ export namespace vct::tools::json{
      * @note Bool type could be cast to Number by `to/move` function in this library, but not equal in `==` operator.
      */
     using Bool = bool;
-    static_assert(std::is_same_v<Bool, bool>, "Bool type must be bool");
-    static_assert( Bool{} == false, "Bool type must be false");
+    static_assert( Bool{} == false, "deafult Bool type must be false");
+    // static_assert( std::is_same_v<Bool, bool>, "Bool type must be bool" );
 
-    /**
+
+    /**s
      * @typedef Null
      * @brief JSON null type definition, using std::nullptr_t
      *
@@ -166,11 +149,12 @@ export namespace vct::tools::json{
      * @note Null type could not cast to false or 0 in this library,
      */
     using Null = std::nullptr_t;
-    static_assert(std::is_same_v<Null, std::nullptr_t>, "Null type must be std::nullptr_t");
-    static_assert( Null{} == nullptr, "Null type must be nullptr");
+    static_assert( Null{} == nullptr, "default Null type must be nullptr");
+    // static_assert(std::is_same_v<Null, std::nullptr_t>, "Null type must be std::nullptr_t");
+
 
     /**
-     * @concept json_types
+     * @concept json_type
      * @brief Concept to constrain template types to valid JSON types
      *
      * Ensures that template parameters are one of the six fundamental JSON types.
@@ -179,7 +163,7 @@ export namespace vct::tools::json{
      * @tparam T Type to check for JSON compatibility
      */
     template<typename T>
-    concept json_types = std::disjunction_v<
+    concept json_type = std::disjunction_v<
         std::is_same<T, Null>,
         std::is_same<T, Bool>,
         std::is_same<T, Number>,
@@ -189,8 +173,8 @@ export namespace vct::tools::json{
     >;
 
     /**
-     * @concept convertible_types
-     * @brief The available types for 'to/move' function, must include 'json types'
+     * @concept convertible
+     * @brief The directly available types for 'to/move' function, include 'json_type'
      *
      * Includes JSON types plus additional types that can be safely converted
      * to or from JSON representation, including arithmetic types, enums,
@@ -199,7 +183,7 @@ export namespace vct::tools::json{
      * @tparam T Type to check for conversion compatibility
      */
     template<typename T>
-    concept convertible_types = json_types<T> || std::disjunction_v<
+    concept convertible = std::disjunction_v<
         std::is_arithmetic<T>,
         std::is_enum<T>,
         std::is_convertible<Array, T>,
@@ -212,7 +196,7 @@ export namespace vct::tools::json{
     >;
 
     /**
-     * @concept convertible_map_types
+     * @concept convertible_map
      * @brief Convertable k-v type, D is default mapped type
      *
      * Defines requirements for types that can be converted to/from JSON Objects.
@@ -223,20 +207,21 @@ export namespace vct::tools::json{
      * @tparam D Default mapped type for failed conversions
      */
     template<typename T, typename D>
-    concept convertible_map_types = std::ranges::range<T> && requires {
+    concept convertible_map = std::ranges::range<T> && requires {
         typename T::key_type;
         typename T::mapped_type;
-        requires std::is_constructible_v<D,typename T::mapped_type>;
+        requires std::is_constructible_v<typename T::mapped_type, D>;
         requires std::is_convertible_v<String, typename T::key_type>;
-        requires convertible_types<typename T::mapped_type>;
+        requires convertible<typename T::mapped_type>;
         requires std::is_default_constructible_v<T>;
         requires std::is_default_constructible_v<typename T::mapped_type>;
+        requires std::is_copy_constructible_v<typename T::mapped_type>;
     } && requires (T t, String s, typename T::mapped_type m) {
         t.emplace(static_cast<typename T::key_type>(s), std::move(m));
     };
 
     /**
-     * @concept convertible_array_types
+     * @concept convertible_array
      * @brief Convertable array type, D is default value type
      *
      * Defines requirements for types that can be converted to/from JSON Arrays.
@@ -246,12 +231,13 @@ export namespace vct::tools::json{
      * @tparam D Default value type for failed conversions
      */
     template<typename T, typename D>
-    concept convertible_array_types =  std::ranges::range<T> && requires {
+    concept convertible_array =  std::ranges::range<T> && requires {
         typename T::value_type;
-        requires std::is_constructible_v<D,typename T::value_type>;
-        requires convertible_types<typename T::value_type>;
+        requires std::is_constructible_v<typename T::value_type,D>;
+        requires convertible<typename T::value_type>;
         requires std::is_default_constructible_v<T>;
         requires std::is_default_constructible_v<typename T::value_type>;
+        requires std::is_copy_constructible_v<typename T::value_type>;
     } && requires (T t, typename T::value_type v) {
         t.emplace_back(std::move(v));
     };
@@ -284,22 +270,33 @@ export namespace vct::tools::json{
         using Variant = std::variant<
             Null,       ///< JSON null value storage
             Bool,       ///< JSON boolean value storage
-            Number,     ///< JSON number storage (unified using Number)
+            Number,     ///< JSON number storage
             String,     ///< JSON string storage
             Array,      ///< JSON array storage
             Object      ///< JSON object storage
         >;
         
         Variant m_data { Null{} };      ///< Actual data storage, defaults to null
-        Type m_type { Type::eNull };     ///< Type identifier for current value
-
     public:
+
         /**
          * @brief Clear data to nullptr and reset type to null
          */
+        template<json_type T = Null>
         void reset() noexcept {
-            m_data = Null{}; // Reset to null
-            m_type = Type::eNull; // Reset type
+            if constexpr(std::is_same_v<T, Null>) {
+                m_data = Null{};
+            } else if constexpr(std::is_same_v<T, Bool>) {
+                m_data = Bool{};
+            } else if constexpr(std::is_same_v<T, Number>) {
+                m_data = Number{};
+            } else if constexpr(std::is_same_v<T, String>) {
+                m_data = String{};
+            } else if constexpr(std::is_same_v<T, Array>) {
+                m_data = Array{};
+            } else if constexpr(std::is_same_v<T, Object>) {
+                m_data = Object{};
+            }
         }
 
         /**
@@ -307,42 +304,67 @@ export namespace vct::tools::json{
          * @return The current Type of this Value
          */
         [[nodiscard]]
-        Type type() const noexcept { return m_type; }
-
-        template<json_types T>
-        [[nodiscard]]
-        bool is() const noexcept {
-            if constexpr (std::is_same_v<T, Bool>) {
-                return m_type == Type::eBool;
-            } else if constexpr (std::is_same_v<T, Number>) {
-                return m_type == Type::eNumber;
-            } else if constexpr (std::is_same_v<T, Object>) {
-                return m_type == Type::eObject;
-            } else if constexpr (std::is_same_v<T, Array>) {
-                return m_type == Type::eArray;
-            } else if constexpr (std::is_same_v<T, String>) {
-                return m_type == Type::eString;
-            } else {
-                return m_type == Type::eNull;
-            }
-        }
+        constexpr Type type() const noexcept { return static_cast<Type>(m_data.index()); }
 
         /**
-         * @brief Get the current JSON type name
-         * @return The current Type Name of this Value
+         * @brief Get the string name of current JSON (should only be used for debug)
+         * @return The current Type Name(string) of this Value
          */
         [[nodiscard]]
-        String type_name() const noexcept {
-            switch (m_type) {
+        constexpr String type_name() const noexcept {
+            switch ( this->type() ) {
                 case Type::eObject: return "Object";
                 case Type::eArray:  return "Array";
                 case Type::eString: return "String";
                 case Type::eNumber: return "Number";
                 case Type::eBool:   return "Bool";
                 case Type::eNull:   return "Null";
+                default: return "error"; // should never happen
             }
-            return "Unknown"; // Should never happen
         }
+
+        /**
+         * @brief check if this Value is null
+         * @return true if this Value is null, false otherwise
+         */
+        [[nodiscard]]
+        constexpr bool is_nul() const noexcept { return type() == Type::eNull; }
+
+        /**
+         * @brief check if this Value is boolean
+         * @return true if this Value is boolean, false otherwise
+         */
+        [[nodiscard]]
+        constexpr bool is_bol() const noexcept { return type() == Type::eBool; }
+
+        /**
+         * @brief check if this Value is numeric
+         * @return true if this Value is numeric, false otherwise
+         */
+        [[nodiscard]]
+        constexpr bool is_num() const noexcept { return type() == Type::eNumber; }
+
+        /**
+         * @brief check if this Value is string
+         * @return true if this Value is string, false otherwise
+         */
+        [[nodiscard]]
+        constexpr bool is_str() const noexcept { return type() == Type::eString; }
+
+        /**
+         * @brief check if this Value is array
+         * @return true if this Value is array, false otherwise
+         */
+        [[nodiscard]]
+        constexpr bool is_arr() const noexcept { return type() == Type::eArray; }
+
+        /**
+         * @brief check if this Value is object
+         * @return true if this Value is object, false otherwise
+         */
+        [[nodiscard]]
+        constexpr bool is_obj() const noexcept { return type() == Type::eObject; }
+
 
         /**
          * @brief Default constructor, initializes to null type and null data
@@ -374,8 +396,6 @@ export namespace vct::tools::json{
         Value(Value&& other) noexcept {
             m_data = std::move(other.m_data);
             other.m_data = Null{};
-            m_type = other.m_type;
-            other.m_type = Type::eNull;
         }
 
         /**
@@ -389,40 +409,6 @@ export namespace vct::tools::json{
             if (this == &other) return *this;
             m_data = std::move(other.m_data);
             other.m_data = Null{};
-            m_type = other.m_type;
-            other.m_type = Type::eNull;
-            return *this;
-        }
-
-        /**
-         * @brief Clear data only without changing type
-         * 
-         * Resets data to default values: string->string(), number->0.0, bool->false, null->nullptr, etc.
-         */
-        void clear_data() noexcept {
-            switch (m_type) {
-                case Type::eObject: m_data = Object{};  break;
-                case Type::eArray:  m_data = Array{};   break;
-                case Type::eString: m_data = String{};  break;
-                case Type::eNumber: m_data = Number{};  break;
-                case Type::eBool:   m_data = Bool{};    break;
-                case Type::eNull:   m_data = Null{};    break;
-            }
-        }
-
-        /**
-         * @brief Construct Value with specified JSON type
-         * @param type The JSON type to initialize
-         */
-        Value(const Type type) noexcept : m_type(type) { clear_data(); }
-        
-        /**
-         * @brief Assign Value with specified JSON type
-         * @param type The JSON type to initialize
-         */
-        Value& operator=(const Type type) noexcept{
-            m_type = type;
-            clear_data();
             return *this;
         }
 
@@ -435,38 +421,36 @@ export namespace vct::tools::json{
          * @brief Assign Value from nullptr
          */
         Value& operator=(const Null) noexcept {
-            m_type = Type::eNull;
             m_data = Null{};
             return *this;
         }
         
         /**
          * @brief Construct Value from boolean
+         * @param bol Boolean value to initialize
          */
-        Value(const Bool bl) noexcept : m_data(bl), m_type(Type::eBool) {}
+        Value(const Bool bol) noexcept : m_data(bol) {}
 
         /**
          * @brief Assign Value from boolean
+         * @param bol Boolean value to assign
          */
-        Value& operator=(const Bool bl) noexcept {
-            m_type = Type::eBool;
-            m_data = bl;
+        Value& operator=(const Bool bol) noexcept {
+            m_data = bol;
             return *this;
         }
-
 
         /**
          * @brief Construct Value from numeric type
          * @param num Numeric value to initialize
          */
-        Value(Number num) noexcept : m_data(num), m_type(Type::eNumber) {}
+        Value(Number num) noexcept : m_data(num) {}
 
         /**
          * @brief Assign Value from numeric type
          * @param num Numeric value to assign
          */
         Value& operator=(const Number num) noexcept {
-            m_type = Type::eNumber;
             m_data = num;
             return *this;
         }
@@ -474,39 +458,41 @@ export namespace vct::tools::json{
         /**
          * @brief Construct Value from numeric types
          * @tparam T Numeric type (integral or floating-point or enum)
+         * @warning Every enum class will be handled as Integer. including json::Type.
          */
         template<typename T>
         requires (std::is_arithmetic_v<T> || std::is_enum_v<T>)
-        Value(T num) noexcept : m_data( static_cast<Number>(num) ), m_type(Type::eNumber) {}
+        Value(T num) noexcept : m_data( static_cast<Number>(num) ) {}
 
         /**
          * @brief Assign Value from numeric types
          * @tparam T Numeric type (integral or floating-point or enum)
+         * @warning Every enum class will be handled as Integer. including json::Type.
          */
         template<typename T>
         requires (std::is_arithmetic_v<T> || std::is_enum_v<T>)
         Value& operator=(T num) noexcept {
-            m_type = Type::eNumber;
             m_data = static_cast<Number>(num);
             return *this;
         }
 
         /**
          * @brief Construct Value from string types
+         * @param str String value to initialize
          */
-        Value(String str) noexcept : m_data(std::move(str)), m_type(Type::eString) {}
+        Value(String str) noexcept : m_data(std::move(str)) {}
 
         /**
          * @brief Construct Value from C-style string literal
          * @param str C-style string literal or const char*
          */
-        Value(const char* str) noexcept : m_data(String{str}), m_type(Type::eString) {}
+        Value(const char* str) noexcept : m_data(String{str}) {}
 
         /**
          * @brief Assign Value from string types
+         * @param str String value to assign
          */
         Value& operator=(String str) noexcept {
-            m_type = Type::eString;
             m_data = std::move(str);
             return *this;
         }
@@ -516,35 +502,37 @@ export namespace vct::tools::json{
          * @param str C-style string literal or const char*
          */
         Value& operator=(const char* str) noexcept {
-            m_type = Type::eString;
             m_data = String{str};
             return *this;
         }
         
         /**
          * @brief Construct Value from Object
+         * @param obj Object to initialize
          */
-        Value(Object obj) noexcept : m_data(std::move(obj)), m_type(Type::eObject) {}
+        Value(Object obj) noexcept : m_data(std::move(obj)) {}
 
 
         /**
          * @brief Assign Value from Object
+         * @param obj Object to assign
          */
         Value& operator=(Object obj) noexcept {
-            m_type = Type::eObject;
             m_data = std::move(obj);
             return *this;
         }
         
         /**
          * @brief Construct Value from Array
+         * @param arr Array to initialize
          */
-        Value(Array arr) noexcept : m_data(std::move(arr)), m_type(Type::eArray) {}
+        Value(Array arr) noexcept : m_data(std::move(arr)) {}
+
         /**
          * @brief Assign Value from Array
+         * @param arr Array to assign
          */
         Value& operator=(Array arr) noexcept {
-            m_type = Type::eArray;
             m_data = std::move(arr);
             return *this;
         }
@@ -557,7 +545,7 @@ export namespace vct::tools::json{
          */
         template<std::ranges::range T>
         requires std::is_constructible_v<Value, typename T::value_type>
-        explicit Value(T other) noexcept : m_data( Array{} ), m_type( Type::eArray ) {
+        explicit Value(T other) noexcept : m_data( Array{} ) {
             auto& arr = std::get<Array>(m_data);
             for (auto& item : other) {
                 arr.emplace_back( static_cast<Value>(std::move(item)) );
@@ -571,13 +559,12 @@ export namespace vct::tools::json{
          */
         template<std::ranges::range T>
         requires std::is_convertible_v<typename T::key_type, String> && std::is_constructible_v<Value, typename T::mapped_type>
-        explicit Value(T other) noexcept : m_data( Object{} ), m_type( Type::eObject ) {
+        explicit Value(T other) noexcept : m_data( Object{} ) {
             auto& obj = std::get<Object>(m_data);
             for (auto& [key, val]: other) {
                 obj.emplace( static_cast<String>(key), static_cast<Value>(std::move(val)) );
             }
         }
-
 
         /**
          * @brief Access object member by key (non-const)
@@ -587,7 +574,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         Value& operator[](const String& key) {
-            if (m_type != Type::eObject) throw std::runtime_error("Value is not an object");
+            if (type() != Type::eObject) throw std::runtime_error("Value is not an object");
             return std::get<Object>(m_data)[key];
         }
         
@@ -600,7 +587,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         const Value& operator[](const String& key) const {
-            if (m_type != Type::eObject) throw std::runtime_error("Value is not an object");
+            if (type() != Type::eObject) throw std::runtime_error("Value is not an object");
             return std::get<Object>(m_data).at(key);
         }
         
@@ -613,7 +600,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         Value& operator[](const std::size_t index) {
-            if (m_type != Type::eArray) throw std::runtime_error("Value is not an array");
+            if (type() != Type::eArray) throw std::runtime_error("Value is not an array");
             return std::get<Array>(m_data)[index];
         }
         
@@ -626,7 +613,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         const Value& operator[](const std::size_t index) const {
-            if (m_type != Type::eArray) throw std::runtime_error("Value is not an array");
+            if (type() != Type::eArray) throw std::runtime_error("Value is not an array");
             return std::get<Array>(m_data).at(index);
         }
 
@@ -639,7 +626,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         Value& at(const String& key) {
-            if (m_type != Type::eObject) throw std::runtime_error("Value is not an object");
+            if (type() != Type::eObject) throw std::runtime_error("Value is not an object");
             return std::get<Object>(m_data).at(key);
         }
         
@@ -652,7 +639,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         const Value& at(const String& key) const {
-            if (m_type != Type::eObject) throw std::runtime_error("Value is not an object");
+            if (type() != Type::eObject) throw std::runtime_error("Value is not an object");
             return std::get<Object>(m_data).at(key);
         }
         
@@ -665,7 +652,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         Value& at(const std::size_t index) {
-            if (m_type != Type::eArray) throw std::runtime_error("Value is not an array");
+            if (type() != Type::eArray) throw std::runtime_error("Value is not an array");
             return std::get<Array>(m_data).at(index);
         }
         
@@ -678,7 +665,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         const Value& at(const std::size_t index) const {
-            if (m_type != Type::eArray) throw std::runtime_error("Value is not an array");
+            if (type() != Type::eArray) throw std::runtime_error("Value is not an array");
             return std::get<Array>(m_data).at(index);
         }
 
@@ -716,7 +703,7 @@ export namespace vct::tools::json{
          * @param max_space Maximum allowed indentation spaces (default: 512)
          * @return True if serialization succeeded, false if max_space exceeded
          */
-        Bool serialize_pretty_to(
+        Bool prettify_to(
             String& str, 
             std::uint16_t space_num = 2,
             std::uint16_t depth = 0,
@@ -731,7 +718,7 @@ export namespace vct::tools::json{
          * @param max_space Maximum allowed indentation spaces (default: 512)
          * @return True if serialization succeeded, false if max_space exceeded or stream failed
          */
-        Bool serialize_pretty_to(
+        Bool prettify_to(
             std::ostream& out, 
             std::uint16_t space_num = 2,
             std::uint16_t depth = 0,
@@ -747,71 +734,71 @@ export namespace vct::tools::json{
          * @return Formatted JSON string or nullopt if max_space exceeded
          */
         [[nodiscard]]
-        std::optional<String> serialize_pretty(
+        std::optional<String> prettify(
             const std::uint16_t space_num = 2, 
             const std::uint16_t depth = 0, 
             const std::uint32_t max_space = 512
         ) const noexcept {
-            if(String res; this->serialize_pretty_to(res, space_num, depth, max_space)) return res;
+            if(String res; this->prettify_to(res, space_num, depth, max_space)) return res;
             return std::nullopt;
         }
 
         /**
          * @brief Get const reference to underlying data
-         * @tparam T The JSON type to retrieve (must satisfy json_types concept)
+         * @tparam T The JSON type to retrieve (must satisfy json_type concept)
          * @return Const reference to underlying data
          * @throws std::runtime_error if type doesn't match
          */
-        template<json_types T>
+        template<json_type T>
         [[nodiscard]]
         const T&  get() const {
             if constexpr (std::is_same_v<T, Null>) {
-                if (m_type == Type::eNull) return std::get<Null>(m_data);
+                if (type() == Type::eNull) return std::get<Null>(m_data);
             }
             if constexpr (std::is_same_v<T, Bool>) {
-                if (m_type == Type::eBool) return std::get<Bool>(m_data);
+                if (type() == Type::eBool) return std::get<Bool>(m_data);
             }
             if constexpr (std::is_same_v<T, Number>) {
-                if (m_type == Type::eNumber) return std::get<Number>(m_data);
+                if (type() == Type::eNumber) return std::get<Number>(m_data);
             }
             if constexpr (std::is_same_v<T, String>) {
-                if (m_type == Type::eString) return std::get<String>(m_data);
+                if (type() == Type::eString) return std::get<String>(m_data);
             }
             if constexpr (std::is_same_v<T, Array>) {
-                if (m_type == Type::eArray) return std::get<Array>(m_data);
+                if (type() == Type::eArray) return std::get<Array>(m_data);
             }
             if constexpr (std::is_same_v<T, Object>) {
-                if (m_type == Type::eObject) return std::get<Object>(m_data);
+                if (type() == Type::eObject) return std::get<Object>(m_data);
             }
             throw std::runtime_error("Value type mismatch");
         }
 
         /**
          * @brief Get mutable reference to underlying data
-         * @tparam T The JSON type to retrieve (must satisfy json_types concept)
+         * @tparam T The JSON type to retrieve (must satisfy json_type concept)
          * @return Mutable reference to underlying data
          * @throws std::runtime_error if type doesn't match
          */
-        template<json_types T>
+        template<json_type T>
         [[nodiscard]]
         T& get() {
             if constexpr (std::is_same_v<T, Null>) {
-                if (m_type == Type::eNull) return std::get<Null>(m_data);
+                if (type() == Type::eNull) return std::get<Null>(m_data);
             }
             if constexpr (std::is_same_v<T, Bool>) {
-                if (m_type == Type::eBool) return std::get<Bool>(m_data);
+                if (type() == Type::eBool) return std::get<Bool>(m_data);
             }
             if constexpr (std::is_same_v<T, Number>) {
-                if (m_type == Type::eNumber) return std::get<Number>(m_data);
+                if (type() == Type::eNumber) return std::get<Number>(m_data);
             }
             if constexpr (std::is_same_v<T, String>) {
-                if (m_type == Type::eString) return std::get<String>(m_data);
+                if (type() == Type::eString) return std::get<String>(m_data);
             }
             if constexpr (std::is_same_v<T, Array>) {
-                if (m_type == Type::eArray) return std::get<Array>(m_data);
+                if (type() == Type::eArray) return std::get<Array>(m_data);
             }
             if constexpr (std::is_same_v<T, Object>) {
-                if (m_type == Type::eObject) return std::get<Object>(m_data);
+                if (type() == Type::eObject) return std::get<Object>(m_data);
             }
             throw std::runtime_error("Value type mismatch");
         }
@@ -820,7 +807,7 @@ export namespace vct::tools::json{
          * @brief type conversion, copy inner value to specified type
          * @tparam T The target type to convert to
          * @tparam D The mapped_type or value_type of the target type, used for range conversion, default is Null for other types(useless).
-         * @param default_range_value if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
+         * @param default_range_elem if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
          * @return The converted value
          * @throws std::runtime_error if conversion fails
          * @note Number is double, so conversions to integral (and enum) types will round to nearest.
@@ -847,64 +834,64 @@ export namespace vct::tools::json{
          * 18. throw std::runtime_error
          */
         template<typename T, typename D = Null>
-        requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
+        requires convertible<T> || convertible_map<T, D> || convertible_array<T, D>
         [[nodiscard]]
-        T  to( D default_range_value = D{} ) const {
+        T  to( D default_range_elem = D{} ) const {
             if constexpr (std::is_same_v<T, Null>) {
-                if (m_type == Type::eNull) return Null{};
+                if (type() == Type::eNull) return Null{};
             } else if constexpr (std::is_same_v<T, Object>) {
-                if (m_type == Type::eObject) return std::get<Object>(m_data);
+                if (type() == Type::eObject) return std::get<Object>(m_data);
             } else if constexpr (std::is_same_v<T, Array>) {
-                if (m_type == Type::eArray) return std::get<Array>(m_data);
+                if (type() == Type::eArray) return std::get<Array>(m_data);
             } else if constexpr (std::is_same_v<T, String>) {
-                if (m_type == Type::eString) return std::get<String>(m_data);
+                if (type() == Type::eString) return std::get<String>(m_data);
             } else if constexpr (std::is_same_v<T, Bool>) {
-                if (m_type == Type::eBool) return std::get<Bool>(m_data);
+                if (type() == Type::eBool) return std::get<Bool>(m_data);
             } else if constexpr (std::is_enum_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_integral_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_floating_point_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_constructible_v<T, Value>) {
                 return static_cast<T>(*this);
             }
             if constexpr (std::is_convertible_v<Object, T>) {
-                if (m_type == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
+                if (type() == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
             }
             if constexpr (std::is_convertible_v<Array, T>) {
-                if (m_type == Type::eArray) return static_cast<T>(std::get<Array>(m_data));
+                if (type() == Type::eArray) return static_cast<T>(std::get<Array>(m_data));
             }
             if constexpr (std::is_convertible_v<String, T>) {
-                if (m_type == Type::eString) return static_cast<T>(std::get<String>(m_data));
+                if (type() == Type::eString) return static_cast<T>(std::get<String>(m_data));
             }
             if constexpr (std::is_convertible_v<Number, T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_convertible_v<Bool, T>) {
-                if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
+                if (type() == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(Null{});
+                if (type() == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr ( convertible_map_types<T, D> ) {
-                if (m_type == Type::eObject) {
+            if constexpr ( convertible_map<T, D> ) {
+                if (type() == Type::eObject) {
                     T result{};
                     for (auto& [key, value] : std::get<Object>(m_data)) {
                         auto val = value.to_if<typename T::mapped_type>();
-                        if (!val) result.emplace(static_cast<typename T::key_type>(key), default_range_value);
+                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_elem));
                         else result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
                     }
                     return result;
                 }
             }
-            if constexpr ( convertible_array_types<T, D> ) {
-                if (m_type == Type::eArray) {
+            if constexpr ( convertible_array<T, D> ) {
+                if (type() == Type::eArray) {
                     T result{};
                     for (auto& value : std::get<Array>(m_data)) {
                         auto val = value.to_if<typename T::value_type>();
-                        if (!val) result.emplace_back(default_range_value);
+                        if (!val) result.emplace_back(default_range_elem);
                         else result.emplace_back(std::move(*val));
                     }
                     return result;
@@ -917,7 +904,7 @@ export namespace vct::tools::json{
          * @brief type conversion, copy inner value to specified type
          * @tparam T The target type to convert to
          * @tparam D The mapped_type or value_type of the target type, used for range conversion, default is Null for other types(useless).
-         * @param default_range_value if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
+         * @param default_range_elem if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
          * @return The converted value
          * @note Number is double, so conversions to integral (and enum) types will round to nearest.
          * @details
@@ -943,64 +930,64 @@ export namespace vct::tools::json{
          * 18. return std::nullopt;
          */
         template<typename T, typename D = Null>
-        requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
+        requires convertible<T> || convertible_map<T, D> || convertible_array<T, D>
         [[nodiscard]]
-        std::optional<T>  to_if( D default_range_value = D{} ) const noexcept {
+        std::optional<T>  to_if( D default_range_elem = D{} ) const noexcept {
             if constexpr (std::is_same_v<T, Null>) {
-                if (m_type == Type::eNull) return Null{};
+                if (type() == Type::eNull) return Null{};
             } else if constexpr (std::is_same_v<T, Object>) {
-                if (m_type == Type::eObject) return std::get<Object>(m_data);
+                if (type() == Type::eObject) return std::get<Object>(m_data);
             } else if constexpr (std::is_same_v<T, Array>) {
-                if (m_type == Type::eArray) return std::get<Array>(m_data);
+                if (type() == Type::eArray) return std::get<Array>(m_data);
             } else if constexpr (std::is_same_v<T, String>) {
-                if (m_type == Type::eString) return std::get<String>(m_data);
+                if (type() == Type::eString) return std::get<String>(m_data);
             } else if constexpr (std::is_same_v<T, Bool>) {
-                if (m_type == Type::eBool) return std::get<Bool>(m_data);
+                if (type() == Type::eBool) return std::get<Bool>(m_data);
             } else if constexpr (std::is_enum_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_integral_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_floating_point_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_constructible_v<T, Value>) {
                 return static_cast<T>(*this);
             }
             if constexpr (std::is_convertible_v<Object, T>) {
-                if (m_type == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
+                if (type() == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
             }
             if constexpr (std::is_convertible_v<Array, T>) {
-                if (m_type == Type::eArray) return static_cast<T>(std::get<Array>(m_data));
+                if (type() == Type::eArray) return static_cast<T>(std::get<Array>(m_data));
             }
             if constexpr (std::is_convertible_v<String, T>) {
-                if (m_type == Type::eString) return static_cast<T>(std::get<String>(m_data));
+                if (type() == Type::eString) return static_cast<T>(std::get<String>(m_data));
             }
             if constexpr (std::is_convertible_v<Number, T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_convertible_v<Bool, T>) {
-                if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
+                if (type() == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(Null{});
+                if (type() == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr ( convertible_map_types<T, D> ) {
-                if (m_type == Type::eObject) {
+            if constexpr ( convertible_map<T, D> ) {
+                if (type() == Type::eObject) {
                     T result{};
                     for (auto& [key, value] : std::get<Object>(m_data)) {
                         auto val = value.to_if<typename T::mapped_type>();
-                        if (!val) result.emplace(static_cast<typename T::key_type>(key), default_range_value);
+                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_elem));
                         else result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
                     }
                     return result;
                 }
             }
-            if constexpr ( convertible_array_types<T, D> ) {
-                if (m_type == Type::eArray) {
+            if constexpr ( convertible_array<T, D> ) {
+                if (type() == Type::eArray) {
                     T result{};
                     for (auto& value : std::get<Array>(m_data)) {
                         auto val = value.to_if<typename T::value_type>();
-                        if (!val) result.emplace_back(default_range_value);
+                        if (!val) result.emplace_back(default_range_elem);
                         else result.emplace_back(std::move(*val));
                     }
                     return result;
@@ -1015,7 +1002,7 @@ export namespace vct::tools::json{
          * @tparam T The target type to convert to
          * @tparam D The mapped_type or value_type of the target type, used for range conversion, default is Null for other types(useless).
          * @param default_result The default value to return if conversion fails
-         * @param default_range_value if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
+         * @param default_range_elem if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
          * @return The converted value or default_value if conversion fails
          * @note Number is double, so conversions to integral (and enum) types will round to nearest.
          * @details
@@ -1041,64 +1028,64 @@ export namespace vct::tools::json{
          * 18. return default_result
          */
         template<typename T, typename D = Null>
-        requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
+        requires convertible<T> || convertible_map<T, D> || convertible_array<T, D>
         [[nodiscard]]
-        T  to_or( T default_result, D default_range_value = D{} ) const noexcept {
+        T  to_or( T default_result, D default_range_elem = D{} ) const noexcept {
             if constexpr (std::is_same_v<T, Null>) {
-                if (m_type == Type::eNull) return Null{};
+                if (type() == Type::eNull) return Null{};
             } else if constexpr (std::is_same_v<T, Object>) {
-                if (m_type == Type::eObject) return std::get<Object>(m_data);
+                if (type() == Type::eObject) return std::get<Object>(m_data);
             } else if constexpr (std::is_same_v<T, Array>) {
-                if (m_type == Type::eArray) return std::get<Array>(m_data);
+                if (type() == Type::eArray) return std::get<Array>(m_data);
             } else if constexpr (std::is_same_v<T, String>) {
-                if (m_type == Type::eString) return std::get<String>(m_data);
+                if (type() == Type::eString) return std::get<String>(m_data);
             } else if constexpr (std::is_same_v<T, Bool>) {
-                if (m_type == Type::eBool) return std::get<Bool>(m_data);
+                if (type() == Type::eBool) return std::get<Bool>(m_data);
             } else if constexpr (std::is_enum_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_integral_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_floating_point_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_constructible_v<T, Value>) {
                 return static_cast<T>(*this);
             }
             if constexpr (std::is_convertible_v<Object, T>) {
-                if (m_type == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
+                if (type() == Type::eObject) return static_cast<T>(std::get<Object>(m_data));
             }
             if constexpr (std::is_convertible_v<Array, T>) {
-                if (m_type == Type::eArray) return static_cast<T>(std::get<Array>(m_data));
+                if (type() == Type::eArray) return static_cast<T>(std::get<Array>(m_data));
             }
             if constexpr (std::is_convertible_v<String, T>) {
-                if (m_type == Type::eString) return static_cast<T>(std::get<String>(m_data));
+                if (type() == Type::eString) return static_cast<T>(std::get<String>(m_data));
             }
             if constexpr (std::is_convertible_v<Number, T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_convertible_v<Bool, T>) {
-                if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
+                if (type() == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(Null{});
+                if (type() == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr ( convertible_map_types<T, D> ) {
-                if (m_type == Type::eObject) {
+            if constexpr ( convertible_map<T, D> ) {
+                if (type() == Type::eObject) {
                     T result{};
                     for (auto& [key, value] : std::get<Object>(m_data)) {
                         auto val = value.to_if<typename T::mapped_type>();
-                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_value));
+                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_elem));
                         else result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
                     }
                     return result;
                 }
             }
-            if constexpr ( convertible_array_types<T, D> ) {
-                if (m_type == Type::eArray) {
+            if constexpr ( convertible_array<T, D> ) {
+                if (type() == Type::eArray) {
                     T result{};
                     for (auto& value : std::get<Array>(m_data)) {
                         auto val = value.to_if<typename T::value_type>();
-                        if (!val) result.emplace_back( static_cast<typename T::value_type>(default_range_value));
+                        if (!val) result.emplace_back( static_cast<typename T::value_type>(default_range_elem));
                         else result.emplace_back(std::move(*val));
                     }
                     return result;
@@ -1113,7 +1100,7 @@ export namespace vct::tools::json{
          * @brief type conversion, Move or Copy inner value to specified type
          * @tparam T The target type to convert to
          * @tparam D The mapped_type or value_type of the target type, used for range conversion, default is Null for other types(useless).
-         * @param default_range_value if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
+         * @param default_range_elem if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
          * @return The converted value
          * @throws std::runtime_error if conversion fails
          * @note 
@@ -1143,64 +1130,64 @@ export namespace vct::tools::json{
          * 18. throw std::runtime_error
          */
         template<typename T, typename D = Null>
-        requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
+        requires convertible<T> || convertible_map<T, D> || convertible_array<T, D>
         [[nodiscard]]
-        T  move( D default_range_value = D{} ) {
+        T  move( D default_range_elem = D{} ) {
             if constexpr (std::is_same_v<T, Null>) {
-                if (m_type == Type::eNull) return Null{};
+                if (type() == Type::eNull) return Null{};
             } else if constexpr (std::is_same_v<T, Object>) {
-                if (m_type == Type::eObject) return std::move(std::get<Object>(m_data));
+                if (type() == Type::eObject) return std::move(std::get<Object>(m_data));
             } else if constexpr (std::is_same_v<T, Array>) {
-                if (m_type == Type::eArray) return std::move(std::get<Array>(m_data));
+                if (type() == Type::eArray) return std::move(std::get<Array>(m_data));
             } else if constexpr (std::is_same_v<T, String>) {
-                if (m_type == Type::eString) return std::move(std::get<String>(m_data));
+                if (type() == Type::eString) return std::move(std::get<String>(m_data));
             } else if constexpr (std::is_same_v<T, Bool>) {
-                if (m_type == Type::eBool) return std::get<Bool>(m_data);
+                if (type() == Type::eBool) return std::get<Bool>(m_data);
             } else if constexpr (std::is_enum_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_integral_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_floating_point_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_constructible_v<T, Value>) {
                 return static_cast<T>(std::move(*this));
             }
             if constexpr (std::is_convertible_v<Object, T>) {
-                if (m_type == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
+                if (type() == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
             }
             if constexpr (std::is_convertible_v<Array, T>) {
-                if (m_type == Type::eArray) return static_cast<T>(std::move(std::get<Array>(m_data)));
+                if (type() == Type::eArray) return static_cast<T>(std::move(std::get<Array>(m_data)));
             }
             if constexpr (std::is_convertible_v<String, T>) {
-                if (m_type == Type::eString) return static_cast<T>(std::move(std::get<String>(m_data)));
+                if (type() == Type::eString) return static_cast<T>(std::move(std::get<String>(m_data)));
             }
             if constexpr (std::is_convertible_v<Number, T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_convertible_v<Bool, T>) {
-                if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
+                if (type() == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(Null{});
+                if (type() == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr ( convertible_map_types<T, D> ) {
-                if (m_type == Type::eObject) {
+            if constexpr ( convertible_map<T, D> ) {
+                if (type() == Type::eObject) {
                     T result{};
                     for (auto& [key, value] : std::get<Object>(m_data)) {
                         auto val = value.move_if<typename T::mapped_type>();
-                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_value));
+                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_elem));
                         else result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
                     }
                     return result;
                 }
             }
-            if constexpr ( convertible_array_types<T, D> ) {
-                if (m_type == Type::eArray) {
+            if constexpr ( convertible_array<T, D> ) {
+                if (type() == Type::eArray) {
                     T result{};
                     for (auto& value : std::get<Array>(m_data)) {
                         auto val = value.move_if<typename T::value_type>();
-                        if (!val) result.emplace_back( static_cast<typename T::value_type>(default_range_value) );
+                        if (!val) result.emplace_back( static_cast<typename T::value_type>(default_range_elem) );
                         else result.emplace_back(std::move(*val));
                     }
                     return result;
@@ -1213,7 +1200,7 @@ export namespace vct::tools::json{
          * @brief type conversion, Move or Copy inner value to specified type
          * @tparam T The target type to convert to
          * @tparam D The mapped_type or value_type of the target type, used for range conversion, default is Null for other types(useless).
-         * @param default_range_value if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
+         * @param default_range_elem if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
          * @return The converted value
          * @note 
          * Number is double, so conversions to integral (and enum) types will round to nearest.
@@ -1242,64 +1229,64 @@ export namespace vct::tools::json{
          * 18. return std::nullopt;
          */
         template<typename T, typename D = Null>
-        requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
+        requires convertible<T> || convertible_map<T, D> || convertible_array<T, D>
         [[nodiscard]]
-        std::optional<T>  move_if( D default_range_value = D{} ) noexcept {
+        std::optional<T>  move_if( D default_range_elem = D{} ) noexcept {
             if constexpr (std::is_same_v<T, Null>) {
-                if (m_type == Type::eNull) return Null{};
+                if (type() == Type::eNull) return Null{};
             } else if constexpr (std::is_same_v<T, Object>) {
-                if (m_type == Type::eObject) return std::move(std::get<Object>(m_data));
+                if (type() == Type::eObject) return std::move(std::get<Object>(m_data));
             } else if constexpr (std::is_same_v<T, Array>) {
-                if (m_type == Type::eArray) return std::move(std::get<Array>(m_data));
+                if (type() == Type::eArray) return std::move(std::get<Array>(m_data));
             } else if constexpr (std::is_same_v<T, String>) {
-                if (m_type == Type::eString) return std::move(std::get<String>(m_data));
+                if (type() == Type::eString) return std::move(std::get<String>(m_data));
             } else if constexpr (std::is_same_v<T, Bool>) {
-                if (m_type == Type::eBool) return std::get<Bool>(m_data);
+                if (type() == Type::eBool) return std::get<Bool>(m_data);
             } else if constexpr (std::is_enum_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_integral_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_floating_point_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_constructible_v<T, Value>) {
                 return static_cast<T>(std::move(*this));
             }
             if constexpr (std::is_convertible_v<Object, T>) {
-                if (m_type == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
+                if (type() == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
             }
             if constexpr (std::is_convertible_v<Array, T>) {
-                if (m_type == Type::eArray) return static_cast<T>(std::move(std::get<Array>(m_data)));
+                if (type() == Type::eArray) return static_cast<T>(std::move(std::get<Array>(m_data)));
             }
             if constexpr (std::is_convertible_v<String, T>) {
-                if (m_type == Type::eString) return static_cast<T>(std::move(std::get<String>(m_data)));
+                if (type() == Type::eString) return static_cast<T>(std::move(std::get<String>(m_data)));
             }
             if constexpr (std::is_convertible_v<Number, T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_convertible_v<Bool, T>) {
-                if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
+                if (type() == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(Null{});
+                if (type() == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr ( convertible_map_types<T, D> ) {
-                if (m_type == Type::eObject) {
+            if constexpr ( convertible_map<T, D> ) {
+                if (type() == Type::eObject) {
                     T result{};
                     for (auto& [key, value] : std::get<Object>(m_data)) {
                         auto val = value.move_if<typename T::mapped_type>();
-                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_value));
+                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_elem));
                         else result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
                     }
                     return result;
                 }
             }
-            if constexpr ( convertible_array_types<T, D> ) {
-                if (m_type == Type::eArray) {
+            if constexpr ( convertible_array<T, D> ) {
+                if (type() == Type::eArray) {
                     T result{};
                     for (auto& value : std::get<Array>(m_data)) {
                         auto val = value.move_if<typename T::value_type>();
-                        if (!val) result.emplace_back( static_cast<typename T::value_type>(default_range_value) );
+                        if (!val) result.emplace_back( static_cast<typename T::value_type>(default_range_elem) );
                         else result.emplace_back(std::move(*val));
                     }
                     return result;
@@ -1314,7 +1301,7 @@ export namespace vct::tools::json{
          * @tparam T The target type to convert to
          * @tparam D The mapped_type or value_type of the target type, used for range conversion, default is Null for other types(useless).
          * @param default_result The default value to return if conversion fails
-         * @param default_range_value if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
+         * @param default_range_elem if T is a range type and is not json::Array or json::Object, must be specified for safe conversion. Else, please use default value.
          * @return The converted value
          * @note 
          * Number is double, so conversions to integral (and enum) types will round to nearest.
@@ -1343,64 +1330,64 @@ export namespace vct::tools::json{
          * 18. return default_result;
          */
         template<typename T, typename D = Null>
-        requires convertible_types<T> || convertible_map_types<T, D> || convertible_array_types<T, D>
+        requires convertible<T> || convertible_map<T, D> || convertible_array<T, D>
         [[nodiscard]]
-        T  move_or( T default_result, D default_range_value = D{} ) noexcept {
+        T  move_or( T default_result, D default_range_elem = D{} ) noexcept {
             if constexpr (std::is_same_v<T, Null>) {
-                if (m_type == Type::eNull) return Null{};
+                if (type() == Type::eNull) return Null{};
             } else if constexpr (std::is_same_v<T, Object>) {
-                if (m_type == Type::eObject) return std::move(std::get<Object>(m_data));
+                if (type() == Type::eObject) return std::move(std::get<Object>(m_data));
             } else if constexpr (std::is_same_v<T, Array>) {
-                if (m_type == Type::eArray) return std::move(std::get<Array>(m_data));
+                if (type() == Type::eArray) return std::move(std::get<Array>(m_data));
             } else if constexpr (std::is_same_v<T, String>) {
-                if (m_type == Type::eString) return std::move(std::get<String>(m_data));
+                if (type() == Type::eString) return std::move(std::get<String>(m_data));
             } else if constexpr (std::is_same_v<T, Bool>) {
-                if (m_type == Type::eBool) return std::get<Bool>(m_data);
+                if (type() == Type::eBool) return std::get<Bool>(m_data);
             } else if constexpr (std::is_enum_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_integral_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
+                if (type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data)));
             } else if constexpr (std::is_floating_point_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_constructible_v<T, Value>) {
                 return static_cast<T>(std::move(*this));
             }
             if constexpr (std::is_convertible_v<Object, T>) {
-                if (m_type == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
+                if (type() == Type::eObject) return static_cast<T>(std::move(std::get<Object>(m_data)));
             }
             if constexpr (std::is_convertible_v<Array, T>) {
-                if (m_type == Type::eArray) return static_cast<T>(std::move(std::get<Array>(m_data)));
+                if (type() == Type::eArray) return static_cast<T>(std::move(std::get<Array>(m_data)));
             }
             if constexpr (std::is_convertible_v<String, T>) {
-                if (m_type == Type::eString) return static_cast<T>(std::move(std::get<String>(m_data)));
+                if (type() == Type::eString) return static_cast<T>(std::move(std::get<String>(m_data)));
             }
             if constexpr (std::is_convertible_v<Number, T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
+                if (type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data));
             }
             if constexpr (std::is_convertible_v<Bool, T>) {
-                if (m_type == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
+                if (type() == Type::eBool) return static_cast<T>(std::get<Bool>(m_data));
             }
             if constexpr (std::is_convertible_v<Null, T>) {
-                if (m_type == Type::eNull) return static_cast<T>(Null{});
+                if (type() == Type::eNull) return static_cast<T>(Null{});
             }
-            if constexpr ( convertible_map_types<T, D> ) {
-                if (m_type == Type::eObject) {
+            if constexpr ( convertible_map<T, D> ) {
+                if (type() == Type::eObject) {
                     T result{};
                     for (auto& [key, value] : std::get<Object>(m_data)) {
                         auto val = value.move_if<typename T::mapped_type>();
-                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_value));
+                        if (!val) result.emplace(static_cast<typename T::key_type>(key), static_cast<typename T::mapped_type>(default_range_elem));
                         else result.emplace(static_cast<typename T::key_type>(key), std::move(*val));
                     }
                     return result;
                 }
             }
-            if constexpr ( convertible_array_types<T, D> ) {
-                if (m_type == Type::eArray) {
+            if constexpr ( convertible_array<T, D> ) {
+                if (type() == Type::eArray) {
                     T result{};
                     for (auto& value : std::get<Array>(m_data)) {
                         auto val = value.move_if<typename T::value_type>();
-                        if (!val) result.emplace_back( static_cast<typename T::value_type>(default_range_value) );
+                        if (!val) result.emplace_back( static_cast<typename T::value_type>(default_range_elem) );
                         else result.emplace_back(std::move(*val));
                     }
                     return result;
@@ -1419,8 +1406,8 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         bool operator==(const Value& other) const noexcept {
-            if (m_type != other.m_type) return false; // Different types cannot be equal
-            switch (m_type) {
+            if (type() != other.type()) return false; // Different types cannot be equal
+            switch (type()) {
                 case Type::eNull: return true; // Both are null
                 case Type::eBool: return std::get<Bool>(m_data) == std::get<Bool>(other.m_data);
                 case Type::eNumber: return std::get<Number>(m_data) == std::get<Number>(other.m_data);
@@ -1463,25 +1450,25 @@ export namespace vct::tools::json{
         [[nodiscard]]
         bool operator==(const T& other) const noexcept {
             if constexpr ( std::is_same_v<T,Null> ) {
-                return m_type == Type::eNull;
+                return type() == Type::eNull;
             } else if constexpr ( std::is_same_v<T,Bool> ) {
-                if ( m_type == Type::eBool ) return std::get<Bool>(m_data) == other;
+                if ( type() == Type::eBool ) return std::get<Bool>(m_data) == other;
             } else if constexpr ( std::is_same_v<T,Number> ) {
-                if ( m_type == Type::eNumber ) return std::get<Number>(m_data) == other;
+                if ( type() == Type::eNumber ) return std::get<Number>(m_data) == other;
             } else if constexpr ( std::is_same_v<T,String> ) {
-                if ( m_type == Type::eString ) return std::get<String>(m_data) == other;
+                if ( type() == Type::eString ) return std::get<String>(m_data) == other;
             } else if constexpr ( std::is_same_v<T,Array> ) {
-                if ( m_type == Type::eArray ) return std::get<Array>(m_data) == other;
+                if ( type() == Type::eArray ) return std::get<Array>(m_data) == other;
             } else if constexpr ( std::is_same_v<T,Object> ) {
-                if ( m_type == Type::eObject ) return std::get<Object>(m_data) == other;
+                if ( type() == Type::eObject ) return std::get<Object>(m_data) == other;
             } else if constexpr (std::is_enum_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data))) == other;
+                if ( type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data))) == other;
             } else if constexpr (std::is_integral_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data))) == other;
+                if ( type() == Type::eNumber) return static_cast<T>(std::llround(std::get<Number>(m_data))) == other;
             } else if constexpr (std::is_floating_point_v<T>) {
-                if (m_type == Type::eNumber) return static_cast<T>(std::get<Number>(m_data)) == other;
+                if ( type() == Type::eNumber) return static_cast<T>(std::get<Number>(m_data)) == other;
             } else if constexpr (std::is_convertible_v<T, std::string_view>) {
-                if(m_type == Type::eString) return std::get<String>(m_data) == std::string_view( other );
+                if( type() == Type::eString) return std::get<String>(m_data) == std::string_view( other );
             } else if constexpr (std::equality_comparable<T> && std::is_constructible_v<T, Value>) {
                 return other == static_cast<T>(*this);     // Use T's operator==
             } else if constexpr (std::is_constructible_v<Value, T>) {
@@ -1493,10 +1480,11 @@ export namespace vct::tools::json{
         /**
          * @brief Get the size of container types ( Object, Array )
          * @return Size of the container, or 0 for non-container types (including string)
+         * @warning String.size() is always 0, because it is not a container type in this context
          */
         [[nodiscard]]
         std::size_t size() const noexcept {
-            switch (m_type) {
+            switch (type()) {
                 case Type::eObject: return std::get<Object>(m_data).size();
                 case Type::eArray:  return std::get<Array>(m_data).size();
                 default: return 0;
@@ -1505,13 +1493,13 @@ export namespace vct::tools::json{
 
         /**
          * @brief Check if the Value is empty
-         * @return True if the Value is empty (Object or Array), false otherwise
+         * @return False if the Value is Object or Array and is not empty , True otherwise
          */
         [[nodiscard]]
         bool empty() const noexcept {
-            if (m_type == Type::eObject) return std::get<Object>(m_data).empty();
-            if (m_type == Type::eArray) return std::get<Array>(m_data).empty();
-            return false;
+            if (type() == Type::eObject) return std::get<Object>(m_data).empty();
+            if (type() == Type::eArray) return std::get<Array>(m_data).empty();
+            return true;
         }
 
         /**
@@ -1520,7 +1508,7 @@ export namespace vct::tools::json{
          * @return True if the element was pushed, false if the Value is not an array
          */
         bool push_back(const Value& value) noexcept {
-            if (m_type != Type::eArray) return false;
+            if (type() != Type::eArray) return false;
             std::get<Array>(m_data).emplace_back(value);
             return true;
         }
@@ -1531,7 +1519,7 @@ export namespace vct::tools::json{
          * @return True if the element was pushed, false if the Value is not an array
          */
         bool push_back(Value&& value) noexcept {
-            if (m_type != Type::eArray) return false;
+            if (type() != Type::eArray) return false;
             std::get<Array>(m_data).emplace_back(std::move(value));
             return true;
         }
@@ -1541,7 +1529,7 @@ export namespace vct::tools::json{
          * @return True if the element was popped, false if the Value is not an array or is empty
          */
         bool pop_back() noexcept {
-            if (m_type != Type::eArray || std::get<Array>(m_data).empty()) return false;
+            if (type() != Type::eArray || std::get<Array>(m_data).empty()) return false;
             std::get<Array>(m_data).pop_back();
             return true;
         }
@@ -1553,7 +1541,7 @@ export namespace vct::tools::json{
          * @return True if the element was inserted, false if the Value is not an array or index is out of bounds
          */
         bool insert(const std::size_t index, const Value& value) noexcept {
-            if (m_type != Type::eArray || index > std::get<Array>(m_data).size()) return false;
+            if (type() != Type::eArray || index > std::get<Array>(m_data).size()) return false;
             auto& arr = std::get<Array>(m_data);
             arr.emplace(arr.begin() + index, value);
             return true;
@@ -1566,7 +1554,7 @@ export namespace vct::tools::json{
          * @return True if the element was inserted, false if the Value is not an array or index is out of bounds
          */
         bool insert(const std::size_t index, Value&& value) noexcept {
-            if (m_type != Type::eArray || index > std::get<Array>(m_data).size()) return false;
+            if (type() != Type::eArray || index > std::get<Array>(m_data).size()) return false;
             auto& arr = std::get<Array>(m_data);
             arr.emplace(arr.begin() + index, std::move(value));
             return true;
@@ -1580,7 +1568,7 @@ export namespace vct::tools::json{
          * @return True if the elements were inserted, false if the Value is not an array or index is out of bounds
          */
         bool insert(const std::size_t index,const std::size_t count, const Value& value) noexcept {
-            if (m_type != Type::eArray || index > std::get<Array>(m_data).size()) return false;
+            if (type() != Type::eArray || index > std::get<Array>(m_data).size()) return false;
             auto& arr = std::get<Array>(m_data);
             arr.insert(arr.begin() + index, count, value);
             return true;
@@ -1592,7 +1580,7 @@ export namespace vct::tools::json{
          * @return True if the element was erased, false if the Value is not an array or index is out of bounds
          */
         bool erase(const std::size_t index) noexcept {
-            if (m_type != Type::eArray || index >= std::get<Array>(m_data).size()) return false;
+            if (type() != Type::eArray || index >= std::get<Array>(m_data).size()) return false;
             auto& arr = std::get<Array>(m_data);
             arr.erase(arr.begin() + index);
             return true;
@@ -1604,7 +1592,7 @@ export namespace vct::tools::json{
          * @return True if the key was inserted, false if the Value is not an object
          */
         bool insert(String key, const Value& value) noexcept {
-            if (m_type != Type::eObject) return false;
+            if (type() != Type::eObject) return false;
             std::get<Object>(m_data).emplace(std::move(key), value);
             return true;
         }
@@ -1615,7 +1603,7 @@ export namespace vct::tools::json{
          * @return True if the key was inserted, false if the Value is not an object
          */
         bool insert(String key, Value&& value) noexcept {
-            if (m_type != Type::eObject) return false;
+            if (type() != Type::eObject) return false;
             std::get<Object>(m_data).emplace(std::move(key), std::move(value));
             return true;
         }
@@ -1625,7 +1613,7 @@ export namespace vct::tools::json{
          * @return True if the key was erased, false if the Value is not an object or the key does not exist
          */
         bool erase(const String& key) noexcept {
-            if (m_type != Type::eObject) return false;
+            if (type() != Type::eObject) return false;
             return std::get<Object>(m_data).erase(key);
         }
 
@@ -1636,7 +1624,7 @@ export namespace vct::tools::json{
          */
         [[nodiscard]]
         bool contains(const String& key) const noexcept {
-            if (m_type != Type::eObject) return false;
+            if (type() != Type::eObject) return false;
             return std::get<Object>(m_data).contains(key);
         }
 
@@ -1679,4 +1667,572 @@ export namespace vct::tools::json{
         return deserialize(is_test, max_depth);
     }
 
-}
+} // namespace vct::tools::json
+
+
+module :private;
+
+
+namespace vct::tools::json{
+
+    void escape_to(String& out, const std::string_view str) noexcept {
+        out.push_back('\"');
+        for (const char c : str) {
+            switch (c) {
+                case '\\': out.append(R"(\\)"); break;
+                case '\"': out.append(R"(\")"); break;
+                case '\r': out.append(R"(\r)"); break;
+                case '\n': out.append(R"(\n)"); break;
+                case '\f': out.append(R"(\f)"); break;
+                case '\t': out.append(R"(\t)"); break;
+                case '\b': out.append(R"(\b)"); break;
+                default: {
+                    if (static_cast<unsigned char>(c) < 0x20) {
+                        out.append(std::format("\\u{:04x}", static_cast<unsigned char>(c)));
+                    } else out.push_back(c);
+                } break;
+            }
+        }
+        out.push_back('"');
+    }
+
+    void escape_to(std::ostream& out, const std::string_view str) noexcept {
+        out.put('\"');
+        for (const char c : str) {
+            switch (c) {
+                case '\\': out << R"(\\)"; break;
+                case '\"': out << R"(\")"; break;
+                case '\r': out << R"(\r)"; break;
+                case '\n': out << R"(\n)"; break;
+                case '\f': out << R"(\f)"; break;
+                case '\t': out << R"(\t)"; break;
+                case '\b': out << R"(\b)"; break;
+                default: {
+                    if (static_cast<unsigned char>(c) < 0x20) {
+                        std::print(out, "\\u{:04x}", static_cast<unsigned char>(c));
+                    } else out.put(c);
+                } break;
+            }
+        }
+        out.put('\"');
+    }
+
+
+    constexpr std::array<std::uint8_t, 256> hex_table = [] {
+        std::array<std::uint8_t, 256> table{};
+        for (int i = 0; i < 256; ++i) table[i] = 255; // Invalid marker
+        for (int i = 0; i <= 9; ++i) table['0' + i] = i;
+        for (int i = 0; i <= 5; ++i) table['A' + i] = 10 + i;
+        for (int i = 0; i <= 5; ++i) table['a' + i] = 10 + i;
+        return table;
+    }();
+
+
+    template<typename T>
+    concept char_iterator =  std::disjunction_v<
+        std::is_same<T, std::string_view::const_iterator>,
+        std::is_same<T, std::istreambuf_iterator<char>>
+    >;
+
+
+    std::uint32_t hex4_next(char_iterator auto& it, const char_iterator auto end_ptr) noexcept {
+        // `it` wat in `\uABCD`'s A position, and not be end_ptr
+        std::uint32_t result{ 0 };
+
+        const std::uint8_t d1 = hex_table[static_cast<unsigned char>(*it)];
+        if (d1 == 255) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not a hex digit
+        result = result << 4 | d1;
+
+        ++it; // External `++it` may reduce some instructions
+        if(it == end_ptr) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not enough characters
+        const std::uint8_t d2 = hex_table[static_cast<unsigned char>(*it)];
+        if (d2 == 255) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not a hex digit
+        result = result << 4 | d2;
+
+        ++it;
+        if(it == end_ptr) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not enough characters
+        const std::uint8_t d3 = hex_table[static_cast<unsigned char>(*it)];
+        if (d3 == 255) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not a hex digit
+        result = result << 4 | d3;
+
+        ++it;
+        if(it == end_ptr) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not enough characters
+        const std::uint8_t d4 = hex_table[static_cast<unsigned char>(*it)];
+        if (d4 == 255) return std::numeric_limits<std::uint32_t>::max(); // Invalid if not a hex digit
+        result = result << 4 | d4;
+
+        // `it` wat in `\uABCD`'s D position
+        return result;
+    }
+
+
+    bool unescape_unicode_next(
+        String& out,
+        char_iterator auto& it,
+        const char_iterator auto end_ptr
+    ) noexcept {
+        // it was in `\uABCD`'s `u` position
+        ++it;
+        if (it == end_ptr) return false;
+        // `it` was in `\uXXXX`'s A position
+
+        // move to \uABCD's D position and get hex4 value
+        std::uint32_t code_point = hex4_next( it , end_ptr);
+        if(code_point > 0xFFFF) return false;
+        // `it` was in `\uXXXX`'s D position and not be `end_ptr`, if hex4_next successful
+
+        // [0xD800 , 0xE000) is agent pair, which is two consecutive \u encoding
+        if (code_point >= 0xD800 && code_point <= 0xDFFF) {
+            // agent pair, must be high agent + low agent
+            // high agent [\uD800, \uDBFF]
+            // low agent [\uDC00, \uDFFF]
+
+            // first char must be high agent
+            if (code_point >= 0xDC00) return false;
+
+            // second char must be low agent
+            ++it;
+            if(it == end_ptr || *it != '\\') return false;
+            ++it;
+            if(it == end_ptr || *it != 'u') return false;
+            ++it;
+            if(it == end_ptr) return false;
+            // `it` was in `\uXXXX`'s A position, and be not end_ptr
+
+            // move to \uABCD's D position and get hex4 value
+            const std::uint32_t low_code_point = hex4_next( it, end_ptr );
+            if( 0xDFFF < low_code_point ||  low_code_point < 0xDC00 ) return false;
+            // `it` was in `\uXXXX`'s D position and not be `end_ptr`, if hex4_next successful
+
+            // combine the agent pair into a single code point
+            code_point = 0x10000 + ((code_point - 0xD800) << 10) + (low_code_point - 0xDC00);
+        }
+
+        // encode the code point to UTF-8
+        if (code_point <= 0x7F) {
+            out.push_back(static_cast<char>(code_point));
+        } else if (code_point <= 0x7FF) {
+            out.push_back(static_cast<char>(code_point >> 6 | 0xC0));
+            out.push_back(static_cast<char>(code_point & 0x3F | 0x80));
+        } else if (code_point <= 0xFFFF) {
+            out.push_back(static_cast<char>(code_point >> 12 | 0xE0));
+            out.push_back(static_cast<char>(code_point >> 6 & 0x3F | 0x80));
+            out.push_back(static_cast<char>(code_point & 0x3F | 0x80));
+        } else if (code_point <= 0x10FFFF) {
+            out.push_back(static_cast<char>(code_point >> 18 | 0xF0));
+            out.push_back(static_cast<char>(code_point >> 12 & 0x3F | 0x80));
+            out.push_back(static_cast<char>(code_point >> 6 & 0x3F | 0x80));
+            out.push_back(static_cast<char>(code_point & 0x3F | 0x80));
+        } else return false;
+        return true;
+    }
+
+
+    std::expected<std::string, ParseError> unescape_next(
+        char_iterator auto& it,
+        const char_iterator auto end_ptr
+    ) noexcept {
+        std::string res;
+
+        for (++it; it != end_ptr && *it != '\"'; ++it) {
+            switch (*it) {
+            case '\\': {
+                ++it;
+                if (it == end_ptr) return std::unexpected( ParseError::eUnclosedString );
+                switch (*it) {
+                case '\"': res.push_back('\"'); break;
+                case '\\': res.push_back('\\'); break;
+                case 'n':  res.push_back('\n'); break;
+                case 'r':  res.push_back('\r'); break;
+                case 't':  res.push_back('\t'); break;
+                case 'f':  res.push_back('\f'); break;
+                case 'b':  res.push_back('\b'); break;
+                case 'u': case 'U': if (!unescape_unicode_next(res, it, end_ptr)) return std::unexpected( ParseError::eIllegalEscape ); break;
+                default: return std::unexpected( ParseError::eIllegalEscape );
+                }
+            } break;
+            case '\t': case '\n': case '\f': case '\b': case '\r': return std::unexpected( ParseError::eIllegalEscape );
+            default: res.push_back( *it ); break;
+            }
+        }
+        if(it == end_ptr) return std::unexpected( ParseError::eUnclosedString );
+        ++it;
+        return res;
+    }
+
+
+    std::expected<Value, ParseError> reader(
+        char_iterator auto& it,
+        const char_iterator auto end_ptr,
+        const std::int32_t max_depth
+    ) noexcept {
+        // Check for maximum depth
+        if(max_depth < 0) return std::unexpected( ParseError::eDepthExceeded );
+        // return value
+        Value json;
+        // Check the first character to determine the type
+        switch (*it) {
+            case '{': {
+                // Object type
+                ++it;
+                json = Object{};
+                auto& object = json.get<Object>();
+                // Parse the object
+                while(it != end_ptr){
+                    // Skip spaces
+                    while (it != end_ptr && std::isspace(*it)) ++it;
+                    if(it == end_ptr || *it == '}') break;
+                    // find key
+                    if (*it != '\"') return std::unexpected( ParseError::eUnknownFormat );
+                    auto key = unescape_next(it, end_ptr);
+                    if(!key) return std::unexpected( key.error() );
+                    // find ':'
+                    while (it != end_ptr && std::isspace(*it)) ++it;
+                    if(it == end_ptr || *it != ':') return std::unexpected( ParseError::eUnknownFormat );
+                    ++it;
+                    // find value
+                    while (it != end_ptr && std::isspace(*it)) ++it;
+                    if (it == end_ptr) break;
+                    auto value = reader(it, end_ptr, max_depth - 1);
+                    if(!value) return value;
+                    // add to object
+                    object.emplace(std::move(*key), std::move(*value));
+
+                    while(it != end_ptr && std::isspace(*it)) ++it;
+                    if(it == end_ptr) break;
+                    if(*it == ',') ++it;
+                    else if(*it != '}') return std::unexpected( ParseError::eUnknownFormat );
+                }
+                if(it == end_ptr) return std::unexpected( ParseError::eUnclosedObject );
+                ++it;
+            } break;
+            case '[': {
+                // Array type
+                ++it;
+                json = Array{};
+                auto& array = json.get<Array>();
+                while(it != end_ptr){
+                    // Skip spaces
+                    while (it != end_ptr && std::isspace(*it)) ++it;
+                    if(it == end_ptr || *it == ']') break;
+                    // find value
+                    auto value = reader(it, end_ptr, max_depth - 1);
+                    if(!value) return value;
+                    // add to array
+                    array.emplace_back(std::move(*value));
+
+                    while(it != end_ptr && std::isspace(*it)) ++it;
+                    if(it == end_ptr) break;
+                    if(*it == ',') ++it;
+                    else if(*it != ']') return std::unexpected( ParseError::eUnknownFormat );
+                }
+                if(it == end_ptr) return std::unexpected( ParseError::eUnclosedArray );
+                ++it;
+            } break;
+            case '\"': {
+                // String type
+                auto str = unescape_next(it, end_ptr);
+                if(!str) return str;
+                json = std::move(*str);
+            } break;
+            case 't': {
+                // true
+                if (++it == end_ptr || *it != 'r' ||
+                    ++it == end_ptr || *it != 'u' ||
+                    ++it == end_ptr || *it != 'e'
+                ) return std::unexpected( ParseError::eUnknownFormat );
+                json = Bool{true};
+                ++it;
+            } break;
+            case 'f': {
+                // false
+                if (++it == end_ptr || *it != 'a' ||
+                    ++it == end_ptr || *it != 'l' ||
+                    ++it == end_ptr || *it != 's' ||
+                    ++it == end_ptr || *it != 'e'
+                ) return std::unexpected( ParseError::eUnknownFormat );
+                json = Bool{false};
+                ++it;
+            } break;
+            case 'n': {
+                // null
+                if (++it == end_ptr || *it != 'u' ||
+                    ++it == end_ptr || *it != 'l' ||
+                    ++it == end_ptr || *it != 'l'
+                ) return std::unexpected( ParseError::eUnknownFormat );
+                json = Null{};
+                ++it;
+            } break;
+            default: {
+                if(* it == 'e' || *it == 'E' ) return std::unexpected( ParseError::eUnknownFormat );
+                // begin with e/E is invalid, other invalid type will be handled after
+
+                // number
+                std::uint8_t buffer_len{};
+                char buffer[25];    // Reserve enough space for typical numbers
+                // std::array<char, 24> buffer;
+
+                while(buffer_len < 25 && it != end_ptr &&
+                    (std::isdigit(*it)  || *it=='-' || *it=='.' || *it=='e' || *it=='E' || *it=='+')
+                ) buffer[buffer_len++] = *it++;
+                if( buffer_len == 0 || buffer_len == 25 ) return std::unexpected( ParseError::eInvalidNumber );
+
+                Number value;
+                if(const auto [ptr, ec] = std::from_chars(buffer, buffer + buffer_len, value);
+                    ec != std::errc{} || ptr != buffer + buffer_len
+                ) return std::unexpected( ParseError::eInvalidNumber );
+
+                json = value;
+            } break;
+        }
+        return json;
+    }
+
+
+    std::expected<Value, ParseError> deserialize(const std::string_view text, const std::int32_t max_depth) noexcept{
+        auto it = text.begin();
+        const auto end_ptr = text.end();
+        // Skip spaces
+        while(it != end_ptr && std::isspace(*it)) ++it;
+        if(it == end_ptr) return std::unexpected( ParseError::eEmptyData );
+        // Parse the JSON
+        const auto result = reader(it, end_ptr, max_depth-1);
+        if(!result) return result;
+        // check for trailing spaces
+        while(it != end_ptr && std::isspace(*it)) ++it;
+        if(it != end_ptr) return std::unexpected( ParseError::eRedundantText );
+        return result;
+    }
+
+    std::expected<Value, ParseError> deserialize(std::istream& is_test, const std::int32_t max_depth) noexcept{
+        auto it = std::istreambuf_iterator<char>(is_test);
+        constexpr auto end_ptr = std::istreambuf_iterator<char>();
+        // Skip spaces
+        while(it != end_ptr && std::isspace(*it)) ++it;
+        if(it == end_ptr) return std::unexpected( ParseError::eEmptyData );
+        // Parse the JSON
+        const auto result = reader(it, end_ptr, max_depth-1);
+        if(!result) return result;
+        // check for trailing spaces
+        while(it != end_ptr && std::isspace(*it)) ++it;
+        if(it != end_ptr) return std::unexpected( ParseError::eRedundantText );
+        return result;
+    }
+
+
+    void Value::serialize_to(String& out) const noexcept {
+        switch (type()) {
+            case Type::eObject: {
+                out.push_back('{');
+                for (const auto& [key, val] : std::get<Object>(m_data)) {
+                    // out.append(escape(key));
+                    escape_to(out, key);
+                    out.push_back(':');
+                    val.serialize_to(out);
+                    out.push_back(',');
+                }
+                if (*out.rbegin() == ',') *out.rbegin() = '}';
+                else out.push_back('}');
+            } break;
+            case Type::eArray: {
+                out.push_back('[');
+                for (const auto& val : std::get<Array>(m_data)) {
+                    val.serialize_to(out);
+                    out.push_back(',');
+                }
+                if (*out.rbegin() == ',') *out.rbegin() = ']';
+                else out.push_back(']');
+            } break;
+            case Type::eBool:
+                out.append(std::get<Bool>(m_data) ? "true" : "false");
+                break;
+            case Type::eNull:
+                out.append("null");
+                break;
+            case Type::eString:
+                escape_to(out, std::get<String>(m_data));
+                break;
+            case Type::eNumber:
+                out.append(std::format("{:.17}",std::get<Number>(m_data)));
+                break;
+        }
+    }
+
+
+    void Value::serialize_to(std::ostream& out) const noexcept {
+        if(out.fail()) return;
+        switch (type()) {
+            case Type::eObject: {
+                out.put('{');
+                for(bool first = true;
+                    const auto& [key, val] : std::get<Object>(m_data)
+                ) {
+                    if(!first) out.put(',');
+                    else first = false;
+                    escape_to(out, key);
+                    out.put(':');
+                    val.serialize_to(out);
+                    if(out.fail()) return;
+                }
+                out.put('}');
+            } break;
+            case Type::eArray: {
+                out.put('[');
+                for(bool first = true;
+                    const auto& val : std::get<Array>(m_data)
+                ) {
+                    if(!first) out.put(',');
+                    else first = false;
+                    val.serialize_to(out);
+                    if(out.fail()) return;
+                }
+                out.put(']');
+            } break;
+            case Type::eBool:
+                out << (std::get<Bool>(m_data) ? "true" : "false");
+                break;
+            case Type::eNull:
+                out << "null";
+                break;
+            case Type::eString:
+                escape_to(out, std::get<String>(m_data));
+                break;
+            case Type::eNumber:
+                std::print(out, "{:.17}", std::get<Number>(m_data));
+                break;
+        }
+    }
+
+
+    Bool Value::prettify_to(
+        String& out,
+        const std::uint16_t space_num,
+        const std::uint16_t depth,
+        const std::uint32_t max_space
+    ) const noexcept {
+        const std::uint32_t tabs  = depth * space_num + space_num;
+        if(tabs > max_space) return false;
+
+        switch (type()) {
+            case Type::eObject: {
+                out.push_back('{');
+                for (const auto& [key, val] : std::get<Object>(m_data)) {
+                    out.push_back('\n');
+                    out.append(tabs, ' ');
+                    escape_to(out, key);
+                    out.append(": ");
+                    if(!val.prettify_to(out, space_num, depth + 1, max_space)) return false;
+                    out.push_back(',');
+                }
+                if (*out.rbegin() == ',') *out.rbegin() = '\n';
+                if(!std::get<Object>(m_data).empty()){
+                    out.append(tabs - space_num, ' ');
+                    out.push_back('}');
+                } else out.append(" }");
+            } break;
+            case Type::eArray: {
+                out.push_back('[');
+                for (const auto& val : std::get<Array>(m_data)) {
+                    out.push_back('\n');
+                    out.append(tabs, ' ');
+                    if(!val.prettify_to(out, space_num, depth + 1, max_space)) return false;
+                    out.push_back(',');
+                }
+                if (*out.rbegin() == ',') *out.rbegin() = '\n';
+                if(!std::get<Array>(m_data).empty()){
+                    out.append(tabs - space_num, ' ');
+                    out.push_back(']');
+                } else out.append(" ]");
+            } break;
+            case Type::eBool:
+                out.append(std::get<Bool>(m_data) ? "true" : "false");
+                break;
+            case Type::eNull:
+                out.append("null");
+                break;
+            case Type::eString:
+                escape_to(out, std::get<String>(m_data));
+                break;
+            case Type::eNumber:
+                out.append(std::format("{:.17}",std::get<Number>(m_data)));
+                break;
+        }
+        return true;
+    }
+
+
+    Bool Value::prettify_to(
+        std::ostream& out,
+        const std::uint16_t space_num,
+        const std::uint16_t depth,
+        const std::uint32_t max_space
+    ) const noexcept {
+        if(out.fail()) return false;
+        const std::uint32_t tabs  = depth * space_num + space_num;
+        if(tabs > max_space) return false;
+
+        switch (type()) {
+            case Type::eObject: {
+                out.put('{');
+                bool first = true;
+                for(const auto& [key, val] : std::get<Object>(m_data)) {
+                    if(!first) out.put(',');
+                    else first = false;
+                    out.put('\n');
+                    out << std::setfill(' ') << std::setw(tabs) << "";
+                    escape_to(out, key);
+                    out.put(':');
+                    out.put(' ');
+                    if(!val.prettify_to(out, space_num, depth + 1, max_space)) return false;
+                }
+                if(!first) out.put('\n');
+                if(!std::get<Object>(m_data).empty()){
+                    out << std::setfill(' ') << std::setw(tabs - space_num) << "";
+                    out.put('}');
+                } else {
+                    out.put(' ');
+                    out.put('}');
+                }
+            } break;
+            case Type::eArray: {
+                out.put('[');
+                bool first = true;
+                for (const auto& val : std::get<Array>(m_data)) {
+                    if(!first) out.put(',');
+                    else first = false;
+                    out.put('\n');
+                    out << std::setfill(' ') << std::setw(tabs) << "";
+                    if(!val.prettify_to(out, space_num, depth + 1, max_space)) return false;
+                }
+                if(!first) out.put('\n');
+                if(!std::get<Array>(m_data).empty()){
+                    out << std::setfill(' ') << std::setw(tabs - space_num) << "";
+                    out.put(']');
+                } else {
+                    out.put(' ');
+                    out.put(']');
+                }
+            } break;
+            case Type::eBool:
+                out << (std::get<Bool>(m_data) ? "true" : "false");
+                break;
+            case Type::eNull:
+                out << "null";
+                break;
+            case Type::eString:
+                escape_to(out, std::get<String>(m_data));
+                break;
+            case Type::eNumber:
+                std::print( out, "{:.17}", std::get<Number>(m_data) );
+                break;
+        }
+        if(out.fail()) return false;
+        return true;
+    }
+
+
+} // namespace vct::tools::json
+
+
+
+

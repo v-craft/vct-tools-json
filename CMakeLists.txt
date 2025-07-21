@@ -6,7 +6,7 @@ set(package_name "${prev_name}-${lib_name}")
 
 # Project declaration with metadata
 project(${package_name}
-    VERSION 0.2.0                                     # Semantic versioning (MAJOR.MINOR.PATCH)
+    VERSION 1.0.0                                     # Semantic versioning (MAJOR.MINOR.PATCH)
     HOMEPAGE_URL "https://github.com/v-craft/vct-test-unit"
     DESCRIPTION "V-Craft Unit Test Library - A modern C++23 testing framework"
     LANGUAGES CXX                                     # C++ only project
@@ -15,14 +15,12 @@ project(${package_name}
 # Source file discovery
 # Recursively find all C++23 module files (.cppm and .ixx extensions)
 file(GLOB_RECURSE cxx_module_files "${CMAKE_CURRENT_SOURCE_DIR}/modules/*.cppm" "${CMAKE_CURRENT_SOURCE_DIR}/modules/*.ixx")
-# Recursively find all C/C++ source files in the `src` directory
-file(GLOB_RECURSE cxx_cpp_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 # Recursively find all C/C++ header files in the `include` directory
 file(GLOB_RECURSE cxx_header_files "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 
 # Library target creation
 # Create the main library target that can be built as either static or shared
-add_library(${lib_name}  ${cxx_cpp_files})
+add_library(${lib_name})
 # Create an alias target for namespaced usage
 add_library(${prev_name}::${lib_name} ALIAS ${lib_name})
 

@@ -11,7 +11,8 @@ using namespace vct::tools;
 M_TEST(Value, Number) {
     // Default construction
     M_ASSERT_NO_THROW(json::Value num_default{json::Type::eNumber});
-    M_ASSERT_EQ(json::Value{json::Type::eNumber}.to<json::Number>(), 0.0);
+    M_ASSERT_NO_THROW(json::Value num_default{ json::Number{} });
+    M_ASSERT_EQ(json::Value{json::Number{}}.to<json::Number>(), 0.0);
 
     // Construction with various numeric types
     M_ASSERT_NO_THROW(json::Value int_val{42});
@@ -27,8 +28,8 @@ M_TEST(Value, Number) {
     // --- Type checking ---
     json::Value v_int{42}, v_float{3.14f}, v_neg{-123.456}, v_zero{0.0};
     M_ASSERT_EQ(v_int.type(), json::Type::eNumber);
-    M_ASSERT_TRUE(v_int.is<json::Number>());
-    M_ASSERT_FALSE(v_int.is<json::String>());
+    M_ASSERT_TRUE(v_int.is_num());
+    M_ASSERT_FALSE(v_int.is_str());
     M_EXPECT_STREQ(v_int.type_name(), "Number");
 
     // --- Reference access ---
@@ -47,7 +48,7 @@ M_TEST(Value, Number) {
     M_ASSERT_THROW(std::ignore = json::Value{nullptr}.get<json::Number>(), std::runtime_error);
 
     // --- Assignment tests ---
-    json::Value assign_val{json::Type::eNumber};
+    json::Value assign_val{json::Number{}};
     assign_val = 99.5;
     M_ASSERT_EQ(assign_val.to<json::Number>(), 99.5);
     assign_val = 100;
@@ -75,7 +76,7 @@ M_TEST(Value, Number) {
     M_ASSERT_EQ(json::Value{42.0}.serialize(), "42");
     M_ASSERT_EQ(json::Value{0.0}.serialize(), "0");
     M_ASSERT_EQ(json::Value{-1.0}.serialize(), "-1");
-    M_ASSERT_EQ(json::Value{123.0}.serialize_pretty(), "123");
+    M_ASSERT_EQ(json::Value{123.0}.prettify(), "123");
 
     // --- Parsing tests ---
     auto parsed_int = json::parse("42");

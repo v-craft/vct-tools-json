@@ -120,19 +120,19 @@
  */
 #define M_VCT_TOOLS_JSON_CONVERSION_FUNCTION( class_name, ... )   \
     explicit operator ::vct::tools::json::Value() const & { \
-        ::vct::tools::json::Value macro_result{::vct::tools::json::Type::eObject}; \
+        ::vct::tools::json::Value macro_result{ ::vct::tools::json::Object{} }; \
         auto _move_if_rvalue = [](const auto& val) -> const auto& { return val; }; \
         __VA_ARGS__ \
         return macro_result; \
     } \
     explicit operator ::vct::tools::json::Value() && { \
-    ::vct::tools::json::Value macro_result{::vct::tools::json::Type::eObject}; \
+    ::vct::tools::json::Value macro_result{ ::vct::tools::json::Object{} }; \
     auto _move_if_rvalue = [](auto& val) -> auto&& { return std::move(val); }; \
     __VA_ARGS__ \
     return macro_result; \
     } \
     explicit operator ::vct::tools::json::Value() & { \
-        ::vct::tools::json::Value macro_result{::vct::tools::json::Type::eObject}; \
+        ::vct::tools::json::Value macro_result{ ::vct::tools::json::Object{} }; \
         auto _move_if_rvalue = [](auto& val) -> auto& { return val; }; \
         __VA_ARGS__ \
         return macro_result; \
@@ -349,7 +349,7 @@
  * @{
  */
 
-#ifdef M_VCT_JSON_SIMPLIFY_MACROS
+#ifdef M_VCT_TOOLS_JSON_SIMPLIFY_MACROS
     /**
      * @def M_JSON_CV_MEM
      * @brief Simplified alias for M_VCT_TOOLS_JSON_CONVERSION_FIELD
@@ -405,7 +405,7 @@
      * @see M_VCT_TOOLS_JSON_CONSTRUCTOR_FUNCTION
      */
     #define M_JSON_CS_FUN       M_VCT_TOOLS_JSON_CONSTRUCTOR_FUNCTION
-#endif // M_VCT_JSON_SIMPLIFY_MACROS
+#endif // M_VCT_TOOLS_JSON_SIMPLIFY_MACROS
 
 /** @} */ // end of JSON_SIMPLIFIED_MACROS
 

@@ -8,7 +8,7 @@ using namespace vct::tools;
 
 // --- Null type tests ---
 M_TEST(Equal, Null) {
-    json::Value null_val{json::Type::eNull};
+    json::Value null_val{};
     json::Value another_null{nullptr};
     M_ASSERT_TRUE(null_val == nullptr);
     M_ASSERT_TRUE(another_null == nullptr);

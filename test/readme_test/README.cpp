@@ -1,5 +1,5 @@
 #include <vct/test_unit_macros.hpp>
-#define M_VCT_JSON_SIMPLIFY_MACROS
+#define M_VCT_TOOLS_JSON_SIMPLIFY_MACROS
 #include <vct/tools/json_macros.hpp>
 import std;
 import vct.test.unit;
@@ -58,7 +58,7 @@ M_TEST( README, readme ) {
     //     {"obj", json::Object{ {"nested_k", "nested_v"} } }
     // };
     // M_EXPECT_EQ(smp_val.type() , json::Type::eObject); // 返回 Type::eObject
-    // M_EXPECT_FALSE(smp_val.is<json::Array>());
+    // M_EXPECT_FALSE(smp_val.is_arr());
     // M_EXPECT_EQ(smp_val.type_name(), "Object");        // 返回 "Object" ,没有前缀 `e`
     //
     // json::Value vi_42 = smp_val.get<json::Object>()["key1"]; // 注意 Object 的 mapped 值依然是 Value 类型
@@ -81,8 +81,8 @@ M_TEST( README, readme ) {
     // val1.serialize_to( str_back ); // 将序列化结果写入 std::string 的末尾
     // val1.serialize_to( std::cout ); // 将序列化结果直接输出到 `ostream` 中
     //
-    // auto pretty_str = val1.serialize_pretty().value_or( "fail" );
-    // bool res = val1.serialize_pretty_to( std::cout ); // 输出到 `ostream`，返回是否成功
+    // auto pretty_str = val1.prettify().value_or( "fail" );
+    // bool res = val1.prettify_to( std::cout ); // 输出到 `ostream`，返回是否成功
     // if (!res){ std::cerr << "fail"; }
     //
     // json::Value val_arr_1 = json::Array{{ 1, 2, 3 }};
@@ -113,7 +113,7 @@ M_TEST( README, readme ) {
     //     MyData2 data2;
     //     json::Value v_data2{ data2 };
     //     std::println("");
-    //     v_data2.serialize_pretty_to( std::cout );
+    //     v_data2.prettify_to( std::cout );
     //     std::println("");
     //     v_data2["data"]["id"] = 8848;
     //     v_data2["data"]["name"] = "Mount Everest";

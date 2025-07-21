@@ -8,15 +8,17 @@ using namespace vct::tools;
 
 // Array1: 基础构造与访问
 M_TEST(Value, Array) {
-    M_ASSERT_NO_THROW(json::Value arr_default{json::Type::eArray});
-    M_ASSERT_EQ(json::Value{json::Type::eArray}.type(), json::Type::eArray);
-    M_ASSERT_EQ(json::Value{json::Type::eArray}.size(), 0);
-    M_ASSERT_TRUE(json::Value{json::Type::eArray}.to<json::Array>().empty());
+    M_ASSERT_NO_THROW(json::Value arr_default{ json::Array{} });
+    M_ASSERT_EQ(json::Value{json::Type::eArray}.type(), json::Type::eNumber);
+    M_ASSERT_FALSE(json::Value{json::Type::eArray}.is_arr());
+    M_ASSERT_TRUE(json::Value{json::Type::eArray}.is_num());
+    M_ASSERT_EQ(json::Value{json::Array{}}.size(), 0);
+    M_ASSERT_TRUE(json::Value{json::Array{}}.to<json::Array>().empty());
     M_ASSERT_NO_THROW(json::Value arr_explicit{json::Array{{}}});
     M_ASSERT_NO_THROW(json::Value arr_init{json::Array{{1, 2, 3}}});
     json::Value arr_val{json::Array{{1, 2, 3}}};
-    M_ASSERT_TRUE(arr_val.is<json::Array>());
-    M_ASSERT_FALSE(arr_val.is<json::String>());
+    M_ASSERT_TRUE(arr_val.is_arr());
+    M_ASSERT_FALSE(arr_val.is_str());
     M_EXPECT_STREQ(arr_val.type_name(), "Array");
 
 
@@ -49,7 +51,7 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ(modify_test[1].to<json::String>(), "modified");
     M_ASSERT_EQ(modify_test[2].to<json::Bool>(), false);
 
-    json::Value assign_val{json::Type::eArray};
+    json::Value assign_val{json::Array{}};
     M_ASSERT_NO_THROW(assign_val = json::Array{{1, 2, 3}});
     M_ASSERT_EQ(assign_val.size(), 3);
     M_ASSERT_EQ(assign_val[0].to<json::Number>(), 1);
@@ -245,6 +247,7 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ(simplified_multi_dim[0][0][0].to<json::Number>(), 1);
     M_ASSERT_EQ(simplified_multi_dim[1][1][1].to<json::String>(), "e");
     M_ASSERT_EQ(simplified_multi_dim[2][0][2].type(), json::Type::eNull);
+    M_ASSERT_EQ(simplified_multi_dim[2][0][2].is_nul(), true);
     M_ASSERT_EQ(simplified_multi_dim[2][1][1].to<json::String>(), "mixed");
     M_ASSERT_EQ(simplified_multi_dim[2][1][2].to<json::Number>(), 3.14);
     M_ASSERT_THROW(std::ignore = simplified_multi_dim.at(3), std::out_of_range);

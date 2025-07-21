@@ -13,8 +13,8 @@ M_TEST(Value, Null) {
     M_ASSERT_EQ(json::Value{}.type(), json::Type::eNull);
 
     // Explicit null construction
-    M_ASSERT_NO_THROW(json::Value null_explicit{json::Type::eNull});
-    M_ASSERT_EQ(json::Value{json::Type::eNull}.type(), json::Type::eNull);
+    M_ASSERT_NO_THROW(json::Value null_explicit{json::Null{}});
+    M_ASSERT_EQ(json::Value{json::Null{}}.type(), json::Type::eNull);
 
     // nullptr construction
     M_ASSERT_NO_THROW(json::Value null_ptr{nullptr});
@@ -26,8 +26,8 @@ M_TEST(Value, Null) {
 
     // --- Type checking ---
     json::Value null_val{nullptr};
-    M_ASSERT_TRUE(null_val.is<json::Null>());
-    M_ASSERT_FALSE(null_val.is<json::String>());
+    M_ASSERT_TRUE(null_val.is_nul());
+    M_ASSERT_FALSE(null_val.is_str());
     M_EXPECT_STREQ(null_val.type_name(), "Null");
 
     // --- Reference access ---
@@ -43,7 +43,7 @@ M_TEST(Value, Null) {
     M_ASSERT_THROW(std::ignore = json::Value{42.0}.get<std::nullptr_t>(), std::runtime_error);
 
     // --- Assignment tests ---
-    json::Value assign_val{json::Type::eBool};
+    json::Value assign_val{ json::Bool{} };
     assign_val = nullptr;
     M_ASSERT_EQ(assign_val.type(), json::Type::eNull);
 
@@ -67,7 +67,7 @@ M_TEST(Value, Null) {
     // --- Serialization tests ---
     M_ASSERT_EQ(json::Value{nullptr}.serialize(), "null");
     M_ASSERT_EQ(json::Value{}.serialize(), "null");
-    M_ASSERT_EQ(json::Value{nullptr}.serialize_pretty(), "null");
+    M_ASSERT_EQ(json::Value{nullptr}.prettify(), "null");
 
     // --- Parsing tests ---
     auto parsed_null = json::parse("null");
@@ -113,7 +113,7 @@ M_TEST(Value, Null) {
     M_ASSERT_THROW(std::ignore = null_val.to<std::string>(), std::runtime_error);
 
     // --- Null consistency ---
-    json::Value consistency_null1{}, consistency_null2{nullptr}, consistency_null3{json::Type::eNull};
+    json::Value consistency_null1{}, consistency_null2{nullptr}, consistency_null3{json::Null{}};
     M_ASSERT_TRUE(consistency_null1 == consistency_null2);
     M_ASSERT_TRUE(consistency_null2 == consistency_null3);
     M_ASSERT_TRUE(consistency_null1 == consistency_null3);

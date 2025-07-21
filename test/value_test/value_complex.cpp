@@ -109,6 +109,12 @@ M_TEST(Value, Complex) {
     
     // Test basic structure validation
     M_ASSERT_EQ( complex_data.type(), json::Type::eObject );
+    M_ASSERT_TRUE( complex_data.is_obj() );
+    M_ASSERT_FALSE( complex_data.is_nul() );
+    M_ASSERT_FALSE( complex_data.is_num() );
+    M_ASSERT_FALSE( complex_data.is_arr() );
+    M_ASSERT_FALSE( complex_data.is_str() );
+    M_ASSERT_FALSE( complex_data.is_bol() );
     M_ASSERT_EQ( complex_data.size(), 3 );
     M_ASSERT_TRUE( complex_data.contains("application") );
     M_ASSERT_TRUE( complex_data.contains("users") );
@@ -253,7 +259,7 @@ M_TEST(Value, Complex) {
     M_ASSERT_EQ( moved_string.to<json::String>(), "movable_string" );
     
     // Test move assignment
-    json::Value move_target{json::Type::eNull};
+    json::Value move_target{};
     
     std::map<std::string, json::Value> another_map{{"move_key", json::Number(999)}};
     move_target = std::move(another_map);
@@ -452,8 +458,8 @@ M_TEST(Value, Complex) {
     M_ASSERT_TRUE( serialized.size() > 1000 );  // Should be quite large
     
     // Test pretty serialization
-    M_ASSERT_NO_THROW( std::ignore = complex_data.serialize_pretty() );
-    auto pretty_serialized = complex_data.serialize_pretty();
+    M_ASSERT_NO_THROW( std::ignore = complex_data.prettify() );
+    auto pretty_serialized = complex_data.prettify();
     if (pretty_serialized.has_value()) {
         M_ASSERT_TRUE( pretty_serialized->size() > serialized.size() );
     }

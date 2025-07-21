@@ -1,5 +1,5 @@
 #include <vct/test_unit_macros.hpp>
-#define M_VCT_JSON_SIMPLIFY_MACROS
+#define M_VCT_TOOLS_JSON_SIMPLIFY_MACROS
 #include <vct/tools/json_macros.hpp>
 import std;
 import vct.test.unit;
@@ -96,10 +96,12 @@ M_TEST(Macros, Complex) {
     M_ASSERT_EQ(v1["inner"]["flag"].to<bool>(), false);
     M_ASSERT_EQ(v1["desc"].to<std::string>(), "outer");
 
+    std::println("================================");
+
     // 2. 反序列化
-    json::Value v2{json::Type::eObject};
+    json::Value v2{ json::Object{} };
     v2["value"] = 2.718;
-    v2["inner"] = json::Value{json::Type::eObject};
+    v2["inner"] = json::Object{};
     v2["inner"]["id"] = 42;
     v2["inner"]["name"] = "world";
     v2["inner"]["flag"] = true;
@@ -112,7 +114,7 @@ M_TEST(Macros, Complex) {
     M_ASSERT_EQ(o2.desc, "macro");
 
     // 3. 默认值测试
-    json::Value v3{json::Type::eObject};
+    json::Value v3{ json::Object{} };
     v3["value"] = 1.0;
     // inner未设置，desc未设置
     OuterType o3{ v3 };
@@ -122,6 +124,8 @@ M_TEST(Macros, Complex) {
     M_ASSERT_EQ(o3.inner.name, "");
     M_ASSERT_EQ(o3.inner.flag, true);
     M_ASSERT_EQ(o3.desc, "empty");
+
+    std::println("================================");
 
     // 4. move语义测试
     OuterType o4;
@@ -136,6 +140,8 @@ M_TEST(Macros, Complex) {
     M_ASSERT_EQ(v4["inner"]["name"].to<std::string>(), "move");
     M_ASSERT_EQ(v4["inner"]["flag"].to<bool>(), false);
     M_ASSERT_EQ(v4["desc"].to<std::string>(), "move_desc");
+
+    std::println("================================");
 
     // 5. 嵌套类型的序列化/反序列化一致性
     OuterType o5{v1};
@@ -214,7 +220,7 @@ M_TEST(Macros, ComplexArrayMap) {
 
 M_TEST(Macros, ComplexDefaultBehavior) {
     // 默认构造，未设置 inner
-    json::Value v_obj{json::Type::eObject};
+    json::Value v_obj{ json::Object{} };
     v_obj["value"] = 1.23;
     // 不设置 inner
     OuterType o1{v_obj};
