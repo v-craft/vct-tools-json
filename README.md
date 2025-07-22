@@ -120,16 +120,16 @@ smp_val.is_arr();     // 返回 false
 
 ### 2. 访问和修改
 
-本库提供了 `get_xxx()` 成员函数以获取内部数据的**引用**，`xxx` 和上面的 `is_xxx` 相同。
+本库提供了 `xxx()` 成员函数以获取内部数据的**引用**，`xxx` 和上面的 `is_xxx` 相同。
 
 ```cpp
  // 注意 Object 的 mapped 依然是 Value 类型
-json::Value& vi_42 = smp_val.get_obj()["key1"];
+json::Value& vi_42 = smp_val.obj()["key1"];
 
 // 虽然返回引用，但也可以用于赋值
-double i_42 = vi_42.get_num(); 
+double i_42 = vi_42.num(); 
 
- // vi_42.get_str(); // 类型不匹配，抛出 std::bad_varient_access 异常
+ // vi_42.str(); // 类型不匹配，抛出 std::bad_varient_access 异常
 ```
 
 `Value` 还提供了 `[]` 和 `at` 运算符，区别在于 `at` 禁止索引越界（抛出异常），而 `[]` 不检查越界（所以`Object`可以用`[]`创建新键值对，但`Array`越界是未定义行为，可能直接断言崩溃）。
@@ -137,7 +137,7 @@ double i_42 = vi_42.get_num();
 > `const` 的 `[]` 较为特殊，等价于 `const` 的 `at` ，无法创建新键值对或越界。
 
 ```cpp
-smp_val["arr"][1].get_num(); // 返回 3.14
+smp_val["arr"][1].num(); // 返回 3.14
 smp_val.at("obj").at("nested_k") = nullptr; // 修改对象，变为 Null 类型
 smp_val["obj"].at("nested_k").is_nul(); // 返回true, [] 和 at 可以随意混合使用
 ```
@@ -195,12 +195,12 @@ std::string or_str = smp_val["key1"].to_or<std::string>("default"); // 如果转
 
 本库的序列化和反序列化非常高效且容易使用。
 
-首先是反序列化，将字符串转换为 `Value` 对象，使用 `deserialize()` 或 `parse()` 函数，它们完全等价。
+首先是反序列化，将字符串转换为 `Value` 对象，使用 `json::read()` 函数。
 
 ```cpp
 std::string json_str1 = R"( [ 1, false, null, { "Hello": "World" } ] )";
 std::string json_str2 = R"( false )"; // 允许顶层类型是任一 JSON 类型
-json::Value val1 = json::parse(json_str1).value_or( nullptr ); // 解析 JSON 字符串
+json::Value val1 = json::read(json_str1).value_or( nullptr ); // 解析 JSON 字符串
 std::cout << val1[1].to<bool>() << std::endl; // 输出 0 （没有指定 boolaplha）
 ```
 
@@ -215,33 +215,33 @@ std::cout << val1[1].to<bool>() << std::endl; // 输出 0 （没有指定 boolap
 3. 此函数除了 `std::string` 外，还能传入 `std::istream` 进行流式解析。
 流式解析文件的效率几乎等同于先将文件全部读入 string 再用 string 解析，但内存占用可能更少。
 
-然后是序列化，使用 `Value` 对象的 `serialize` 系列成员函数。
+然后是序列化，使用 `Value` 对象的 `dump/write` 成员函数。
 
 ```cpp
-std::string str_ser = val1.serialize(); // 不含无效空白字符的高效序列化，返回 std::string
+std::string str_ser = val1.dump(); // 不含无效空白字符的高效序列化，返回 std::string
 std::string str_back;
-val1.serialize_to( str_back ); // 将序列化结果写入 std::string 的末尾
-val1.serialize_to( std::cout ); // 将序列化结果直接输出到 `ostream` 中
+val1.write( str_back ); // 将序列化结果写入 std::string 的末尾
+val1.write( std::cout ); // 将序列化结果直接输出到 `ostream` 中
 ```
 
-现在 `str_ser` 和 `str_back` 的内容完全一样，因为 `serialize` 就是用 `serialize_to` 实现的。
+现在 `str_ser` 和 `str_back` 的内容完全一样，因为 `dump` 就是用 `write` 实现的。
 
-由于 `Value` 必然是有效的 JSON 数据，因此 `serialize` 必然成功。
-不过 `serialize_to` 的流操作不一定成功（比如文件突然关闭）、函数检测到流的状态为 `fail()` 后会立即返回，但不会抛出异常，需要你自行检查流的状态。
+由于 `Value` 必然是有效的 JSON 数据，因此 `dump` 必然成功。
+不过 `write` 的流操作不一定成功（比如文件突然关闭）、函数检测到流的状态为 `fail()` 后会立即返回，但不会抛出异常，需要你自行检查流的状态。
 
 上面的三个序列化函数都是高效的紧凑序列化，不含无效空白字符。
-但你可以使用 `prettify` 系列函数来获得更易读的格式化输出，它同样包含三种形式：
+但你可以使用 `dumpf/writef` 系列函数来获得更易读的格式化输出，`f` 指 `format` 它同样包含三种形式：
 
 ```cpp
-std::string pretty_str = val1.prettify().value_or( "fail" );
-bool res = val1.prettify_to( std::cout ); // 输出到 `ostream`，返回是否成功
-if (!res){ std::cerr << "fail"; }   // 还有 to 字符串，此处省略
+std::string pretty_str = val1.dumpf().value_or( "fail" );
+bool res = val1.writef( std::cout ); // 输出到 `ostream`，返回是否成功
+if (!res){ std::cerr << "fail"; }   // 还有写入字符串，此处省略
 ```
 
-`prettify` 系列有三个可选参数，依次是 “单次缩进空格数（默认 2）”，“初始缩进次数（默认 0）”和“最大**单行**缩进空格数（默认 512）”。
+`f` 系列有三个可选参数，依次是 “单次缩进空格数（默认 2）”，“初始缩进次数（默认 0）”和“最大**单行**缩进空格数（默认 512）”。
 
 前两个参数控制缩进的样式，很好理解。第三个参数依然是为了避免 `[[[[]]]]` 这种垃圾数据，此类数据自身文本不长，但是带缩进后会变得非常大，因此使用此参数加以限制。
-这就是为什么美化系列的返回值有所不同， `prettify()` 返回 `std::optional<std::string>` ，另外二者返回 `bool` ，表示是否成功。
+这就是为什么美化系列的返回值有所不同， `dumpf()` 返回 `std::optional<std::string>` ，另外二者返回 `bool` ，表示是否成功。
 
 美化序列化失败通常是因为缩进长度溢出，但流处理返回 `false` 也可能是因为流本身 `fail` 了。
 
@@ -395,7 +395,7 @@ struct MyData2 {
 ```cpp
 json::Value v_data2{ MyData2{} };
 std::println("");
-v_data2.prettify_to( std::cout );
+v_data2.writef( std::cout );
 std::println("");
 v_data2["data"]["id"] = 8848;
 v_data2["data"]["name"] = "Mount Everest";
@@ -589,16 +589,16 @@ The template parameter of `reset` can only be one of the six JSON types, otherwi
 
 ### 2. Access and Modification
 
-This library provides `get_xxx()` member functions to get **references** to internal data, where `xxx` is the same as the `is_xxx` above.
+This library provides `xxx()` member functions to get **references** to internal data, where `xxx` is the same as the `is_xxx` above.
 
 ```cpp
  // Note that Object's mapped is still Value type
-json::Value& vi_42 = smp_val.get_obj()["key1"];
+json::Value& vi_42 = smp_val.obj()["key1"];
 
 // Although it returns a reference, it can also be used for assignment
-double i_42 = vi_42.get_num(); 
+double i_42 = vi_42.num(); 
 
- // vi_42.get_str(); // Type mismatch, throws std::bad_varient_access exception
+ // vi_42.str(); // Type mismatch, throws std::bad_varient_access exception
 ```
 
 `Value` also provides `[]` and `at` operators. The difference is that `at` prohibits index out-of-bounds (throws exception), while `[]` doesn't check bounds (so `Object` can use `[]` to create new key-value pairs, but `Array` out-of-bounds is undefined behavior and may crash directly).
@@ -606,7 +606,7 @@ double i_42 = vi_42.get_num();
 > The `const` version of `[]` is special, equivalent to `const` `at`, and cannot create new key-value pairs or go out of bounds.
 
 ```cpp
-smp_val["arr"][1].get_num(); // Returns 3.14
+smp_val["arr"][1].num(); // Returns 3.14
 smp_val.at("obj").at("nested_k") = nullptr; // Modify object, becomes Null type
 smp_val["obj"].at("nested_k").is_nul(); // Returns true, [] and at can be mixed freely
 ```
@@ -664,12 +664,12 @@ As long as a type satisfies any of the three concepts, you can use the `to` and 
 
 Serialization and deserialization in this library are very efficient and easy to use.
 
-First is deserialization, converting strings to `Value` objects, using `deserialize()` or `parse()` functions, which are completely equivalent.
+First is deserialization, converting strings to `Value` objects, using `json::read()` functions.
 
 ```cpp
 std::string json_str1 = R"( [ 1, false, null, { "Hello": "World" } ] )";
 std::string json_str2 = R"( false )"; // Top-level type can be any JSON type
-json::Value val1 = json::parse(json_str1).value_or( nullptr ); // Parse JSON string
+json::Value val1 = json::read(json_str1).value_or( nullptr ); // Parse JSON string
 std::cout << val1[1].to<bool>() << std::endl; // Output 0 (no boolaplha specified)
 ```
 
@@ -684,33 +684,33 @@ Although this library guarantees that total parsing complexity is `O(n)` (strict
 3. Besides `std::string`, this function can also take `std::istream` for streaming parsing.
 Streaming file parsing efficiency is almost equivalent to first reading the entire file into a string and then parsing the string, but memory usage may be less.
 
-Next is serialization, using the `serialize` series member functions of `Value` objects.
+Next is serialization, using the `dump/write` series member functions of `Value` objects.
 
 ```cpp
-std::string str_ser = val1.serialize(); // Efficient serialization without invalid whitespace, returns std::string
+std::string str_ser = val1.dump(); // Efficient serialization without invalid whitespace, returns std::string
 std::string str_back;
-val1.serialize_to( str_back ); // Write serialization result to the end of std::string
-val1.serialize_to( std::cout ); // Output serialization result directly to `ostream`
+val1.write( str_back ); // Write serialization result to the end of std::string
+val1.write( std::cout ); // Output serialization result directly to `ostream`
 ```
 
-Now `str_ser` and `str_back` have exactly the same content, because `serialize` is implemented using `serialize_to`.
+Now `str_ser` and `str_back` have exactly the same content, because `dump` is implemented using `write`.
 
-Since `Value` is always valid JSON data, `serialize` always succeeds.
-However, `serialize_to` stream operations may not always succeed (such as file suddenly closing). The function will return immediately when it detects the stream state is `fail()`, but won't throw exceptions. You need to check the stream state yourself.
+Since `Value` is always valid JSON data, `dump` always succeeds.
+However, `write` stream operations may not always succeed (such as file suddenly closing). The function will return immediately when it detects the stream state is `fail()`, but won't throw exceptions. You need to check the stream state yourself.
 
 The above three serialization functions are all efficient compact serialization without invalid whitespace.
-But you can use the `prettify` series functions to get more readable formatted output, which also comes in three forms:
+But you can use the `dumpf/writef` series functions to get more readable formatted output, `f` is `format`, which also comes in three forms:
 
 ```cpp
-std::string pretty_str = val1.prettify().value_or( "fail" );
-bool res = val1.prettify_to( std::cout ); // Output to `ostream`, returns whether successful
+std::string pretty_str = val1.dumpf().value_or( "fail" );
+bool res = val1.writef( std::cout ); // Output to `ostream`, returns whether successful
 if (!res){ std::cerr << "fail"; }   // There's also to string, omitted here
 ```
 
-The `prettify` series has three optional parameters: "spaces per indent (default 2)", "initial indent count (default 0)", and "maximum **single-line** indent spaces (default 512)".
+The `f` series has three optional parameters: "spaces per indent (default 2)", "initial indent count (default 0)", and "maximum **single-line** indent spaces (default 512)".
 
 The first two parameters control indent style, which is easy to understand. The third parameter is still to avoid garbage data like `[[[[]]]]`. Such data isn't long in text itself, but becomes very large with indentation, so this parameter is used to limit it.
-This is why the return values of the prettify series are different. `prettify()` returns `std::optional<std::string>`, while the other two return `bool` indicating success.
+This is why the return values of the prettify series are different. `dumpf()` returns `std::optional<std::string>`, while the other two return `bool` indicating success.
 
 Prettify serialization failure is usually due to indent length overflow, but stream processing returning `false` might also be because the stream itself `fail`ed.
 
@@ -864,7 +864,7 @@ You can then switch between the two types as shown below:
 ```cpp
 json::Value v_data2{ MyData2{} };
 std::println("");
-v_data2.prettify_to( std::cout );
+v_data2.writef( std::cout );
 std::println("");
 v_data2["data"]["id"] = 8848;
 v_data2["data"]["name"] = "Mount Everest";

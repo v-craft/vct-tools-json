@@ -304,25 +304,25 @@ M_TEST(Value, Complex) {
     M_ASSERT_EQ( features_array_copy[0]["name"].to<json::String>(), "auth" );
     
     // Test get_ref<T>() with complex structures (returns references)
-    auto& complex_obj_ref = complex_data.get_obj();
+    auto& complex_obj_ref = complex_data.obj();
     M_ASSERT_EQ( complex_obj_ref.size(), 3 );
     M_ASSERT_TRUE( complex_obj_ref.contains("application") );
     
-    auto& users_array_ref = complex_data["users"].get_arr();
+    auto& users_array_ref = complex_data["users"].arr();
     M_ASSERT_EQ( users_array_ref.size(), 2 );
     M_ASSERT_EQ( users_array_ref[0]["name"].to<json::String>(), "John Doe" );
     
-    auto& features_array_ref = complex_data["application"]["config"]["features"].get_arr();
+    auto& features_array_ref = complex_data["application"]["config"]["features"].arr();
     M_ASSERT_EQ( features_array_ref.size(), 3 );
     M_ASSERT_EQ( features_array_ref[0]["name"].to<json::String>(), "auth" );
     
     // Test get_ref<T>() with modifications
-    auto& stats_ref = complex_data["statistics"].get_obj();
+    auto& stats_ref = complex_data["statistics"].obj();
     stats_ref["new_metric"] = json::Number(123.45);
     M_ASSERT_TRUE( complex_data["statistics"].contains("new_metric") );
     M_ASSERT_EQ( complex_data["statistics"]["new_metric"].to<json::Number>(), 123.45 );
     
-    auto& response_times_ref = complex_data["statistics"]["performance"]["response_times"].get_arr();
+    auto& response_times_ref = complex_data["statistics"]["performance"]["response_times"].arr();
     response_times_ref.push_back(json::Number(75));
     M_ASSERT_EQ( complex_data["statistics"]["performance"]["response_times"].size(), 6 );
     M_ASSERT_EQ( complex_data["statistics"]["performance"]["response_times"][5].to<json::Number>(), 75 );
@@ -453,19 +453,19 @@ M_TEST(Value, Complex) {
     M_ASSERT_FALSE( complex_data == complex_clone );
     
     // Test serialization of complex structure
-    M_ASSERT_NO_THROW( std::ignore = complex_data.serialize() );
-    auto serialized = complex_data.serialize();
+    M_ASSERT_NO_THROW( std::ignore = complex_data.dump() );
+    auto serialized = complex_data.dump();
     M_ASSERT_TRUE( serialized.size() > 1000 );  // Should be quite large
     
     // Test pretty serialization
-    M_ASSERT_NO_THROW( std::ignore = complex_data.prettify() );
-    auto pretty_serialized = complex_data.prettify();
+    M_ASSERT_NO_THROW( std::ignore = complex_data.dumpf() );
+    auto pretty_serialized = complex_data.dumpf();
     if (pretty_serialized.has_value()) {
         M_ASSERT_TRUE( pretty_serialized->size() > serialized.size() );
     }
     
     // Test round-trip parsing
-    auto parsed_complex = json::parse(serialized);
+    auto parsed_complex = json::read(serialized);
     if (parsed_complex.has_value()) {
         M_ASSERT_TRUE( *parsed_complex == complex_data );
         
@@ -519,7 +519,7 @@ M_TEST(Value, Complex) {
             large_nested[section_name][subsection_name] = json::Array{};
 
             for (int k = 0; k < 10; ++k) {
-                large_nested[section_name][subsection_name].get_arr().push_back(
+                large_nested[section_name][subsection_name].arr().push_back(
                     json::Object{
                         {"id", k},
                         {"name", "item_" + std::to_string(k)},
@@ -543,8 +543,8 @@ M_TEST(Value, Complex) {
     M_ASSERT_EQ( large_nested["section_5"]["subsection_7"][7]["metadata"]["info"].to<json::String>(), "data" );
     
     // Test serialization performance on large structure
-    M_ASSERT_NO_THROW( std::ignore = large_nested.serialize() );
-    auto large_serialized = large_nested.serialize();
+    M_ASSERT_NO_THROW( std::ignore = large_nested.dump() );
+    auto large_serialized = large_nested.dump();
     M_ASSERT_TRUE( large_serialized.size() > 10000 );
     
     // Test final validation of all modifications

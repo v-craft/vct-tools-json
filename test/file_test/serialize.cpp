@@ -9,12 +9,12 @@ using namespace vct::tools;
 
 M_TEST(File, Serial_Unicode) {
     std::ifstream file( CURRENT_PATH "/files/all_unicode.json" );
-    const auto json = json::parse(file).value_or( nullptr );
+    const auto json = json::read(file).value_or( nullptr );
     M_EXPECT_FALSE( json.is_nul() );
 
     const auto bein = std::chrono::system_clock::now();
 
-    std::string res = json.serialize();
+    std::string res = json.dump();
 
 
     const auto end = std::chrono::system_clock::now();
@@ -26,12 +26,12 @@ M_TEST(File, Serial_Unicode) {
 
 M_TEST(File, Serial_Number) {
     std::ifstream file( CURRENT_PATH "/files/many_number.json" );
-    const auto json = json::parse(file).value_or( nullptr );
+    const auto json = json::read(file).value_or( nullptr );
     M_EXPECT_FALSE( json.is_nul() );
 
     const auto bein = std::chrono::system_clock::now();
 
-    std::string res = json.serialize();
+    std::string res = json.dump();
 
     const auto end = std::chrono::system_clock::now();
     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
@@ -43,12 +43,12 @@ M_TEST(File, Serial_Number) {
 
 M_TEST(File, Serial_Complex) {
     std::ifstream file( CURRENT_PATH "/files/many_complex.json" );
-    const auto json = json::parse(file).value_or( nullptr );
+    const auto json = json::read(file).value_or( nullptr );
     M_EXPECT_FALSE( json.is_nul() );
 
     const auto bein = std::chrono::system_clock::now();
 
-    std::string res = json.serialize();
+    std::string res = json.dump();
 
     const auto end = std::chrono::system_clock::now();
     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
@@ -59,12 +59,12 @@ M_TEST(File, Serial_Complex) {
 
 M_TEST(File, Serial_All) {
     std::ifstream file( CURRENT_PATH "/files/many_all.json" );
-    const auto json = json::parse(file).value_or( nullptr );
+    const auto json = json::read(file).value_or( nullptr );
     M_EXPECT_FALSE( json.is_nul() );
 
     const auto bein = std::chrono::system_clock::now();
 
-    std::string res = json.serialize();
+    std::string res = json.dump();
 
     const auto end = std::chrono::system_clock::now();
     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
@@ -75,12 +75,12 @@ M_TEST(File, Serial_All) {
 
 // M_TEST(File, Serial_String) {
 //     std::ifstream file( CURRENT_PATH "/files/many_string.json" );
-//     const auto json = json::parse(file, 1024).value_or( nullptr );
+//     const auto json = json::read(file, 1024).value_or( nullptr );
 //     M_EXPECT_FALSE( json.is_nul() );
 //
 //     const auto bein = std::chrono::system_clock::now();
 //
-//     std::string res = json.serialize();
+//     std::string res = json.dump();
 //
 //     const auto end = std::chrono::system_clock::now();
 //     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();

@@ -80,7 +80,7 @@ M_TEST(Value, Object) {
 
     // --- Reference Access and Modification ---
     json::Value ref_test{json::Object{{"data1", 10}, {"data2", 20}}};
-    auto& obj_ref = ref_test.get_obj();
+    auto& obj_ref = ref_test.obj();
     obj_ref["data1"] = 100;
     obj_ref["new_data"] = "added";
     M_ASSERT_EQ(ref_test.size(), 3);
@@ -120,17 +120,17 @@ M_TEST(Value, Object) {
 
     // --- Serialization and Parsing ---
     json::Value serial_test{json::Object{{"key1", 1}, {"key2", 2}}};
-    M_ASSERT_NO_THROW(std::ignore = serial_test.serialize());
-    M_ASSERT_NO_THROW(std::ignore = serial_test.prettify());
+    M_ASSERT_NO_THROW(std::ignore = serial_test.dump());
+    M_ASSERT_NO_THROW(std::ignore = serial_test.dumpf());
 
-    auto parsed_simple = json::parse(R"({"key1":1,"key2":2})");
+    auto parsed_simple = json::read(R"({"key1":1,"key2":2})");
     if (parsed_simple.has_value()) {
         M_ASSERT_TRUE(*parsed_simple == serial_test);
     } else {
         M_ASSERT_FAIL("Failed to parse simple object");
     }
 
-    auto parsed_empty = json::parse("{}");
+    auto parsed_empty = json::read("{}");
     if (parsed_empty.has_value()) {
         json::Value empty_code{json::Object{}};
         M_ASSERT_TRUE(*parsed_empty == empty_code);
@@ -139,7 +139,7 @@ M_TEST(Value, Object) {
     }
 
     // Test nested object parsing
-    auto parsed_nested = json::parse(R"({"outer":{"inner1":1,"inner2":2}})");
+    auto parsed_nested = json::read(R"({"outer":{"inner1":1,"inner2":2}})");
     if (parsed_nested.has_value()) {
         M_ASSERT_EQ( parsed_nested->type(), json::Type::eObject );
         M_ASSERT_EQ( parsed_nested->size(), 1 );
@@ -157,7 +157,7 @@ M_TEST(Value, Object) {
     }
     
     // Test mixed type parsing
-    auto parsed_mixed = json::parse(R"({"number":42,"string":"test","boolean":true,"null_val":null})");
+    auto parsed_mixed = json::read(R"({"number":42,"string":"test","boolean":true,"null_val":null})");
     if (parsed_mixed.has_value()) {
         M_ASSERT_EQ( parsed_mixed->type(), json::Type::eObject );
         M_ASSERT_EQ( parsed_mixed->size(), 4 );
@@ -188,8 +188,8 @@ M_TEST(Value, Object) {
             {"items", json::Object{{"item1", 1}, {"item2", 2}}}
         }}
     }};
-    auto serialized_obj = original_obj.serialize();
-    auto parsed_back_obj = json::parse(serialized_obj);
+    auto serialized_obj = original_obj.dump();
+    auto parsed_back_obj = json::read(serialized_obj);
     if (parsed_back_obj.has_value()) {
         M_ASSERT_TRUE( *parsed_back_obj == original_obj );
     } else {
@@ -203,7 +203,7 @@ M_TEST(Value, Object) {
 
     // --- Type Safety ---
     M_ASSERT_THROW(std::ignore = obj_val.to<json::Number>(), std::runtime_error);
-    M_ASSERT_THROW(std::ignore = obj_val.get_arr(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = obj_val.arr(), std::bad_variant_access);
 
     // --- Modification via Reference ---
     json::Value ref_modify_test{json::Object{{"a", 1}, {"b", 2}}};

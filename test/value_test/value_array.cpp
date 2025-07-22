@@ -73,16 +73,16 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ(const_at_test.at(1).to<json::Number>(), 2);
 
     json::Value wrong_type_val{42};
-    M_ASSERT_THROW(std::ignore = wrong_type_val.get_arr(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = wrong_type_val.arr(), std::bad_variant_access);
 
     json::Value string_val{"not array"};
-    M_ASSERT_THROW(std::ignore = string_val.get_arr(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = string_val.arr(), std::bad_variant_access);
 
 
     // Array5: get<T>引用与容器操作
     json::Value get_test{json::Array{{1, 2, 3}}};
     M_ASSERT_NO_THROW(std::ignore = get_test.to<json::Array>());
-    auto& arr_ref = get_test.get_arr();
+    auto& arr_ref = get_test.arr();
     arr_ref[0] = 100;
     arr_ref.push_back(40);
     M_ASSERT_EQ(get_test.size(), 4);
@@ -90,8 +90,8 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ(get_test[3].to<json::Number>(), 40);
 
     const json::Value const_ref_test{json::Array{{1, 2, 3}}};
-    M_ASSERT_NO_THROW(std::ignore = const_ref_test.get_arr());
-    const auto& const_arr_ref = const_ref_test.get_arr();
+    M_ASSERT_NO_THROW(std::ignore = const_ref_test.arr());
+    const auto& const_arr_ref = const_ref_test.arr();
     M_ASSERT_EQ(const_arr_ref.size(), 3);
     M_ASSERT_EQ(const_arr_ref[0].to<json::Number>(), 1);
 
@@ -184,26 +184,26 @@ M_TEST(Value, Array) {
     M_ASSERT_FALSE(nested1 == nested3);
 
     json::Value simple3_arr{json::Array{{1, 2, 3}}};
-    M_ASSERT_EQ(simple3_arr.serialize(), "[1,2,3]");
+    M_ASSERT_EQ(simple3_arr.dump(), "[1,2,3]");
 
     // empty must be use json::Array{} to avoid ambiguity with json::Value
     json::Value empty_serial{json::Array{}};
-    M_ASSERT_EQ(empty_serial.serialize(), "[]");
+    M_ASSERT_EQ(empty_serial.dump(), "[]");
 
     json::Value empty_serial_2{json::Array{{} }};
-    M_ASSERT_EQ(empty_serial_2.serialize(), "[null]");
+    M_ASSERT_EQ(empty_serial_2.dump(), "[null]");
 
     json::Value mixed{json::Array{{42, "test", true, nullptr}}};
-    M_ASSERT_EQ(mixed.serialize(), "[42,\"test\",true,null]");
+    M_ASSERT_EQ(mixed.dump(), "[42,\"test\",true,null]");
     json::Value nested{json::Array{{
         json::Array{{1, 2}},
         json::Array{{3, 4}}
     }}};
-    M_ASSERT_EQ(nested.serialize(), "[[1,2],[3,4]]");
+    M_ASSERT_EQ(nested.dump(), "[[1,2],[3,4]]");
 
 
 // Array9: 解析与序列化回环
-    auto parsed_simple = json::parse("[1,2,3]");
+    auto parsed_simple = json::read("[1,2,3]");
     if (parsed_simple.has_value()) {
         M_ASSERT_EQ(parsed_simple->type(), json::Type::eArray);
         M_ASSERT_EQ(parsed_simple->size(), 3);
@@ -214,8 +214,8 @@ M_TEST(Value, Array) {
     }
 
     json::Value simple2_arr{json::Array{{1, 2, 3}}};
-    auto serialized_arr = simple2_arr.serialize();
-    auto parsed_back_arr = json::parse(serialized_arr);
+    auto serialized_arr = simple2_arr.dump();
+    auto parsed_back_arr = json::read(serialized_arr);
     if (parsed_back_arr.has_value()) {
         M_ASSERT_TRUE(*parsed_back_arr == simple2_arr);
     } else {

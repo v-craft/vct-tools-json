@@ -31,16 +31,16 @@ M_TEST(Value, Null) {
     M_EXPECT_STREQ(null_val.type_name(), "Null");
 
     // --- Reference access ---
-    M_ASSERT_NO_THROW(std::ignore = null_val.get_nul());
-    M_ASSERT_EQ(null_val.get_nul(), nullptr);
+    M_ASSERT_NO_THROW(std::ignore = null_val.nul());
+    M_ASSERT_EQ(null_val.nul(), nullptr);
 
     // Const reference access
     const json::Value const_null{nullptr};
-    M_ASSERT_EQ(const_null.get_nul(), nullptr);
+    M_ASSERT_EQ(const_null.nul(), nullptr);
 
     // Type safety: wrong type throws
-    M_ASSERT_THROW(std::ignore = json::Value{"not null"}.get_nul(), std::bad_variant_access);
-    M_ASSERT_THROW(std::ignore = json::Value{42.0}.get_nul(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = json::Value{"not null"}.nul(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = json::Value{42.0}.nul(), std::bad_variant_access);
 
     // --- Assignment tests ---
     json::Value assign_val{ json::Bool{} };
@@ -65,25 +65,25 @@ M_TEST(Value, Null) {
     M_ASSERT_FALSE(null_cmp1 == json::Value{json::Object{}});
 
     // --- Serialization tests ---
-    M_ASSERT_EQ(json::Value{nullptr}.serialize(), "null");
-    M_ASSERT_EQ(json::Value{}.serialize(), "null");
-    M_ASSERT_EQ(json::Value{nullptr}.prettify(), "null");
+    M_ASSERT_EQ(json::Value{nullptr}.dump(), "null");
+    M_ASSERT_EQ(json::Value{}.dump(), "null");
+    M_ASSERT_EQ(json::Value{nullptr}.dumpf(), "null");
 
     // --- Parsing tests ---
-    auto parsed_null = json::parse("null");
+    auto parsed_null = json::read("null");
     if (parsed_null.has_value()) {
         M_ASSERT_EQ(parsed_null->type(), json::Type::eNull);
-        M_ASSERT_EQ(parsed_null->get_nul(), nullptr);
+        M_ASSERT_EQ(parsed_null->nul(), nullptr);
     } else {
         M_ASSERT_FAIL("Failed to parse 'null'");
     }
 
     // Round-trip serialization/parsing
-    auto serialized_null = json::Value{nullptr}.serialize();
-    auto parsed_back_null = json::parse(serialized_null);
+    auto serialized_null = json::Value{nullptr}.dump();
+    auto parsed_back_null = json::read(serialized_null);
     if (parsed_back_null.has_value()) {
         M_ASSERT_EQ(parsed_back_null->type(), json::Type::eNull);
-        M_ASSERT_EQ(parsed_back_null->get_nul(), nullptr);
+        M_ASSERT_EQ(parsed_back_null->nul(), nullptr);
     } else {
         M_ASSERT_FAIL("Failed to parse back serialized null");
     }
@@ -120,7 +120,7 @@ M_TEST(Value, Null) {
     M_ASSERT_TRUE(consistency_null1 == nullptr);
 
     // All null values serialize to the same string
-    M_ASSERT_EQ(consistency_null1.serialize(), "null");
-    M_ASSERT_EQ(consistency_null2.serialize(), "null");
-    M_ASSERT_EQ(consistency_null3.serialize(), "null");
+    M_ASSERT_EQ(consistency_null1.dump(), "null");
+    M_ASSERT_EQ(consistency_null2.dump(), "null");
+    M_ASSERT_EQ(consistency_null3.dump(), "null");
 }

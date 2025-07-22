@@ -6,7 +6,7 @@ set(package_name "${prev_name}-${lib_name}")
 
 # Project declaration with metadata
 project(${package_name}
-    VERSION 0.6.0                                     # Semantic versioning (MAJOR.MINOR.PATCH)
+    VERSION 0.7.0                                     # Semantic versioning (MAJOR.MINOR.PATCH)
     HOMEPAGE_URL "https://github.com/v-craft/vct-tools-json"
     DESCRIPTION "V-Craft JSON tools library for C++23"
     LANGUAGES CXX                                     # C++ only project

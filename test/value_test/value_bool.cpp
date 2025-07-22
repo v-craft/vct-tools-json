@@ -50,11 +50,11 @@ M_TEST(Value, Bool) {
     M_EXPECT_STREQ(false_val.type_name(), "Bool");
 
     // --- Reference access ---
-    M_ASSERT_EQ(true_val.get_bol(), true);
-    M_ASSERT_EQ(false_val.get_bol(), false);
+    M_ASSERT_EQ(true_val.bol(), true);
+    M_ASSERT_EQ(false_val.bol(), false);
     const json::Value const_bool{true};
-    M_ASSERT_EQ(const_bool.get_bol(), true);
-    M_ASSERT_THROW(std::ignore = json::Value{json::String("not a bool")}.get_bol(), std::bad_variant_access);
+    M_ASSERT_EQ(const_bool.bol(), true);
+    M_ASSERT_THROW(std::ignore = json::Value{json::String("not a bool")}.bol(), std::bad_variant_access);
 
     // --- Assignment tests ---
     json::Value assign_val{json::Bool{}};
@@ -73,7 +73,7 @@ M_TEST(Value, Bool) {
 
     // Reference modification
     json::Value mod_val{true};
-    auto& bool_ref = mod_val.get_bol();
+    auto& bool_ref = mod_val.bol();
     bool_ref = false;
     M_ASSERT_EQ(mod_val.to<json::Bool>(), false);
     bool_ref = true;
@@ -100,21 +100,21 @@ M_TEST(Value, Bool) {
     M_ASSERT_TRUE(json::Value{nullptr} == nullptr);
 
     // --- Serialization tests ---
-    M_ASSERT_EQ(json::Value{true}.serialize(), "true");
-    M_ASSERT_EQ(json::Value{false}.serialize(), "false");
-    M_ASSERT_EQ(json::Value{true}.prettify(), "true");
-    M_ASSERT_EQ(json::Value{false}.prettify(), "false");
+    M_ASSERT_EQ(json::Value{true}.dump(), "true");
+    M_ASSERT_EQ(json::Value{false}.dump(), "false");
+    M_ASSERT_EQ(json::Value{true}.dumpf(), "true");
+    M_ASSERT_EQ(json::Value{false}.dumpf(), "false");
 
     // --- Parsing tests ---
-    auto parsed_true = json::parse("true");
+    auto parsed_true = json::read("true");
     M_ASSERT_TRUE(parsed_true.has_value());
     M_ASSERT_EQ(parsed_true->type(), json::Type::eBool);
-    M_ASSERT_EQ(parsed_true->get_bol(), true);
+    M_ASSERT_EQ(parsed_true->bol(), true);
 
-    auto parsed_false = json::parse("false");
+    auto parsed_false = json::read("false");
     M_ASSERT_TRUE(parsed_false.has_value());
     M_ASSERT_EQ(parsed_false->type(), json::Type::eBool);
-    M_ASSERT_EQ(parsed_false->get_bol(), false);
+    M_ASSERT_EQ(parsed_false->bol(), false);
 
     // --- Type safety for conversions ---
     M_ASSERT_THROW(std::ignore = true_val.to<json::String>(), std::runtime_error);
@@ -131,24 +131,24 @@ M_TEST(Value, Bool) {
     M_ASSERT_EQ(false_val.to<double>(), 0.0);
 
     // --- get<T> type safety ---
-    M_ASSERT_THROW(std::ignore = true_val.get_num(), std::bad_variant_access);
-    M_ASSERT_THROW(std::ignore = false_val.get_str(), std::bad_variant_access);
-    M_ASSERT_THROW(std::ignore = true_val.get_arr(), std::bad_variant_access);
-    M_ASSERT_THROW(std::ignore = false_val.get_obj(), std::bad_variant_access);
-    M_ASSERT_THROW(std::ignore = true_val.get_nul(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = true_val.num(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = false_val.str(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = true_val.arr(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = false_val.obj(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = true_val.nul(), std::bad_variant_access);
 
     // --- Round-trip serialization/parsing ---
-    auto serialized_true = json::Value{true}.serialize();
-    auto parsed_back_true = json::parse(serialized_true);
+    auto serialized_true = json::Value{true}.dump();
+    auto parsed_back_true = json::read(serialized_true);
     M_ASSERT_TRUE(parsed_back_true.has_value());
     M_ASSERT_EQ(parsed_back_true->type(), json::Type::eBool);
-    M_ASSERT_EQ(parsed_back_true->get_bol(), true);
+    M_ASSERT_EQ(parsed_back_true->bol(), true);
 
-    auto serialized_false = json::Value{false}.serialize();
-    auto parsed_back_false = json::parse(serialized_false);
+    auto serialized_false = json::Value{false}.dump();
+    auto parsed_back_false = json::read(serialized_false);
     M_ASSERT_TRUE(parsed_back_false.has_value());
     M_ASSERT_EQ(parsed_back_false->type(), json::Type::eBool);
-    M_ASSERT_EQ(parsed_back_false->get_bol(), false);
+    M_ASSERT_EQ(parsed_back_false->bol(), false);
 
     // --- Boolean logic consistency ---
     M_ASSERT_TRUE(json::Value{true}.to<json::Bool>());

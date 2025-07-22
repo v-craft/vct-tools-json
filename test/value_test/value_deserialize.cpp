@@ -11,75 +11,75 @@ using namespace vct::tools;
 M_TEST(Value, Deserialize) {
     // --- Number parsing ---
     {
-        auto result_int = json::parse("42");
+        auto result_int = json::read("42");
         M_ASSERT_TRUE(result_int.has_value());
         M_ASSERT_EQ(result_int->type(), json::Type::eNumber);
-        M_ASSERT_EQ(result_int->get_num(), 42);
+        M_ASSERT_EQ(result_int->num(), 42);
     }
     {
-        auto result_float = json::parse("3.14159");
+        auto result_float = json::read("3.14159");
         M_ASSERT_TRUE(result_float.has_value());
         M_ASSERT_EQ(result_float->type(), json::Type::eNumber);
-        M_ASSERT_EQ(result_float->get_num(), 3.14159);
+        M_ASSERT_EQ(result_float->num(), 3.14159);
     }
     {
-        auto result_negative = json::parse("-123.45");
+        auto result_negative = json::read("-123.45");
         M_ASSERT_TRUE(result_negative.has_value());
         M_ASSERT_EQ(result_negative->type(), json::Type::eNumber);
-        M_ASSERT_EQ(result_negative->get_num(), -123.45);
+        M_ASSERT_EQ(result_negative->num(), -123.45);
     }
 
     // --- String parsing ---
     {
-        auto result_string = json::parse("\"hello world\"");
+        auto result_string = json::read("\"hello world\"");
         M_ASSERT_TRUE(result_string.has_value());
         M_ASSERT_EQ(result_string->type(), json::Type::eString);
-        M_ASSERT_EQ(result_string->get_str(), "hello world");
+        M_ASSERT_EQ(result_string->str(), "hello world");
     }
     {
-        auto result_empty_string = json::parse("\"\"");
+        auto result_empty_string = json::read("\"\"");
         M_ASSERT_TRUE(result_empty_string.has_value());
         M_ASSERT_EQ(result_empty_string->type(), json::Type::eString);
-        M_ASSERT_EQ(result_empty_string->get_str(), "");
+        M_ASSERT_EQ(result_empty_string->str(), "");
     }
     // String with escape sequences
     {
-        auto result_escape = json::parse(R"("Hello\nWorld\t!")");
+        auto result_escape = json::read(R"("Hello\nWorld\t!")");
         M_ASSERT_TRUE(result_escape.has_value());
         M_ASSERT_EQ(result_escape->type(), json::Type::eString);
-        M_ASSERT_EQ(result_escape->get_str(), "Hello\nWorld\t!");
+        M_ASSERT_EQ(result_escape->str(), "Hello\nWorld\t!");
     }
     {
-        auto result_quote_escape = json::parse(R"("Quote: \"test\" and backslash: \\")");
+        auto result_quote_escape = json::read(R"("Quote: \"test\" and backslash: \\")");
         M_ASSERT_TRUE(result_quote_escape.has_value());
         M_ASSERT_EQ(result_quote_escape->type(), json::Type::eString);
-        M_ASSERT_EQ(result_quote_escape->get_str(), "Quote: \"test\" and backslash: \\");
+        M_ASSERT_EQ(result_quote_escape->str(), "Quote: \"test\" and backslash: \\");
     }
 
     // --- Boolean parsing ---
     {
-        auto result_true = json::parse("true");
+        auto result_true = json::read("true");
         M_ASSERT_TRUE(result_true.has_value());
         M_ASSERT_EQ(result_true->type(), json::Type::eBool);
-        M_ASSERT_EQ(result_true->get_bol(), true);
+        M_ASSERT_EQ(result_true->bol(), true);
     }
     {
-        auto result_false = json::parse("false");
+        auto result_false = json::read("false");
         M_ASSERT_TRUE(result_false.has_value());
         M_ASSERT_EQ(result_false->type(), json::Type::eBool);
-        M_ASSERT_EQ(result_false->get_bol(), false);
+        M_ASSERT_EQ(result_false->bol(), false);
     }
 
     // --- Null parsing ---
     {
-        auto result_null = json::parse("null");
+        auto result_null = json::read("null");
         M_ASSERT_TRUE(result_null.has_value());
         M_ASSERT_EQ(result_null->type(), json::Type::eNull);
     }
 
     // --- Array parsing ---
     {
-        auto result_array = json::parse("[1, 2, 3]");
+        auto result_array = json::read("[1, 2, 3]");
         M_ASSERT_TRUE(result_array.has_value());
         M_ASSERT_EQ(result_array->type(), json::Type::eArray);
         M_ASSERT_EQ(result_array->size(), 3);
@@ -88,14 +88,14 @@ M_TEST(Value, Deserialize) {
         M_ASSERT_EQ((*result_array)[2].to<json::Number>(), 3);
     }
     {
-        auto result_empty_array = json::parse("[]");
+        auto result_empty_array = json::read("[]");
         M_ASSERT_TRUE(result_empty_array.has_value());
         M_ASSERT_EQ(result_empty_array->type(), json::Type::eArray);
         M_ASSERT_EQ(result_empty_array->size(), 0);
     }
     // Mixed array
     {
-        auto result_mixed_array = json::parse("[1, \"hello\", true, null, false]");
+        auto result_mixed_array = json::read("[1, \"hello\", true, null, false]");
         M_ASSERT_TRUE(result_mixed_array.has_value());
         M_ASSERT_EQ(result_mixed_array->type(), json::Type::eArray);
         M_ASSERT_EQ(result_mixed_array->size(), 5);
@@ -108,7 +108,7 @@ M_TEST(Value, Deserialize) {
 
     // --- Object parsing ---
     {
-        auto result_object = json::parse(R"({"name": "John", "age": 30})");
+        auto result_object = json::read(R"({"name": "John", "age": 30})");
         M_ASSERT_TRUE(result_object.has_value());
         M_ASSERT_EQ(result_object->type(), json::Type::eObject);
         M_ASSERT_EQ(result_object->size(), 2);
@@ -118,7 +118,7 @@ M_TEST(Value, Deserialize) {
         M_ASSERT_EQ((*result_object)["age"].to<json::Number>(), 30);
     }
     {
-        auto result_empty_object = json::parse("{}");
+        auto result_empty_object = json::read("{}");
         M_ASSERT_TRUE(result_empty_object.has_value());
         M_ASSERT_EQ(result_empty_object->type(), json::Type::eObject);
         M_ASSERT_EQ(result_empty_object->size(), 0);
@@ -141,7 +141,7 @@ M_TEST(Value, Deserialize) {
             },
             "metadata": null
         })";
-        auto result_nested_object = json::parse(json_str);
+        auto result_nested_object = json::read(json_str);
         M_ASSERT_TRUE(result_nested_object.has_value());
         M_ASSERT_EQ(result_nested_object->type(), json::Type::eObject);
         M_ASSERT_EQ(result_nested_object->size(), 2);
@@ -166,7 +166,7 @@ M_TEST(Value, Deserialize) {
                 {"x": 3, "y": 4}
             ]
         ])";
-        auto result_nested_array = json::parse(json_str);
+        auto result_nested_array = json::read(json_str);
         M_ASSERT_TRUE(result_nested_array.has_value());
         M_ASSERT_EQ(result_nested_array->type(), json::Type::eArray);
         M_ASSERT_EQ(result_nested_array->size(), 4);
@@ -238,7 +238,7 @@ M_TEST(Value, Deserialize) {
                 "active": true
             }
         })";
-        auto result_complex = json::parse(json_str);
+        auto result_complex = json::read(json_str);
         M_ASSERT_TRUE(result_complex.has_value());
         M_ASSERT_EQ(result_complex->type(), json::Type::eObject);
         M_ASSERT_EQ(result_complex->size(), 3);
@@ -283,7 +283,7 @@ M_TEST(Value, Deserialize) {
                 "object": {  "key"  :  "value"  }
             }
         )";
-        auto result_whitespace = json::parse(json_str);
+        auto result_whitespace = json::read(json_str);
         M_ASSERT_TRUE(result_whitespace.has_value());
         M_ASSERT_EQ(result_whitespace->type(), json::Type::eObject);
         M_ASSERT_EQ(result_whitespace->size(), 4);
@@ -304,9 +304,9 @@ M_TEST(Value, Deserialize) {
             {"array", json::Array{1, 2, 3}},
             {"object", json::Object{{"nested", "value"}}}
         };
-        auto serialized = original.serialize();
+        auto serialized = original.dump();
         M_ASSERT_TRUE(!serialized.empty());
-        auto result_roundtrip = json::parse(serialized);
+        auto result_roundtrip = json::read(serialized);
         M_ASSERT_TRUE(result_roundtrip.has_value());
         M_ASSERT_TRUE(*result_roundtrip == original);
         // Access after round-trip
@@ -330,7 +330,7 @@ M_TEST(Value, Deserialize) {
             "123 456", "{\"key\": \"value\"} extra"
         };
         for (const auto& invalid_json : invalid_jsons) {
-            auto result_invalid = json::parse(invalid_json);
+            auto result_invalid = json::read(invalid_json);
             M_ASSERT_FALSE(result_invalid.has_value());
         }
     }
@@ -342,14 +342,14 @@ M_TEST(Value, Deserialize) {
         deeply_nested += "\"value\": 42";
         for (int i = 0; i < 1000; ++i) deeply_nested += "}";
         deeply_nested += "}";
-        auto result_deep = json::parse(deeply_nested);
+        auto result_deep = json::read(deeply_nested);
         // No assertion: success/failure depends on implementation limits
     }
 
     // --- Access with at() after deserialization ---
     {
         std::string json_str = R"({"users": [{"name": "John", "age": 30}, {"name": "Jane", "age": 25}]})";
-        auto result_at_test = json::parse(json_str);
+        auto result_at_test = json::read(json_str);
         M_ASSERT_TRUE(result_at_test.has_value());
         // at() method access
         M_ASSERT_NO_THROW(std::ignore = result_at_test->at("users").at(0).at("name"));
@@ -365,7 +365,7 @@ M_TEST(Value, Deserialize) {
     // --- Modification after deserialization ---
     {
         std::string json_str = R"({"config": {"debug": false, "port": 8080}})";
-        auto result_modify = json::parse(json_str);
+        auto result_modify = json::read(json_str);
         M_ASSERT_TRUE(result_modify.has_value());
         // Modify values
         (*result_modify)["config"]["debug"] = true;
@@ -381,13 +381,13 @@ M_TEST(Value, Deserialize) {
     // --- Reference modification after deserialization ---
     {
         std::string json_str = R"({"items": [1, 2, 3], "metadata": {"count": 3}})";
-        auto result_ref = json::parse(json_str);
+        auto result_ref = json::read(json_str);
         M_ASSERT_TRUE(result_ref.has_value());
         // Modify array and object via reference
-        auto& items_ref = (*result_ref)["items"].get_arr();
+        auto& items_ref = (*result_ref)["items"].arr();
         items_ref.push_back(json::Number(4));
         items_ref.push_back(json::Number(5));
-        auto& metadata_ref = (*result_ref)["metadata"].get_obj();
+        auto& metadata_ref = (*result_ref)["metadata"].obj();
         metadata_ref["count"] = json::Number(5);
         metadata_ref["modified"] = json::Bool(true);
         // Verify modifications

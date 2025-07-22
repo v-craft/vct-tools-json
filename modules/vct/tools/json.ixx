@@ -78,6 +78,11 @@ export namespace vct::tools::json{
         eUnknownFormat      ///< Invalid JSON format encountered
     };
 
+    /**
+     * @brief get the string name of a ParseError, should only be used for debug or log
+     */
+    std::string error_name(ParseError error);
+
     // Forward declaration
     class Value;
     
@@ -275,8 +280,9 @@ export namespace vct::tools::json{
             Array,      ///< JSON array storage
             Object      ///< JSON object storage
         >;
-        
+
         Variant m_data { Null{} };      ///< Actual data storage, defaults to null
+
     public:
 
         /**
@@ -299,7 +305,7 @@ export namespace vct::tools::json{
                 case Type::eNumber: return "Number";
                 case Type::eBool:   return "Bool";
                 case Type::eNull:   return "Null";
-                default: return "error"; // should never happen
+                default: return "Unknown Enum Value"; // should never happen
             }
         }
 
@@ -350,114 +356,114 @@ export namespace vct::tools::json{
          * @throw std::bad_variant_access if this Value is not Null
          * @return Reference to Null value (Null itself is immutable)
          * @note Overloads:
-         * - `Null& get_nul() &`              : For non-const lvalues
-         * - `Null&& get_nul() &&`            : For rvalues (enables moving)
-         * - `const Null& get_nul() const &`  : For const lvalues
-         * - `const Null&& get_nul() const &&`: For const rvalues (rarely needed)
+         * - `Null& nul() &`              : For non-const lvalues
+         * - `Null&& nul() &&`            : For rvalues (enables moving)
+         * - `const Null& nul() const &`  : For const lvalues
+         * - `const Null&& nul() const &&`: For const rvalues (rarely needed)
          */
         [[nodiscard]]
-        constexpr Null& get_nul() & { return std::get<Null>(m_data); }
+        constexpr Null& nul() & { return std::get<Null>(m_data); }
         [[nodiscard]]
-        constexpr Null&& get_nul() && { return std::get<Null>(std::move(m_data)); }
+        constexpr Null&& nul() && { return std::get<Null>(std::move(m_data)); }
         [[nodiscard]]
-        constexpr const Null& get_nul() const & { return std::get<Null>(m_data); }
+        constexpr const Null& nul() const & { return std::get<Null>(m_data); }
         [[nodiscard]]
-        constexpr const Null&& get_nul() const && { return std::get<Null>(std::move(m_data)); }
+        constexpr const Null&& nul() const && { return std::get<Null>(std::move(m_data)); }
 
         /**
          * @brief Get the Bool value from this Value
          * @throw std::bad_variant_access if this Value is not Bool
          * @return Mutable reference to Bool value
          * @note Overloads:
-         * - `Bool& get_bol() &`              : For non-const lvalues
-         * - `Bool&& get_bol() &&`            : For rvalues (enables moving)
-         * - `const Bool& get_bol() const &`  : For const lvalues
-         * - `const Bool&& get_bol() const &&`: For const rvalues (rarely needed)
+         * - `Bool& bol() &`              : For non-const lvalues
+         * - `Bool&& bol() &&`            : For rvalues (enables moving)
+         * - `const Bool& bol() const &`  : For const lvalues
+         * - `const Bool&& bol() const &&`: For const rvalues (rarely needed)
          */
         [[nodiscard]]
-        constexpr Bool& get_bol() & { return std::get<Bool>(m_data); }
+        constexpr Bool& bol() & { return std::get<Bool>(m_data); }
         [[nodiscard]]
-        constexpr Bool&& get_bol() && { return std::get<Bool>(std::move(m_data)); }
+        constexpr Bool&& bol() && { return std::get<Bool>(std::move(m_data)); }
         [[nodiscard]]
-        constexpr const Bool& get_bol() const & { return std::get<Bool>(m_data); }
+        constexpr const Bool& bol() const & { return std::get<Bool>(m_data); }
         [[nodiscard]]
-        constexpr const Bool&& get_bol() const && { return std::get<Bool>(std::move(m_data)); }
+        constexpr const Bool&& bol() const && { return std::get<Bool>(std::move(m_data)); }
 
         /**
          * @brief Get the Number value from this Value
          * @throw std::bad_variant_access if this Value is not Number
          * @return Mutable reference to Number value
          * @note Overloads:
-         * - `Number& get_num() &`              : For non-const lvalues
-         * - `Number&& get_num() &&`            : For rvalues (enables moving)
-         * - `const Number& get_num() const &`  : For const lvalues
-         * - `const Number&& get_num() const &&`: For const rvalues (rarely needed)
+         * - `Number& num() &`              : For non-const lvalues
+         * - `Number&& num() &&`            : For rvalues (enables moving)
+         * - `const Number& num() const &`  : For const lvalues
+         * - `const Number&& num() const &&`: For const rvalues (rarely needed)
          */
         [[nodiscard]]
-        constexpr Number& get_num() & { return std::get<Number>(m_data); }
+        constexpr Number& num() & { return std::get<Number>(m_data); }
         [[nodiscard]]
-        constexpr Number&& get_num() && { return std::get<Number>(std::move(m_data)); }
+        constexpr Number&& num() && { return std::get<Number>(std::move(m_data)); }
         [[nodiscard]]
-        constexpr const Number& get_num() const & { return std::get<Number>(m_data); }
+        constexpr const Number& num() const & { return std::get<Number>(m_data); }
         [[nodiscard]]
-        constexpr const Number&& get_num() const && { return std::get<Number>(std::move(m_data)); }
+        constexpr const Number&& num() const && { return std::get<Number>(std::move(m_data)); }
 
         /**
          * @brief Get the String value from this Value
          * @throw std::bad_variant_access if this Value is not String
          * @return Mutable reference to String value
          * @note Overloads:
-         * - `String& get_str() &`              : For non-const lvalues
-         * - `String&& get_str() &&`            : For rvalues (enables moving)
-         * - `const String& get_str() const &`  : For const lvalues
-         * - `const String&& get_str() const &&`: For const rvalues (rarely needed)
+         * - `String& str() &`              : For non-const lvalues
+         * - `String&& str() &&`            : For rvalues (enables moving)
+         * - `const String& str() const &`  : For const lvalues
+         * - `const String&& str() const &&`: For const rvalues (rarely needed)
          */
         [[nodiscard]]
-        constexpr String& get_str() & { return std::get<String>(m_data); }
+        constexpr String& str() & { return std::get<String>(m_data); }
         [[nodiscard]]
-        constexpr String&& get_str() && { return std::get<String>(std::move(m_data)); }
+        constexpr String&& str() && { return std::get<String>(std::move(m_data)); }
         [[nodiscard]]
-        constexpr const String& get_str() const & { return std::get<String>(m_data); }
+        constexpr const String& str() const & { return std::get<String>(m_data); }
         [[nodiscard]]
-        constexpr const String&& get_str() const && { return std::get<String>(std::move(m_data)); }
+        constexpr const String&& str() const && { return std::get<String>(std::move(m_data)); }
 
         /**
          * @brief Get the Array value from this Value
          * @throw std::bad_variant_access if this Value is not Array
          * @return Mutable reference to Array value
          * @note Overloads:
-         * - `Array& get_arr() &`              : For non-const lvalues
-         * - `Array&& get_arr() &&`            : For rvalues (enables moving)
-         * - `const Array& get_arr() const &`  : For const lvalues
-         * - `const Array&& get_arr() const &&`: For const rvalues (rarely needed)
+         * - `Array& arr() &`              : For non-const lvalues
+         * - `Array&& arr() &&`            : For rvalues (enables moving)
+         * - `const Array& arr() const &`  : For const lvalues
+         * - `const Array&& arr() const &&`: For const rvalues (rarely needed)
          */
         [[nodiscard]]
-        constexpr Array& get_arr() & { return std::get<Array>(m_data); }
+        constexpr Array& arr() & { return std::get<Array>(m_data); }
         [[nodiscard]]
-        constexpr Array&& get_arr() && { return std::get<Array>(std::move(m_data)); }
+        constexpr Array&& arr() && { return std::get<Array>(std::move(m_data)); }
         [[nodiscard]]
-        constexpr const Array& get_arr() const & { return std::get<Array>(m_data); }
+        constexpr const Array& arr() const & { return std::get<Array>(m_data); }
         [[nodiscard]]
-        constexpr const Array&& get_arr() const && { return std::get<Array>(std::move(m_data)); }
+        constexpr const Array&& arr() const && { return std::get<Array>(std::move(m_data)); }
 
         /**
          * @brief Get the Object value from this Value
          * @throw std::bad_variant_access if this Value is not Object
          * @return Mutable reference to Object value
          * @note Overloads:
-         * - `Object& get_obj() &`              : For non-const lvalues.
-         * - `Object&& get_obj() &&`            : For rvalues (enables moving).
-         * - `const Object& get_obj() const &`  : For const lvalues.
-         * - `const Object&& get_obj() const &&`: For const rvalues (rarely needed).
+         * - `Object& obj() &`              : For non-const lvalues.
+         * - `Object&& obj() &&`            : For rvalues (enables moving).
+         * - `const Object& obj() const &`  : For const lvalues.
+         * - `const Object&& obj() const &&`: For const rvalues (rarely needed).
          */
         [[nodiscard]]
-        constexpr Object& get_obj() & { return std::get<Object>(m_data); }
+        constexpr Object& obj() & { return std::get<Object>(m_data); }
         [[nodiscard]]
-        constexpr Object&& get_obj() && { return std::get<Object>(std::move(m_data)); }
+        constexpr Object&& obj() && { return std::get<Object>(std::move(m_data)); }
         [[nodiscard]]
-        constexpr const Object& get_obj() const & { return std::get<Object>(m_data); }
+        constexpr const Object& obj() const & { return std::get<Object>(m_data); }
         [[nodiscard]]
-        constexpr const Object&& get_obj() const && { return std::get<Object>(std::move(m_data)); }
+        constexpr const Object&& obj() const && { return std::get<Object>(std::move(m_data)); }
 
         /**
          * @brief Default constructor, initializes to null type and null data
@@ -763,7 +769,7 @@ export namespace vct::tools::json{
          * @brief Serialize Value to string buffer back ( Must succeed )
          * @param out Reference to string buffer to write output
          */
-        void serialize_to(String& out) const noexcept;
+        void write(String& out) const noexcept;
         
         /**
          * @brief Serialize Value to output stream
@@ -772,16 +778,16 @@ export namespace vct::tools::json{
          * output to stream may be failed If an unknown problem occurs (e.g. stream is closed or not writable)
          * when stream.fail() return true, this function will quickly return but not throw any exception.
          */
-        void serialize_to(std::ostream& out) const noexcept;
+        void write(std::ostream& out) const noexcept;
 
         /**
          * @brief Serialize Value to compact JSON string ( Must succeed )
          * @return Compact JSON string without formatting
          */
         [[nodiscard]]
-        String serialize() const noexcept {
+        String dump() const noexcept {
             String res;
-            this->serialize_to(res);
+            this->write(res);
             return res;
         }
 
@@ -793,7 +799,7 @@ export namespace vct::tools::json{
          * @param max_space Maximum allowed indentation spaces (default: 512)
          * @return True if serialization succeeded, false if max_space exceeded
          */
-        Bool prettify_to(
+        Bool writef(
             String& out,
             std::uint16_t space_num = 2,
             std::uint16_t depth = 0,
@@ -808,7 +814,7 @@ export namespace vct::tools::json{
          * @param max_space Maximum allowed indentation spaces (default: 512)
          * @return True if serialization succeeded, false if max_space exceeded or stream failed
          */
-        Bool prettify_to(
+        Bool writef(
             std::ostream& out, 
             std::uint16_t space_num = 2,
             std::uint16_t depth = 0,
@@ -824,12 +830,12 @@ export namespace vct::tools::json{
          * @return Formatted JSON string or nullopt if max_space exceeded
          */
         [[nodiscard]]
-        std::optional<String> prettify(
+        std::optional<String> dumpf(
             const std::uint16_t space_num = 2, 
             const std::uint16_t depth = 0, 
             const std::uint32_t max_space = 512
         ) const noexcept {
-            if(String res; this->prettify_to(res, space_num, depth, max_space)) return res;
+            if(String res; this->writef(res, space_num, depth, max_space)) return res;
             return std::nullopt;
         }
 
@@ -1365,41 +1371,20 @@ export namespace vct::tools::json{
     };
 
     /**
-     * @brief Parse JSON string into Value object (Equal to `parse( ... )`)
+     * @brief Parse JSON string into Value object
      * @param text The JSON string to parse
      * @param max_depth Maximum nesting depth (default: 256)
      * @return std::expected<Value, ParseError> Parsed Value or error
      */
-    std::expected<Value, ParseError> deserialize(std::string_view text, std::int32_t max_depth = 256 ) noexcept;
+    std::expected<Value, ParseError> read(std::string_view text, std::int32_t max_depth = 256 ) noexcept;
 
     /**
-     * @brief Parse JSON string from input-stream into Value object (Equal to `parse( ... )`)
+     * @brief Parse JSON string from input-stream into Value object
      * @param is_test input-stream
      * @param max_depth Maximum nesting depth (default: 256)
      * @return std::expected<Value, ParseError> Parsed Value or error
      */
-    std::expected<Value, ParseError> deserialize(std::istream& is_test, std::int32_t max_depth = 256 ) noexcept;
-
-
-    /**
-     * @brief Parse JSON string into Value object (Equal to `deserialize( ... )`)
-     * @param text The JSON string to parse
-     * @param max_depth Maximum nesting depth (default: 256)
-     * @return std::expected<Value, ParseError> Parsed Value or error
-     */
-    std::expected<Value, ParseError> parse(const std::string_view text, const std::int32_t max_depth = 256 ) noexcept {
-        return deserialize(text, max_depth);
-    }
-
-    /**
-     * @brief Parse JSON string from input-stream into Value object (Equal to `deserialize( ... )`)
-     * @param is_test input-stream
-     * @param max_depth Maximum nesting depth (default: 256)
-     * @return std::expected<Value, ParseError> Parsed Value or error
-     */
-    std::expected<Value, ParseError> parse(std::istream& is_test, const std::int32_t max_depth = 256 ) noexcept {
-        return deserialize(is_test, max_depth);
-    }
+    std::expected<Value, ParseError> read(std::istream& is_test, std::int32_t max_depth = 256 ) noexcept;
 
 } // namespace vct::tools::json
 
@@ -1408,6 +1393,23 @@ module :private;
 
 
 namespace vct::tools::json{
+
+
+    std::string error_name(const ParseError error) {
+        switch (error) {
+            case ParseError::eNone: return "None";
+            case ParseError::eEmptyData: return "EmptyData";
+            case ParseError::eDepthExceeded: return "DepthExceeded";
+            case ParseError::eIllegalEscape: return "IllegalEscape";
+            case ParseError::eInvalidNumber: return "InvalidNumber";
+            case ParseError::eRedundantText: return "RedundantText";
+            case ParseError::eUnclosedArray: return "UnclosedArray";
+            case ParseError::eUnclosedObject: return "UnclosedObject";
+            case ParseError::eUnclosedString: return "UnclosedString";
+            case ParseError::eUnknownFormat: return "UnknownFormat";
+            default: return "Unknown Enum Value";
+        }
+    }
 
     void escape_to(String& out, const std::string_view str) noexcept {
         out.push_back('\"');
@@ -1615,7 +1617,7 @@ namespace vct::tools::json{
                 // Object type
                 ++it;
                 json = Object{};
-                auto& object = json.get_obj();
+                auto& object = json.obj();
                 // Parse the object
                 while(it != end_ptr){
                     // Skip spaces
@@ -1649,7 +1651,7 @@ namespace vct::tools::json{
                 // Array type
                 ++it;
                 json = Array{};
-                auto& array = json.get_arr();
+                auto& array = json.arr();
                 if (it != end_ptr && *it != ']') array.reserve(8);
                 while(it != end_ptr){
                     // Skip spaces
@@ -1730,7 +1732,7 @@ namespace vct::tools::json{
     }
 
 
-    std::expected<Value, ParseError> deserialize(const std::string_view text, const std::int32_t max_depth) noexcept{
+    std::expected<Value, ParseError> read(const std::string_view text, const std::int32_t max_depth) noexcept{
         auto it = text.begin();
         const auto end_ptr = text.end();
         // Skip spaces
@@ -1745,7 +1747,7 @@ namespace vct::tools::json{
         return result;
     }
 
-    std::expected<Value, ParseError> deserialize(std::istream& is_test, const std::int32_t max_depth) noexcept{
+    std::expected<Value, ParseError> read(std::istream& is_test, const std::int32_t max_depth) noexcept{
         auto it = std::istreambuf_iterator<char>(is_test);
         constexpr auto end_ptr = std::istreambuf_iterator<char>();
         // Skip spaces
@@ -1761,7 +1763,7 @@ namespace vct::tools::json{
     }
 
 
-    void Value::serialize_to(String& out) const noexcept {
+    void Value::write(String& out) const noexcept {
         switch (type()) {
             case Type::eObject: {
                 out.push_back('{');
@@ -1769,7 +1771,7 @@ namespace vct::tools::json{
                     // out.append(escape(key));
                     escape_to(out, key);
                     out.push_back(':');
-                    val.serialize_to(out);
+                    val.write(out);
                     out.push_back(',');
                 }
                 if (*out.rbegin() == ',') *out.rbegin() = '}';
@@ -1778,7 +1780,7 @@ namespace vct::tools::json{
             case Type::eArray: {
                 out.push_back('[');
                 for (const auto& val : std::get<Array>(m_data)) {
-                    val.serialize_to(out);
+                    val.write(out);
                     out.push_back(',');
                 }
                 if (*out.rbegin() == ',') *out.rbegin() = ']';
@@ -1810,7 +1812,7 @@ namespace vct::tools::json{
     }
 
 
-    void Value::serialize_to(std::ostream& out) const noexcept {
+    void Value::write(std::ostream& out) const noexcept {
         if(out.fail()) return;
         switch (type()) {
             case Type::eObject: {
@@ -1822,7 +1824,7 @@ namespace vct::tools::json{
                     else first = false;
                     escape_to(out, key);
                     out.put(':');
-                    val.serialize_to(out);
+                    val.write(out);
                     if(out.fail()) return;
                 }
                 out.put('}');
@@ -1834,7 +1836,7 @@ namespace vct::tools::json{
                 ) {
                     if(!first) out.put(',');
                     else first = false;
-                    val.serialize_to(out);
+                    val.write(out);
                     if(out.fail()) return;
                 }
                 out.put(']');
@@ -1865,7 +1867,7 @@ namespace vct::tools::json{
     }
 
 
-    Bool Value::prettify_to(
+    Bool Value::writef(
         String& out,
         const std::uint16_t space_num,
         const std::uint16_t depth,
@@ -1882,7 +1884,7 @@ namespace vct::tools::json{
                     out.append(tabs, ' ');
                     escape_to(out, key);
                     out.append(": ");
-                    if(!val.prettify_to(out, space_num, depth + 1, max_space)) return false;
+                    if(!val.writef(out, space_num, depth + 1, max_space)) return false;
                     out.push_back(',');
                 }
                 if (*out.rbegin() == ',') *out.rbegin() = '\n';
@@ -1896,7 +1898,7 @@ namespace vct::tools::json{
                 for (const auto& val : std::get<Array>(m_data)) {
                     out.push_back('\n');
                     out.append(tabs, ' ');
-                    if(!val.prettify_to(out, space_num, depth + 1, max_space)) return false;
+                    if(!val.writef(out, space_num, depth + 1, max_space)) return false;
                     out.push_back(',');
                 }
                 if (*out.rbegin() == ',') *out.rbegin() = '\n';
@@ -1932,7 +1934,7 @@ namespace vct::tools::json{
     }
 
 
-    Bool Value::prettify_to(
+    Bool Value::writef(
         std::ostream& out,
         const std::uint16_t space_num,
         const std::uint16_t depth,
@@ -1954,7 +1956,7 @@ namespace vct::tools::json{
                     escape_to(out, key);
                     out.put(':');
                     out.put(' ');
-                    if(!val.prettify_to(out, space_num, depth + 1, max_space)) return false;
+                    if(!val.writef(out, space_num, depth + 1, max_space)) return false;
                 }
                 if(!first) out.put('\n');
                 if(!std::get<Object>(m_data).empty()){
@@ -1970,7 +1972,7 @@ namespace vct::tools::json{
                     else first = false;
                     out.put('\n');
                     out << std::setfill(' ') << std::setw(tabs) << "";
-                    if(!val.prettify_to(out, space_num, depth + 1, max_space)) return false;
+                    if(!val.writef(out, space_num, depth + 1, max_space)) return false;
                 }
                 if(!first) out.put('\n');
                 if(!std::get<Array>(m_data).empty()){

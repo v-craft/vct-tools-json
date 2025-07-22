@@ -26,7 +26,7 @@ int main() {
     //     }
     //     val.push_back(std::move(str));
     // }
-    // val.prettify_to(out);
+    // val.writef(out);
     // out.close();
 
 

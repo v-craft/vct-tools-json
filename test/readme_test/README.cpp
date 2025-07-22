@@ -73,13 +73,13 @@ M_TEST( README, readme ) {
     //     std::ignore = smp_val.is_arr();     // 返回 false
     //
     //     // 注意 Object 的 mapped 依然是 Value 类型
-    //     json::Value& vi_42 = smp_val.get_obj()["key1"];
+    //     json::Value& vi_42 = smp_val.obj()["key1"];
     //
     //     // 虽然返回引用，但也可以用于赋值
-    //     double i_42 = vi_42.get_num();
+    //     double i_42 = vi_42.num();
     //
     //
-    //     std::ignore = smp_val["arr"][1].get_num(); // 返回 3.14
+    //     std::ignore = smp_val["arr"][1].num(); // 返回 3.14
     //
     //     std::ignore = smp_val.at("obj").at("nested_k") = nullptr; // 修改对象，变为 Null 类型
     //     std::ignore = smp_val["obj"].at("nested_k").is_nul(); // 返回true, [] 和 at 可以随意混合使用
@@ -95,14 +95,14 @@ M_TEST( README, readme ) {
     //
     //     std::string json_str1 = R"( [ 1, false, null, { "Hello": "World" } ] )";
     //     std::string json_str2 = R"( false )"; // 允许顶层类型是任一 JSON 类型
-    //     json::Value val1 = json::parse(json_str1).value_or( nullptr ); // 解析 JSON 字符串
+    //     json::Value val1 = json::read(json_str1).value_or( nullptr ); // 解析 JSON 字符串
     //     std::cout << val1[1].to<bool>() << std::endl; // 输出 0 （没有指定 boolaplha）
     // }
     //
     // {
     //     json::Value v_data2{ MyData2{} };
     //     std::println("");
-    //     v_data2.prettify_to( std::cout );
+    //     v_data2.writef( std::cout );
     //     std::println("");
     //     v_data2["data"]["id"] = 8848;
     //     v_data2["data"]["name"] = "Mount Everest";

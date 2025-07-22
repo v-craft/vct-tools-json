@@ -33,19 +33,19 @@ M_TEST(Value, Number) {
     M_EXPECT_STREQ(v_int.type_name(), "Number");
 
     // --- Reference access ---
-    M_ASSERT_EQ(v_int.get_num(), 42.0);
-    M_ASSERT_EQ(v_float.get_num(), 3.14f);
-    M_ASSERT_EQ(v_neg.get_num(), -123.456);
-    M_ASSERT_EQ(v_zero.get_num(), 0.0);
+    M_ASSERT_EQ(v_int.num(), 42.0);
+    M_ASSERT_EQ(v_float.num(), 3.14f);
+    M_ASSERT_EQ(v_neg.num(), -123.456);
+    M_ASSERT_EQ(v_zero.num(), 0.0);
 
     // Const reference access
     const json::Value const_num{42.5};
-    M_ASSERT_EQ(const_num.get_num(), 42.5);
+    M_ASSERT_EQ(const_num.num(), 42.5);
 
     // Type safety: wrong type throws
-    M_ASSERT_THROW(std::ignore = json::Value{"not a number"}.get_num(), std::bad_variant_access);
-    M_ASSERT_THROW(std::ignore = json::Value{true}.get_num(), std::bad_variant_access);
-    M_ASSERT_THROW(std::ignore = json::Value{nullptr}.get_num(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = json::Value{"not a number"}.num(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = json::Value{true}.num(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = json::Value{nullptr}.num(), std::bad_variant_access);
 
     // --- Assignment tests ---
     json::Value assign_val{json::Number{}};
@@ -58,7 +58,7 @@ M_TEST(Value, Number) {
 
     // Reference modification
     json::Value mod_val{10.0};
-    auto& num_ref = mod_val.get_num();
+    auto& num_ref = mod_val.num();
     num_ref = 20.0;
     M_ASSERT_EQ(mod_val.to<json::Number>(), 20.0);
 
@@ -73,26 +73,26 @@ M_TEST(Value, Number) {
     M_ASSERT_NO_THROW(std::ignore = json::Value{-2.2250738585072014e-308}.to<json::Number>());
 
     // --- Serialization tests ---
-    M_ASSERT_EQ(json::Value{42.0}.serialize(), "42");
-    M_ASSERT_EQ(json::Value{0.0}.serialize(), "0");
-    M_ASSERT_EQ(json::Value{-1.0}.serialize(), "-1");
-    M_ASSERT_EQ(json::Value{123.0}.prettify(), "123");
+    M_ASSERT_EQ(json::Value{42.0}.dump(), "42");
+    M_ASSERT_EQ(json::Value{0.0}.dump(), "0");
+    M_ASSERT_EQ(json::Value{-1.0}.dump(), "-1");
+    M_ASSERT_EQ(json::Value{123.0}.dumpf(), "123");
 
     // --- Parsing tests ---
-    auto parsed_int = json::parse("42");
-    M_ASSERT_TRUE(parsed_int.has_value() && parsed_int->get_num() == 42.0);
+    auto parsed_int = json::read("42");
+    M_ASSERT_TRUE(parsed_int.has_value() && parsed_int->num() == 42.0);
 
-    auto parsed_float = json::parse("3.14159");
-    M_ASSERT_TRUE(parsed_float.has_value() && parsed_float->get_num() == 3.14159);
+    auto parsed_float = json::read("3.14159");
+    M_ASSERT_TRUE(parsed_float.has_value() && parsed_float->num() == 3.14159);
 
-    auto parsed_neg = json::parse("-999.001");
-    M_ASSERT_TRUE(parsed_neg.has_value() && parsed_neg->get_num() == -999.001);
+    auto parsed_neg = json::read("-999.001");
+    M_ASSERT_TRUE(parsed_neg.has_value() && parsed_neg->num() == -999.001);
 
-    auto parsed_exp = json::parse("1e5");
-    M_ASSERT_TRUE(parsed_exp.has_value() && parsed_exp->get_num() == 100000.0);
+    auto parsed_exp = json::read("1e5");
+    M_ASSERT_TRUE(parsed_exp.has_value() && parsed_exp->num() == 100000.0);
 
-    auto parsed_exp_neg = json::parse("2.5e-3");
-    M_ASSERT_TRUE(parsed_exp_neg.has_value() && parsed_exp_neg->get_num() == 0.0025);
+    auto parsed_exp_neg = json::read("2.5e-3");
+    M_ASSERT_TRUE(parsed_exp_neg.has_value() && parsed_exp_neg->num() == 0.0025);
 
     // --- Type safety for conversions ---
     M_ASSERT_THROW(std::ignore = v_int.to<json::String>(), std::runtime_error);
@@ -109,9 +109,9 @@ M_TEST(Value, Number) {
 
     // --- Round-trip serialization/parsing ---
     json::Value original{123.456789};
-    auto serialized = original.serialize();
-    auto parsed_back = json::parse(serialized);
-    M_ASSERT_TRUE(parsed_back.has_value() && std::abs(parsed_back->get_num() - 123.456789) < 1e-10);
+    auto serialized = original.dump();
+    auto parsed_back = json::read(serialized);
+    M_ASSERT_TRUE(parsed_back.has_value() && std::abs(parsed_back->num() - 123.456789) < 1e-10);
 
     // --- Direct numeric construction and assignment ---
     M_ASSERT_NO_THROW(json::Value int_direct{42});
@@ -156,33 +156,33 @@ M_TEST(Value, Number) {
     M_ASSERT_EQ(min_int.type(), json::Type::eNumber);
 
     // --- Serialization of large numbers ---
-    M_ASSERT_NO_THROW(std::ignore = max_int.serialize());
-    M_ASSERT_NO_THROW(std::ignore = min_int.serialize());
+    M_ASSERT_NO_THROW(std::ignore = max_int.dump());
+    M_ASSERT_NO_THROW(std::ignore = min_int.dump());
 
     // --- Round-trip with large numbers ---
-    auto large_serialized = max_int.serialize();
-    auto large_parsed = json::parse(large_serialized);
-    M_ASSERT_TRUE(large_parsed.has_value() && large_parsed->get_num() == static_cast<double>(std::numeric_limits<int>::max()));
+    auto large_serialized = max_int.dump();
+    auto large_parsed = json::read(large_serialized);
+    M_ASSERT_TRUE(large_parsed.has_value() && large_parsed->num() == static_cast<double>(std::numeric_limits<int>::max()));
 
     // --- Integer precision preservation ---
     json::Value big_int{123456789012345LL};
-    auto big_serialized = big_int.serialize();
-    auto big_parsed = json::parse(big_serialized);
-    M_ASSERT_TRUE(big_parsed.has_value() && big_parsed->get_num() == 123456789012345.0);
+    auto big_serialized = big_int.dump();
+    auto big_parsed = json::read(big_serialized);
+    M_ASSERT_TRUE(big_parsed.has_value() && big_parsed->num() == 123456789012345.0);
 
     // --- Scientific notation parsing ---
-    auto sci_pos = json::parse("1.23e10");
-    M_ASSERT_TRUE(sci_pos.has_value() && sci_pos->get_num() == 1.23e10);
+    auto sci_pos = json::read("1.23e10");
+    M_ASSERT_TRUE(sci_pos.has_value() && sci_pos->num() == 1.23e10);
 
-    auto sci_neg = json::parse("5.67e-8");
-    M_ASSERT_TRUE(sci_neg.has_value() && sci_neg->get_num() == 5.67e-8);
+    auto sci_neg = json::read("5.67e-8");
+    M_ASSERT_TRUE(sci_neg.has_value() && sci_neg->num() == 5.67e-8);
 
     // --- Boundary parsing ---
-    auto zero_parse = json::parse("0.0");
-    M_ASSERT_TRUE(zero_parse.has_value() && zero_parse->get_num() == 0.0);
+    auto zero_parse = json::read("0.0");
+    M_ASSERT_TRUE(zero_parse.has_value() && zero_parse->num() == 0.0);
 
-    auto neg_zero_parse = json::parse("-0.0");
-    M_ASSERT_TRUE(neg_zero_parse.has_value() && neg_zero_parse->get_num() == -0.0);
+    auto neg_zero_parse = json::read("-0.0");
+    M_ASSERT_TRUE(neg_zero_parse.has_value() && neg_zero_parse->num() == -0.0);
 
     // --- Various integer constructions ---
     json::Value char_val{'A'};
@@ -207,7 +207,7 @@ M_TEST(Value, Number) {
 
     // --- Serialization consistency ---
     json::Value serialize_test{123.456789};
-    auto serialized_str = serialize_test.serialize();
-    auto parsed_back_test = json::parse(serialized_str);
-    M_ASSERT_TRUE(parsed_back_test.has_value() && std::abs(serialize_test.to<json::Number>() - parsed_back_test->get_num()) < 1e-10);
+    auto serialized_str = serialize_test.dump();
+    auto parsed_back_test = json::read(serialized_str);
+    M_ASSERT_TRUE(parsed_back_test.has_value() && std::abs(serialize_test.to<json::Number>() - parsed_back_test->num()) < 1e-10);
 }

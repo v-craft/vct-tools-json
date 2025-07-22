@@ -60,11 +60,11 @@ M_TEST(Value, String) {
     M_EXPECT_STREQ(str_val.type_name(), "String");
 
     // --- Reference access ---
-    M_ASSERT_EQ(str_val.get_str(), "test string");
-    M_ASSERT_EQ(empty_val.get_str(), "");
+    M_ASSERT_EQ(str_val.str(), "test string");
+    M_ASSERT_EQ(empty_val.str(), "");
     const json::Value const_str{"const string"};
-    M_ASSERT_EQ(const_str.get_str(), "const string");
-    M_ASSERT_THROW(std::ignore = json::Value{42}.get_str(), std::bad_variant_access);
+    M_ASSERT_EQ(const_str.str(), "const string");
+    M_ASSERT_THROW(std::ignore = json::Value{42}.str(), std::bad_variant_access);
 
     // --- Assignment tests ---
     json::Value assign_val{json::String{}};
@@ -75,7 +75,7 @@ M_TEST(Value, String) {
 
     // Reference modification
     json::Value mod_val{"original"};
-    auto& str_ref = mod_val.get_str();
+    auto& str_ref = mod_val.str();
     str_ref = "modified";
     M_ASSERT_EQ(mod_val.to<json::String>(), "modified");
     str_ref += " appended";
@@ -99,80 +99,80 @@ M_TEST(Value, String) {
     M_ASSERT_FALSE(val_str1 == null_val);
 
     // --- Serialization tests ---
-    M_ASSERT_EQ(json::Value{"hello"}.serialize(), "\"hello\"");
-    M_ASSERT_EQ(json::Value{""}.serialize(), "\"\"");
-    M_ASSERT_EQ(json::Value{"simple"}.serialize(), "\"simple\"");
+    M_ASSERT_EQ(json::Value{"hello"}.dump(), "\"hello\"");
+    M_ASSERT_EQ(json::Value{""}.dump(), "\"\"");
+    M_ASSERT_EQ(json::Value{"simple"}.dump(), "\"simple\"");
 
     // Pretty serialization
-    M_ASSERT_EQ(json::Value{"pretty"}.prettify(), "\"pretty\"");
-    M_ASSERT_EQ(json::Value{""}.prettify(), "\"\"");
+    M_ASSERT_EQ(json::Value{"pretty"}.dumpf(), "\"pretty\"");
+    M_ASSERT_EQ(json::Value{""}.dumpf(), "\"\"");
 
     // Escape sequences serialization
-    M_ASSERT_EQ(json::Value{"line1\nline2"}.serialize(), "\"line1\\nline2\"");
-    M_ASSERT_EQ(json::Value{"col1\tcol2"}.serialize(), "\"col1\\tcol2\"");
-    M_ASSERT_EQ(json::Value{"say \"hello\""}.serialize(), "\"say \\\"hello\\\"\"");
-    M_ASSERT_EQ(json::Value{"path\\to\\file"}.serialize(), "\"path\\\\to\\\\file\"");
+    M_ASSERT_EQ(json::Value{"line1\nline2"}.dump(), "\"line1\\nline2\"");
+    M_ASSERT_EQ(json::Value{"col1\tcol2"}.dump(), "\"col1\\tcol2\"");
+    M_ASSERT_EQ(json::Value{"say \"hello\""}.dump(), "\"say \\\"hello\\\"\"");
+    M_ASSERT_EQ(json::Value{"path\\to\\file"}.dump(), "\"path\\\\to\\\\file\"");
 
     // --- Parsing tests ---
-    auto parsed_hello = json::parse("\"hello world\"");
+    auto parsed_hello = json::read("\"hello world\"");
     if (parsed_hello.has_value()) {
         M_ASSERT_EQ(parsed_hello->type(), json::Type::eString);
-        M_ASSERT_EQ(parsed_hello->get_str(), "hello world");
+        M_ASSERT_EQ(parsed_hello->str(), "hello world");
     }
 
-    auto parsed_empty = json::parse("\"\"");
+    auto parsed_empty = json::read("\"\"");
     if (parsed_empty.has_value()) {
         M_ASSERT_EQ(parsed_empty->type(), json::Type::eString);
-        M_ASSERT_EQ(parsed_empty->get_str(), "");
+        M_ASSERT_EQ(parsed_empty->str(), "");
     }
 
     // Escape sequence parsing
-    auto parsed_newline = json::parse(R"("line1\nline2")");
+    auto parsed_newline = json::read(R"("line1\nline2")");
     if (parsed_newline.has_value()) {
-        M_ASSERT_EQ(parsed_newline->get_str(), "line1\nline2");
+        M_ASSERT_EQ(parsed_newline->str(), "line1\nline2");
     }
 
-    auto parsed_tab = json::parse(R"("col1\tcol2")");
+    auto parsed_tab = json::read(R"("col1\tcol2")");
     if (parsed_tab.has_value()) {
-        M_ASSERT_EQ(parsed_tab->get_str(), "col1\tcol2");
+        M_ASSERT_EQ(parsed_tab->str(), "col1\tcol2");
     }
 
-    auto parsed_quote = json::parse(R"("say \"hello\"")");
+    auto parsed_quote = json::read(R"("say \"hello\"")");
     if (parsed_quote.has_value()) {
-        M_ASSERT_EQ(parsed_quote->get_str(), "say \"hello\"");
+        M_ASSERT_EQ(parsed_quote->str(), "say \"hello\"");
     }
 
-    auto parsed_backslash = json::parse(R"("path\\to\\file")");
+    auto parsed_backslash = json::read(R"("path\\to\\file")");
     if (parsed_backslash.has_value()) {
-        M_ASSERT_EQ(parsed_backslash->get_str(), "path\\to\\file");
+        M_ASSERT_EQ(parsed_backslash->str(), "path\\to\\file");
     }
 
     // --- Unicode escape sequence parsing ---
-    auto parsed_unicode_a = json::parse(R"("\u0041")");
+    auto parsed_unicode_a = json::read(R"("\u0041")");
     if (parsed_unicode_a.has_value()) {
-        M_ASSERT_EQ(parsed_unicode_a->get_str(), "A");
+        M_ASSERT_EQ(parsed_unicode_a->str(), "A");
     }
 
-    auto parsed_unicode_chinese = json::parse(R"("\u4e2d\u6587")");
+    auto parsed_unicode_chinese = json::read(R"("\u4e2d\u6587")");
     if (parsed_unicode_chinese.has_value()) {
-        M_ASSERT_EQ(parsed_unicode_chinese->get_str(), "中文");
+        M_ASSERT_EQ(parsed_unicode_chinese->str(), "中文");
     }
 
-    auto parsed_unicode_mixed = json::parse(R"("Hello \u4e16\u754c!")");
+    auto parsed_unicode_mixed = json::read(R"("Hello \u4e16\u754c!")");
     if (parsed_unicode_mixed.has_value()) {
-        M_ASSERT_EQ(parsed_unicode_mixed->get_str(), "Hello 世界!");
+        M_ASSERT_EQ(parsed_unicode_mixed->str(), "Hello 世界!");
     }
 
     // Unicode round-trip: parse then serialize
-    auto unicode_roundtrip = json::parse(R"("\u4e16\u754c")");
+    auto unicode_roundtrip = json::read(R"("\u4e16\u754c")");
     if (unicode_roundtrip.has_value()) {
-        auto roundtrip_serialized = unicode_roundtrip->serialize();
+        auto roundtrip_serialized = unicode_roundtrip->dump();
         M_ASSERT_EQ(roundtrip_serialized, "\"世界\"");
     }
 
     // Control characters serialization
     json::Value control_chars{"\x01\x02\x03\x1f"};
-    auto control_serialized = control_chars.serialize();
+    auto control_serialized = control_chars.dump();
     M_ASSERT_TRUE(control_serialized.find("\\u") != std::string::npos);
 
     // --- Type safety ---
@@ -202,5 +202,5 @@ M_TEST(Value, String) {
     json::Value consistency_str1{"same content"};
     json::Value consistency_str2{"same content"};
     M_ASSERT_TRUE(consistency_str1 == consistency_str2);
-    M_ASSERT_EQ(consistency_str1.serialize(), "\"same content\"");
+    M_ASSERT_EQ(consistency_str1.dump(), "\"same content\"");
 }

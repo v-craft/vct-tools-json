@@ -20,7 +20,7 @@ M_TEST(File, Deser_Unicode) {
 
     const auto bein = std::chrono::system_clock::now();
 
-    const auto json = json::parse(pretty_str).value_or( nullptr );
+    const auto json = json::read(pretty_str).value_or( nullptr );
 
     const auto end = std::chrono::system_clock::now();
     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
@@ -34,7 +34,7 @@ M_TEST(File, Deser_Number) {
 
     const auto bein = std::chrono::system_clock::now();
 
-    const auto json = json::parse(pretty_str).value_or( nullptr );
+    const auto json = json::read(pretty_str).value_or( nullptr );
 
     const auto end = std::chrono::system_clock::now();
     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
@@ -48,7 +48,7 @@ M_TEST(File, Deser_Complex) {
 
     const auto bein = std::chrono::system_clock::now();
 
-    const auto json = json::parse(pretty_str).value_or( nullptr );
+    const auto json = json::read(pretty_str).value_or( nullptr );
 
     const auto end = std::chrono::system_clock::now();
     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
@@ -62,7 +62,7 @@ M_TEST(File, Deser_All) {
 
     const auto bein = std::chrono::system_clock::now();
 
-    const auto json = json::parse(pretty_str, 1024).value_or( nullptr );
+    const auto json = json::read(pretty_str, 1024).value_or( nullptr );
 
     const auto end = std::chrono::system_clock::now();
     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
@@ -77,7 +77,7 @@ M_TEST(File, Deser_String) {
     const auto bein = std::chrono::system_clock::now();
 
 
-    const auto json = json::parse(pretty_str).value_or( nullptr );
+    const auto json = json::read(pretty_str).value_or( nullptr );
 
     const auto end = std::chrono::system_clock::now();
     const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - bein).count();
