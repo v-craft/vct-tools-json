@@ -14,19 +14,19 @@ M_TEST(Value, Deserialize) {
         auto result_int = json::parse("42");
         M_ASSERT_TRUE(result_int.has_value());
         M_ASSERT_EQ(result_int->type(), json::Type::eNumber);
-        M_ASSERT_EQ(result_int->get<json::Number>(), 42);
+        M_ASSERT_EQ(result_int->get_num(), 42);
     }
     {
         auto result_float = json::parse("3.14159");
         M_ASSERT_TRUE(result_float.has_value());
         M_ASSERT_EQ(result_float->type(), json::Type::eNumber);
-        M_ASSERT_EQ(result_float->get<json::Number>(), 3.14159);
+        M_ASSERT_EQ(result_float->get_num(), 3.14159);
     }
     {
         auto result_negative = json::parse("-123.45");
         M_ASSERT_TRUE(result_negative.has_value());
         M_ASSERT_EQ(result_negative->type(), json::Type::eNumber);
-        M_ASSERT_EQ(result_negative->get<json::Number>(), -123.45);
+        M_ASSERT_EQ(result_negative->get_num(), -123.45);
     }
 
     // --- String parsing ---
@@ -34,26 +34,26 @@ M_TEST(Value, Deserialize) {
         auto result_string = json::parse("\"hello world\"");
         M_ASSERT_TRUE(result_string.has_value());
         M_ASSERT_EQ(result_string->type(), json::Type::eString);
-        M_ASSERT_EQ(result_string->get<json::String>(), "hello world");
+        M_ASSERT_EQ(result_string->get_str(), "hello world");
     }
     {
         auto result_empty_string = json::parse("\"\"");
         M_ASSERT_TRUE(result_empty_string.has_value());
         M_ASSERT_EQ(result_empty_string->type(), json::Type::eString);
-        M_ASSERT_EQ(result_empty_string->get<json::String>(), "");
+        M_ASSERT_EQ(result_empty_string->get_str(), "");
     }
     // String with escape sequences
     {
         auto result_escape = json::parse(R"("Hello\nWorld\t!")");
         M_ASSERT_TRUE(result_escape.has_value());
         M_ASSERT_EQ(result_escape->type(), json::Type::eString);
-        M_ASSERT_EQ(result_escape->get<json::String>(), "Hello\nWorld\t!");
+        M_ASSERT_EQ(result_escape->get_str(), "Hello\nWorld\t!");
     }
     {
         auto result_quote_escape = json::parse(R"("Quote: \"test\" and backslash: \\")");
         M_ASSERT_TRUE(result_quote_escape.has_value());
         M_ASSERT_EQ(result_quote_escape->type(), json::Type::eString);
-        M_ASSERT_EQ(result_quote_escape->get<json::String>(), "Quote: \"test\" and backslash: \\");
+        M_ASSERT_EQ(result_quote_escape->get_str(), "Quote: \"test\" and backslash: \\");
     }
 
     // --- Boolean parsing ---
@@ -61,13 +61,13 @@ M_TEST(Value, Deserialize) {
         auto result_true = json::parse("true");
         M_ASSERT_TRUE(result_true.has_value());
         M_ASSERT_EQ(result_true->type(), json::Type::eBool);
-        M_ASSERT_EQ(result_true->get<json::Bool>(), true);
+        M_ASSERT_EQ(result_true->get_bol(), true);
     }
     {
         auto result_false = json::parse("false");
         M_ASSERT_TRUE(result_false.has_value());
         M_ASSERT_EQ(result_false->type(), json::Type::eBool);
-        M_ASSERT_EQ(result_false->get<json::Bool>(), false);
+        M_ASSERT_EQ(result_false->get_bol(), false);
     }
 
     // --- Null parsing ---
@@ -384,10 +384,10 @@ M_TEST(Value, Deserialize) {
         auto result_ref = json::parse(json_str);
         M_ASSERT_TRUE(result_ref.has_value());
         // Modify array and object via reference
-        auto& items_ref = (*result_ref)["items"].get<json::Array>();
+        auto& items_ref = (*result_ref)["items"].get_arr();
         items_ref.push_back(json::Number(4));
         items_ref.push_back(json::Number(5));
-        auto& metadata_ref = (*result_ref)["metadata"].get<json::Object>();
+        auto& metadata_ref = (*result_ref)["metadata"].get_obj();
         metadata_ref["count"] = json::Number(5);
         metadata_ref["modified"] = json::Bool(true);
         // Verify modifications

@@ -15,6 +15,28 @@ std::string read_file(const std::string& path) {
     return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
 }
 
+M_TEST(File, prettify_senior_1) {
+    std::ifstream ifs( CURRENT_PATH "/files/senior_1_plain.json" );
+    if (!ifs.is_open()) M_EXPECT_FAIL( "Failed to open file: " + CURRENT_PATH );
+    M_ASSERT_TRUE( ifs.is_open() );
+    json::Value value = json::parse(ifs).value_or( nullptr );
+    M_ASSERT_FALSE( value.is_nul() );
+    std::ofstream ofs( CURRENT_PATH "/files/out_senior_1.json" );
+    if (!ofs.is_open()) M_EXPECT_FAIL( "Failed to open file: " + CURRENT_PATH "/files/out_senior_1.json" );
+    M_ASSERT_TRUE( value.prettify_to(ofs) );
+}
+
+M_TEST(File, prettify_senior_2) {
+    std::ifstream ifs( CURRENT_PATH "/files/senior_2_plain.json" );
+    if (!ifs.is_open()) M_EXPECT_FAIL( "Failed to open file: " + CURRENT_PATH );
+    M_ASSERT_TRUE( ifs.is_open() );
+    json::Value value = json::parse(ifs).value_or( nullptr );
+    M_ASSERT_FALSE( value.is_nul() );
+    std::ofstream ofs( CURRENT_PATH "/files/out_senior_2.json" );
+    if (!ofs.is_open()) M_EXPECT_FAIL( "Failed to open file: " + CURRENT_PATH "/files/out_senior_2.json" );
+    M_ASSERT_TRUE( value.prettify_to(ofs) );
+}
+
 M_TEST(File, medium_1) {
     std::ifstream ifs( CURRENT_PATH "/files/medium_1_plain.json" );
     M_ASSERT_TRUE( ifs.is_open() );

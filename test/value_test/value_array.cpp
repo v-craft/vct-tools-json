@@ -73,16 +73,16 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ(const_at_test.at(1).to<json::Number>(), 2);
 
     json::Value wrong_type_val{42};
-    M_ASSERT_THROW(std::ignore = wrong_type_val.get<json::Array>(), std::runtime_error);
+    M_ASSERT_THROW(std::ignore = wrong_type_val.get_arr(), std::bad_variant_access);
 
     json::Value string_val{"not array"};
-    M_ASSERT_THROW(std::ignore = string_val.get<json::Array>(), std::runtime_error);
+    M_ASSERT_THROW(std::ignore = string_val.get_arr(), std::bad_variant_access);
 
 
     // Array5: get<T>引用与容器操作
     json::Value get_test{json::Array{{1, 2, 3}}};
     M_ASSERT_NO_THROW(std::ignore = get_test.to<json::Array>());
-    auto& arr_ref = get_test.get<json::Array>();
+    auto& arr_ref = get_test.get_arr();
     arr_ref[0] = 100;
     arr_ref.push_back(40);
     M_ASSERT_EQ(get_test.size(), 4);
@@ -90,8 +90,8 @@ M_TEST(Value, Array) {
     M_ASSERT_EQ(get_test[3].to<json::Number>(), 40);
 
     const json::Value const_ref_test{json::Array{{1, 2, 3}}};
-    M_ASSERT_NO_THROW(std::ignore = const_ref_test.get<json::Array>());
-    const auto& const_arr_ref = const_ref_test.get<json::Array>();
+    M_ASSERT_NO_THROW(std::ignore = const_ref_test.get_arr());
+    const auto& const_arr_ref = const_ref_test.get_arr();
     M_ASSERT_EQ(const_arr_ref.size(), 3);
     M_ASSERT_EQ(const_arr_ref[0].to<json::Number>(), 1);
 

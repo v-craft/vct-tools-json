@@ -80,7 +80,7 @@ M_TEST(Value, Object) {
 
     // --- Reference Access and Modification ---
     json::Value ref_test{json::Object{{"data1", 10}, {"data2", 20}}};
-    auto& obj_ref = ref_test.get<json::Object>();
+    auto& obj_ref = ref_test.get_obj();
     obj_ref["data1"] = 100;
     obj_ref["new_data"] = "added";
     M_ASSERT_EQ(ref_test.size(), 3);
@@ -203,7 +203,7 @@ M_TEST(Value, Object) {
 
     // --- Type Safety ---
     M_ASSERT_THROW(std::ignore = obj_val.to<json::Number>(), std::runtime_error);
-    M_ASSERT_THROW(std::ignore = obj_val.get<json::Array>(), std::runtime_error);
+    M_ASSERT_THROW(std::ignore = obj_val.get_arr(), std::bad_variant_access);
 
     // --- Modification via Reference ---
     json::Value ref_modify_test{json::Object{{"a", 1}, {"b", 2}}};

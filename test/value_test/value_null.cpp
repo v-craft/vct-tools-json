@@ -31,16 +31,16 @@ M_TEST(Value, Null) {
     M_EXPECT_STREQ(null_val.type_name(), "Null");
 
     // --- Reference access ---
-    M_ASSERT_NO_THROW(std::ignore = null_val.get<std::nullptr_t>());
-    M_ASSERT_EQ(null_val.get<std::nullptr_t>(), nullptr);
+    M_ASSERT_NO_THROW(std::ignore = null_val.get_nul());
+    M_ASSERT_EQ(null_val.get_nul(), nullptr);
 
     // Const reference access
     const json::Value const_null{nullptr};
-    M_ASSERT_EQ(const_null.get<std::nullptr_t>(), nullptr);
+    M_ASSERT_EQ(const_null.get_nul(), nullptr);
 
     // Type safety: wrong type throws
-    M_ASSERT_THROW(std::ignore = json::Value{"not null"}.get<std::nullptr_t>(), std::runtime_error);
-    M_ASSERT_THROW(std::ignore = json::Value{42.0}.get<std::nullptr_t>(), std::runtime_error);
+    M_ASSERT_THROW(std::ignore = json::Value{"not null"}.get_nul(), std::bad_variant_access);
+    M_ASSERT_THROW(std::ignore = json::Value{42.0}.get_nul(), std::bad_variant_access);
 
     // --- Assignment tests ---
     json::Value assign_val{ json::Bool{} };
@@ -73,7 +73,7 @@ M_TEST(Value, Null) {
     auto parsed_null = json::parse("null");
     if (parsed_null.has_value()) {
         M_ASSERT_EQ(parsed_null->type(), json::Type::eNull);
-        M_ASSERT_EQ(parsed_null->get<std::nullptr_t>(), nullptr);
+        M_ASSERT_EQ(parsed_null->get_nul(), nullptr);
     } else {
         M_ASSERT_FAIL("Failed to parse 'null'");
     }
@@ -83,7 +83,7 @@ M_TEST(Value, Null) {
     auto parsed_back_null = json::parse(serialized_null);
     if (parsed_back_null.has_value()) {
         M_ASSERT_EQ(parsed_back_null->type(), json::Type::eNull);
-        M_ASSERT_EQ(parsed_back_null->get<std::nullptr_t>(), nullptr);
+        M_ASSERT_EQ(parsed_back_null->get_nul(), nullptr);
     } else {
         M_ASSERT_FAIL("Failed to parse back serialized null");
     }

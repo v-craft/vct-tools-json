@@ -96,7 +96,6 @@ M_TEST(Macros, Complex) {
     M_ASSERT_EQ(v1["inner"]["flag"].to<bool>(), false);
     M_ASSERT_EQ(v1["desc"].to<std::string>(), "outer");
 
-    std::println("================================");
 
     // 2. 反序列化
     json::Value v2{ json::Object{} };
@@ -125,7 +124,6 @@ M_TEST(Macros, Complex) {
     M_ASSERT_EQ(o3.inner.flag, true);
     M_ASSERT_EQ(o3.desc, "empty");
 
-    std::println("================================");
 
     // 4. move语义测试
     OuterType o4;
@@ -141,7 +139,6 @@ M_TEST(Macros, Complex) {
     M_ASSERT_EQ(v4["inner"]["flag"].to<bool>(), false);
     M_ASSERT_EQ(v4["desc"].to<std::string>(), "move_desc");
 
-    std::println("================================");
 
     // 5. 嵌套类型的序列化/反序列化一致性
     OuterType o5{v1};

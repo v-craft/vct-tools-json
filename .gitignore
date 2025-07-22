@@ -3,6 +3,7 @@
 .vs/
 .vscode/
 
+/test/files/out*.json
 /build/
 /html/
 CMakeUserPresets.json

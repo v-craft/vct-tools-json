@@ -304,25 +304,25 @@ M_TEST(Value, Complex) {
     M_ASSERT_EQ( features_array_copy[0]["name"].to<json::String>(), "auth" );
     
     // Test get_ref<T>() with complex structures (returns references)
-    auto& complex_obj_ref = complex_data.get<json::Object>();
+    auto& complex_obj_ref = complex_data.get_obj();
     M_ASSERT_EQ( complex_obj_ref.size(), 3 );
     M_ASSERT_TRUE( complex_obj_ref.contains("application") );
     
-    auto& users_array_ref = complex_data["users"].get<json::Array>();
+    auto& users_array_ref = complex_data["users"].get_arr();
     M_ASSERT_EQ( users_array_ref.size(), 2 );
     M_ASSERT_EQ( users_array_ref[0]["name"].to<json::String>(), "John Doe" );
     
-    auto& features_array_ref = complex_data["application"]["config"]["features"].get<json::Array>();
+    auto& features_array_ref = complex_data["application"]["config"]["features"].get_arr();
     M_ASSERT_EQ( features_array_ref.size(), 3 );
     M_ASSERT_EQ( features_array_ref[0]["name"].to<json::String>(), "auth" );
     
     // Test get_ref<T>() with modifications
-    auto& stats_ref = complex_data["statistics"].get<json::Object>();
+    auto& stats_ref = complex_data["statistics"].get_obj();
     stats_ref["new_metric"] = json::Number(123.45);
     M_ASSERT_TRUE( complex_data["statistics"].contains("new_metric") );
     M_ASSERT_EQ( complex_data["statistics"]["new_metric"].to<json::Number>(), 123.45 );
     
-    auto& response_times_ref = complex_data["statistics"]["performance"]["response_times"].get<json::Array>();
+    auto& response_times_ref = complex_data["statistics"]["performance"]["response_times"].get_arr();
     response_times_ref.push_back(json::Number(75));
     M_ASSERT_EQ( complex_data["statistics"]["performance"]["response_times"].size(), 6 );
     M_ASSERT_EQ( complex_data["statistics"]["performance"]["response_times"][5].to<json::Number>(), 75 );
@@ -519,7 +519,7 @@ M_TEST(Value, Complex) {
             large_nested[section_name][subsection_name] = json::Array{};
 
             for (int k = 0; k < 10; ++k) {
-                large_nested[section_name][subsection_name].get<json::Array>().push_back(
+                large_nested[section_name][subsection_name].get_arr().push_back(
                     json::Object{
                         {"id", k},
                         {"name", "item_" + std::to_string(k)},

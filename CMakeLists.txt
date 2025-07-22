@@ -6,17 +6,17 @@ set(package_name "${prev_name}-${lib_name}")
 
 # Project declaration with metadata
 project(${package_name}
-    VERSION 1.0.0                                     # Semantic versioning (MAJOR.MINOR.PATCH)
-    HOMEPAGE_URL "https://github.com/v-craft/vct-test-unit"
-    DESCRIPTION "V-Craft Unit Test Library - A modern C++23 testing framework"
+    VERSION 0.6.0                                     # Semantic versioning (MAJOR.MINOR.PATCH)
+    HOMEPAGE_URL "https://github.com/v-craft/vct-tools-json"
+    DESCRIPTION "V-Craft JSON tools library for C++23"
     LANGUAGES CXX                                     # C++ only project
 )
 
 # Source file discovery
 # Recursively find all C++23 module files (.cppm and .ixx extensions)
-file(GLOB_RECURSE cxx_module_files "${CMAKE_CURRENT_SOURCE_DIR}/modules/*.cppm" "${CMAKE_CURRENT_SOURCE_DIR}/modules/*.ixx")
+file(GLOB_RECURSE cxx_module_files "${CMAKE_CURRENT_SOURCE_DIR}/modules/*.ixx")
 # Recursively find all C/C++ header files in the `include` directory
-file(GLOB_RECURSE cxx_header_files "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+file(GLOB_RECURSE cxx_header_files "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 
 # Library target creation
 # Create the main library target that can be built as either static or shared
