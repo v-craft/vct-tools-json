@@ -1568,29 +1568,34 @@ namespace vct::tools::json{
     ) noexcept {
         std::string res;
 
-        for (++it; it != end_ptr && *it != '\"'; ++it) {
-            switch (*it) {
-            case '\\': {
+        ++it;
+        if (it != end_ptr && *it != '\"')  res.reserve( 128 );
+
+        while (it != end_ptr && *it != '\"') {
+            if (*it == '\\') {
                 ++it;
                 if (it == end_ptr) return std::unexpected( ParseError::eUnclosedString );
                 switch (*it) {
-                case '\"': res.push_back('\"'); break;
-                case '\\': res.push_back('\\'); break;
-                case 'n':  res.push_back('\n'); break;
-                case 'r':  res.push_back('\r'); break;
-                case 't':  res.push_back('\t'); break;
-                case 'f':  res.push_back('\f'); break;
-                case 'b':  res.push_back('\b'); break;
-                case 'u': case 'U': if (!unescape_unicode_next(res, it, end_ptr)) return std::unexpected( ParseError::eIllegalEscape ); break;
-                default: return std::unexpected( ParseError::eIllegalEscape );
+                    case '\"': res.push_back('\"'); break;
+                    case '\\': res.push_back('\\'); break;
+                    case 'n':  res.push_back('\n'); break;
+                    case 'r':  res.push_back('\r'); break;
+                    case 't':  res.push_back('\t'); break;
+                    case 'f':  res.push_back('\f'); break;
+                    case 'b':  res.push_back('\b'); break;
+                    case 'u': case 'U': if (!unescape_unicode_next(res, it, end_ptr)) return std::unexpected( ParseError::eIllegalEscape ); break;
+                    default: return std::unexpected( ParseError::eIllegalEscape );
                 }
-            } break;
-            case '\t': case '\n': case '\f': case '\b': case '\r': return std::unexpected( ParseError::eIllegalEscape );
-            default: res.push_back( *it ); break;
+            } else if ( *it == '\b' || *it == '\n' || *it == '\f' || *it == '\r' /* || *it == '\t' */) {
+                return std::unexpected( ParseError::eIllegalEscape );
+            } else {
+                res.push_back( *it );
             }
+            ++it;
         }
         if(it == end_ptr) return std::unexpected( ParseError::eUnclosedString );
         ++it;
+        res.shrink_to_fit();
         return res;
     }
 
@@ -1645,6 +1650,7 @@ namespace vct::tools::json{
                 ++it;
                 json = Array{};
                 auto& array = json.get_arr();
+                if (it != end_ptr && *it != ']') array.reserve(8);
                 while(it != end_ptr){
                     // Skip spaces
                     while (it != end_ptr && std::isspace(*it)) ++it;
@@ -1662,6 +1668,7 @@ namespace vct::tools::json{
                 }
                 if(it == end_ptr) return std::unexpected( ParseError::eUnclosedArray );
                 ++it;
+                array.shrink_to_fit();
             } break;
             case '\"': {
                 // String type
