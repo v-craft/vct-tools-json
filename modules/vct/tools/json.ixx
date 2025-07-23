@@ -4,50 +4,21 @@
  * @author Mysvac
  * @date 2025-07-21
  * @copyright Copyright (c) 2025 Mysvac. All rights reserved.
- *
- * This module provides a comprehensive JSON parsing, serialization and manipulation library
- * that supports all standard JSON data types and provides type-safe operations with modern C++ features.
- *
- * Features:
- * - Type-safe JSON value storage using std::variant
- * - Flexible type conversion system with multiple conversion strategies
- * - Support for both compact and pretty-printed JSON serialization
- * - Template-based generic programming with concepts for type safety
- * - STL-compatible container operations
- * - Exception-safe operations with noexcept guarantees where appropriate
  */
 
 export module vct.tools.json;
 
 import std;
 
-
 /**
  * @namespace vct::tools::json
  * @brief Core namespace for JSON parsing library
- * 
- * Provides comprehensive JSON data parsing, serialization and manipulation functionality.
- * Supports all standard JSON data types: objects, arrays, strings, numbers, booleans and null.
- * 
- * Key features:
- * - Type-safe JSON value storage using std::variant
- * - Flexible type conversion system with multiple conversion strategies
- * - Support for both compact and pretty-printed JSON serialization
- * - Template-based generic programming with concepts for type safety
- * - STL-compatible container operations
- * - Exception-safe operations with noexcept guarantees where appropriate
- * 
- * @author Mysvac
- * @date 2025-07-21
  */
 export namespace vct::tools::json{
 
     /**
      * @enum Type
      * @brief JSON data type enumeration
-     *
-     * Defines the six fundamental JSON data types as specified in RFC 7159.
-     * Used internally for type identification and validation.
      */
     enum class Type{
         eNull = 0,  ///< JSON null type, represents null value
@@ -61,9 +32,6 @@ export namespace vct::tools::json{
     /**
      * @enum ParseError
      * @brief Enumeration of possible JSON parsing errors
-     *
-     * Comprehensive error codes for JSON parsing operations.
-     * Used to provide detailed error information when parsing fails.
      */
     enum class ParseError {
         eNone = 0,          ///< No error occurred, parsing was successful
@@ -81,7 +49,22 @@ export namespace vct::tools::json{
     /**
      * @brief get the string name of a ParseError, should only be used for debug or log
      */
-    std::string error_name(ParseError error);
+    [[nodiscard]]
+    constexpr const char* error_name(const ParseError error) noexcept {
+        switch (error) {
+            case ParseError::eNone: return "None";
+            case ParseError::eEmptyData: return "EmptyData";
+            case ParseError::eDepthExceeded: return "DepthExceeded";
+            case ParseError::eIllegalEscape: return "IllegalEscape";
+            case ParseError::eInvalidNumber: return "InvalidNumber";
+            case ParseError::eRedundantText: return "RedundantText";
+            case ParseError::eUnclosedString: return "UnclosedString";
+            case ParseError::eUnclosedObject: return "UnclosedObject";
+            case ParseError::eUnclosedArray: return "UnclosedArray";
+            case ParseError::eUnknownFormat: return "UnknownFormat";
+            default: return "Unknown Enum Value";
+        }
+    }
 
     // Forward declaration
     class Value;
@@ -176,6 +159,32 @@ export namespace vct::tools::json{
         std::is_same<T, Array>,
         std::is_same<T, Object>
     >;
+
+    template<typename T>
+    concept constructible = std::disjunction_v<
+        std::is_arithmetic<T>,
+        std::is_enum<T>,
+        std::is_convertible<T, Array>,
+        std::is_convertible<T, Object>,
+        std::is_convertible<T, String>,
+        std::is_convertible<T, Number>,
+        std::is_convertible<T, Bool>,
+        std::is_convertible<T, Null>
+    >;
+
+    template<typename T>
+    concept constructible_array = std::ranges::range<T> && requires {
+        typename T::value_type;
+        requires std::is_constructible_v<Value, typename T::value_type>;
+    };
+
+    template<typename T>
+    concept constructible_map = std::ranges::range<T> && requires {
+        typename T::key_type;
+        typename T::mapped_type;
+        requires std::is_convertible_v<typename T::key_type, String>;
+        requires std::is_constructible_v<Value, typename T::mapped_type>;
+    };
 
     /**
      * @concept convertible
@@ -297,7 +306,7 @@ export namespace vct::tools::json{
          * @return The current Type Name(string) of this Value
          */
         [[nodiscard]]
-        constexpr String type_name() const noexcept {
+        constexpr const char* type_name() const noexcept {
             switch ( this->type() ) {
                 case Type::eObject: return "Object";
                 case Type::eArray:  return "Array";
@@ -468,12 +477,12 @@ export namespace vct::tools::json{
         /**
          * @brief Default constructor, initializes to null type and null data
          */
-        constexpr Value() = default;
+        Value() noexcept = default;
         
         /**
          * @brief Default destructor
          */
-        ~Value() = default;
+        ~Value() noexcept = default;
 
         /**
          * @brief Default copy constructor
@@ -531,143 +540,93 @@ export namespace vct::tools::json{
             }
         }
 
-        /**
-         * @brief Construct Value from nullptr
-         */
-        Value(const Null) noexcept {}
-
-        /**
-         * @brief Assign Value from nullptr
-         */
-        Value& operator=(const Null) noexcept {
-            m_data = Null{};
-            return *this;
-        }
-        
-        /**
-         * @brief Construct Value from boolean
-         * @param bol Boolean value to initialize
-         */
-        Value(const Bool bol) noexcept : m_data(bol) {}
-
-        /**
-         * @brief Assign Value from boolean
-         * @param bol Boolean value to assign
-         */
-        Value& operator=(const Bool bol) noexcept {
-            m_data = bol;
-            return *this;
-        }
-
-        /**
-         * @brief Construct Value from numeric type
-         * @param num Numeric value to initialize
-         */
-        Value(Number num) noexcept : m_data(num) {}
-
-        /**
-         * @brief Assign Value from numeric type
-         * @param num Numeric value to assign
-         */
-        Value& operator=(const Number num) noexcept {
-            m_data = num;
-            return *this;
-        }
-
-        /**
-         * @brief Construct Value from numeric types
-         * @tparam T Numeric type (integral or floating-point or enum)
-         * @warning Every enum class will be handled as Integer. including json::Type.
-         */
         template<typename T>
-        requires (std::is_arithmetic_v<T> || std::is_enum_v<T>)
-        Value(T num) noexcept : m_data( static_cast<Number>(num) ) {}
+        requires constructible<std::remove_cvref_t<T>>
+        Value(T&& other) noexcept (
+            std::is_rvalue_reference_v<T&&> ||
+            std::is_arithmetic_v<std::remove_cvref_t<T>> ||
+            std::is_enum_v<std::remove_cvref_t<T>> ||
+            std::is_same_v<std::remove_cvref_t<T>, Null>
+        ) {
+            if constexpr(std::is_same_v<T, Null>) {
+                m_data = Null{};
+            } else if constexpr(std::is_same_v<T, Bool>) {
+                m_data = other;
+            } else if constexpr(std::is_same_v<T, Number>) {
+                m_data = other;
+            } else if constexpr(std::is_same_v<T, String>) {
+                m_data = std::forward<T>(other);
+            } else if constexpr(std::is_same_v<T, Array>) {
+                m_data = std::forward<T>(other);
+            } else if constexpr(std::is_same_v<T, Object>) {
+                m_data = std::forward<T>(other);
+            } else if constexpr(std::is_arithmetic_v<T> || std::is_enum_v<T>) {
+                m_data = static_cast<Number>(other);
+            } else if constexpr(std::is_convertible_v<T, String>) {
+                m_data = static_cast<String>(std::forward<T>(other));
+            } else if constexpr(std::is_convertible_v<T, Object>) {
+                m_data = static_cast<Object>(std::forward<T>(other));
+            } else if constexpr(std::is_convertible_v<T,Array>) {
+                m_data = static_cast<Array>(std::forward<T>(other));
+            } else if constexpr(std::is_convertible_v<T,Number>) {
+                m_data = static_cast<Number>(std::forward<T>(other));
+            } else if constexpr(std::is_convertible_v<T,Bool>) {
+                m_data = static_cast<Bool>(std::forward<T>(other));
+            } else {
+                m_data = Null{};
+            }
+        }
 
-        /**
-         * @brief Assign Value from numeric types
-         * @tparam T Numeric type (integral or floating-point or enum)
-         * @warning Every enum class will be handled as Integer. including json::Type.
-         */
         template<typename T>
-        requires (std::is_arithmetic_v<T> || std::is_enum_v<T>)
-        Value& operator=(T num) noexcept {
-            m_data = static_cast<Number>(num);
+        requires constructible<std::remove_cvref_t<T>>
+        Value& operator=(T&& other) noexcept(
+            std::is_rvalue_reference_v<T&&> ||
+            std::is_arithmetic_v<std::remove_cvref_t<T>> ||
+            std::is_enum_v<std::remove_cvref_t<T>> ||
+            std::is_same_v<std::remove_cvref_t<T>, Null>
+        ) {
+            if constexpr(std::is_same_v<T, Null>) {
+                m_data = Null{};
+            } else if constexpr(std::is_same_v<T, Bool>) {
+                m_data = other;
+            } else if constexpr(std::is_same_v<T, Number>) {
+                m_data = other;
+            } else if constexpr(std::is_same_v<T, String>) {
+                m_data = std::forward<T>(other);
+            } else if constexpr(std::is_same_v<T, Array>) {
+                m_data = std::forward<T>(other);
+            } else if constexpr(std::is_same_v<T, Object>) {
+                m_data = std::forward<T>(other);
+            } else if constexpr(std::is_arithmetic_v<T> || std::is_enum_v<T>) {
+                m_data = static_cast<Number>(other);
+            } else if constexpr(std::is_convertible_v<T, String>) {
+                m_data = static_cast<String>(std::forward<T>(other));
+            } else if constexpr(std::is_convertible_v<T, Object>) {
+                m_data = static_cast<Object>(std::forward<T>(other));
+            } else if constexpr(std::is_convertible_v<T,Array>) {
+                m_data = static_cast<Array>(std::forward<T>(other));
+            } else if constexpr(std::is_convertible_v<T,Number>) {
+                m_data = static_cast<Number>(std::forward<T>(other));
+            } else if constexpr(std::is_convertible_v<T,Bool>) {
+                m_data = static_cast<Bool>(std::forward<T>(other));
+            } else {
+                m_data = Null{};
+            }
             return *this;
         }
-
-        /**
-         * @brief Construct Value from string types
-         * @param str String value to initialize
-         */
-        Value(String str) noexcept : m_data(std::move(str)) {}
-
-        /**
-         * @brief Construct Value from C-style string literal
-         * @param str C-style string literal or const char*
-         */
-        Value(const char* str) noexcept : m_data(String{str}) {}
-
-        /**
-         * @brief Assign Value from string types
-         * @param str String value to assign
-         */
-        Value& operator=(String str) noexcept {
-            m_data = std::move(str);
-            return *this;
-        }
-
-        /**
-         * @brief Assign Value from C-style string literal
-         * @param str C-style string literal or const char*
-         */
-        Value& operator=(const char* str) noexcept {
-            m_data = String{str};
-            return *this;
-        }
-        
-        /**
-         * @brief Construct Value from Object
-         * @param obj Object to initialize
-         */
-        Value(Object obj) noexcept : m_data(std::move(obj)) {}
-
-
-        /**
-         * @brief Assign Value from Object
-         * @param obj Object to assign
-         */
-        Value& operator=(Object obj) noexcept {
-            m_data = std::move(obj);
-            return *this;
-        }
-        
-        /**
-         * @brief Construct Value from Array
-         * @param arr Array to initialize
-         */
-        Value(Array arr) noexcept : m_data(std::move(arr)) {}
-
-        /**
-         * @brief Assign Value from Array
-         * @param arr Array to assign
-         */
-        Value& operator=(Array arr) noexcept {
-            m_data = std::move(arr);
-            return *this;
-        }
-
 
         /**
          * @brief Construct Value from Array types
          * @tparam T Array type, must be a range and value type must be convertible to Value
          * @param other The array-like object to initialize from
          */
-        template<std::ranges::range T>
-        requires std::is_constructible_v<Value, typename T::value_type>
-        explicit Value(T other) noexcept : m_data( Array{} ) {
+        template<typename T>
+        requires !constructible<std::remove_cvref_t<T>> && !constructible_map<std::remove_cvref_t<T>> && constructible_array<std::remove_cvref_t<T>>
+        explicit Value(T&& other) : m_data( Array{} ) {
             auto& arr = std::get<Array>(m_data);
-            for (auto& item : other) {
-                arr.emplace_back( static_cast<Value>(std::move(item)) );
+            for (auto&& item : std::forward<T>(other)) {
+                // cast to std::remove_cvref_t<T>::value_type avoid the problem of vector<bool>'s inner data is not bool
+                arr.emplace_back( static_cast<Value>(static_cast<typename std::remove_cvref_t<T>::value_type>( std::forward<decltype(item)>(item))));
             }
         }
 
@@ -676,12 +635,12 @@ export namespace vct::tools::json{
          * @tparam T Object type, must be a range and key_type must be convertible to String, mapped_type must be convertible to Value
          * @param other The map-like object to initialize from
          */
-        template<std::ranges::range T>
-        requires std::is_convertible_v<typename T::key_type, String> && std::is_constructible_v<Value, typename T::mapped_type>
-        explicit Value(T other) noexcept : m_data( Object{} ) {
+        template<typename T>
+        requires !constructible<std::remove_cvref_t<T>> && constructible_map<std::remove_cvref_t<T>>
+        explicit Value(T&& other) : m_data( Object{} ) {
             auto& obj = std::get<Object>(m_data);
-            for (auto& [key, val]: other) {
-                obj.emplace( static_cast<String>(key), static_cast<Value>(std::move(val)) );
+            for (auto&& [key, val] : std::forward<T>(other)) {
+                obj.emplace( static_cast<String>(key), static_cast<Value>(static_cast<typename std::remove_cvref_t<T>::mapped_type>(std::forward<decltype(val)>(val))) );
             }
         }
 
@@ -1376,15 +1335,17 @@ export namespace vct::tools::json{
      * @param max_depth Maximum nesting depth (default: 256)
      * @return std::expected<Value, ParseError> Parsed Value or error
      */
-    std::expected<Value, ParseError> read(std::string_view text, std::int32_t max_depth = 256 ) noexcept;
+    [[nodiscard]]
+    std::expected<Value, ParseError> parse(std::string_view text, std::int32_t max_depth = 256 ) noexcept;
 
     /**
      * @brief Parse JSON string from input-stream into Value object
-     * @param is_test input-stream
+     * @param is_text input-stream
      * @param max_depth Maximum nesting depth (default: 256)
      * @return std::expected<Value, ParseError> Parsed Value or error
      */
-    std::expected<Value, ParseError> read(std::istream& is_test, std::int32_t max_depth = 256 ) noexcept;
+    [[nodiscard]]
+    std::expected<Value, ParseError> parse(std::istream& is_text, std::int32_t max_depth = 256 ) noexcept;
 
 } // namespace vct::tools::json
 
@@ -1393,23 +1354,6 @@ module :private;
 
 
 namespace vct::tools::json{
-
-
-    std::string error_name(const ParseError error) {
-        switch (error) {
-            case ParseError::eNone: return "None";
-            case ParseError::eEmptyData: return "EmptyData";
-            case ParseError::eDepthExceeded: return "DepthExceeded";
-            case ParseError::eIllegalEscape: return "IllegalEscape";
-            case ParseError::eInvalidNumber: return "InvalidNumber";
-            case ParseError::eRedundantText: return "RedundantText";
-            case ParseError::eUnclosedArray: return "UnclosedArray";
-            case ParseError::eUnclosedObject: return "UnclosedObject";
-            case ParseError::eUnclosedString: return "UnclosedString";
-            case ParseError::eUnknownFormat: return "UnknownFormat";
-            default: return "Unknown Enum Value";
-        }
-    }
 
     void escape_to(String& out, const std::string_view str) noexcept {
         out.push_back('\"');
@@ -1675,7 +1619,7 @@ namespace vct::tools::json{
             case '\"': {
                 // String type
                 auto str = unescape_next(it, end_ptr);
-                if(!str) return str;
+                if(!str) return std::unexpected( str.error() );
                 json = std::move(*str);
             } break;
             case 't': {
@@ -1732,7 +1676,7 @@ namespace vct::tools::json{
     }
 
 
-    std::expected<Value, ParseError> read(const std::string_view text, const std::int32_t max_depth) noexcept{
+    std::expected<Value, ParseError> parse(const std::string_view text, const std::int32_t max_depth) noexcept{
         auto it = text.begin();
         const auto end_ptr = text.end();
         // Skip spaces
@@ -1747,8 +1691,8 @@ namespace vct::tools::json{
         return result;
     }
 
-    std::expected<Value, ParseError> read(std::istream& is_test, const std::int32_t max_depth) noexcept{
-        auto it = std::istreambuf_iterator<char>(is_test);
+    std::expected<Value, ParseError> parse(std::istream& is_text, const std::int32_t max_depth) noexcept{
+        auto it = std::istreambuf_iterator<char>(is_text);
         constexpr auto end_ptr = std::istreambuf_iterator<char>();
         // Skip spaces
         while(it != end_ptr && std::isspace(*it)) ++it;

@@ -18,7 +18,7 @@ int main() {
     // std::uniform_int_distribution<> dis(0, charset.size() - 1);
     //
     // json::Value val = json::Array{};
-    // for (int i=0; i< 20000; ++i) {
+    // for (int i=0; i< 14000; ++i) {
     //     std::string str;
     //     str.reserve(50*( i / 500 + 1));
     //     for (int j=0;j<100*( i / 1000 + 1);++j) {
@@ -28,6 +28,13 @@ int main() {
     // }
     // val.writef(out);
     // out.close();
+
+    std::println("Null size: {}", sizeof(json::Null));
+    std::println("Number size: {}", sizeof(json::Number));
+    std::println("String size: {}", sizeof(json::String));
+    std::println("Bool size: {}", sizeof(json::Bool));
+    std::println("Object size: {}", sizeof(json::Object));
+    std::println("Array size: {}", sizeof(json::Array));
 
 
     return vct::test::unit::start();

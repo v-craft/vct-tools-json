@@ -465,7 +465,7 @@ M_TEST(Value, Complex) {
     }
     
     // Test round-trip parsing
-    auto parsed_complex = json::read(serialized);
+    auto parsed_complex = json::parse(serialized);
     if (parsed_complex.has_value()) {
         M_ASSERT_TRUE( *parsed_complex == complex_data );
         

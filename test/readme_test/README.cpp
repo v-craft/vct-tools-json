@@ -95,7 +95,7 @@ M_TEST( README, readme ) {
     //
     //     std::string json_str1 = R"( [ 1, false, null, { "Hello": "World" } ] )";
     //     std::string json_str2 = R"( false )"; // 允许顶层类型是任一 JSON 类型
-    //     json::Value val1 = json::read(json_str1).value_or( nullptr ); // 解析 JSON 字符串
+    //     json::Value val1 = json::parse(json_str1).value_or( nullptr ); // 解析 JSON 字符串
     //     std::cout << val1[1].to<bool>() << std::endl; // 输出 0 （没有指定 boolaplha）
     // }
     //

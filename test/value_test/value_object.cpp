@@ -123,14 +123,14 @@ M_TEST(Value, Object) {
     M_ASSERT_NO_THROW(std::ignore = serial_test.dump());
     M_ASSERT_NO_THROW(std::ignore = serial_test.dumpf());
 
-    auto parsed_simple = json::read(R"({"key1":1,"key2":2})");
+    auto parsed_simple = json::parse(R"({"key1":1,"key2":2})");
     if (parsed_simple.has_value()) {
         M_ASSERT_TRUE(*parsed_simple == serial_test);
     } else {
         M_ASSERT_FAIL("Failed to parse simple object");
     }
 
-    auto parsed_empty = json::read("{}");
+    auto parsed_empty = json::parse("{}");
     if (parsed_empty.has_value()) {
         json::Value empty_code{json::Object{}};
         M_ASSERT_TRUE(*parsed_empty == empty_code);
@@ -139,7 +139,7 @@ M_TEST(Value, Object) {
     }
 
     // Test nested object parsing
-    auto parsed_nested = json::read(R"({"outer":{"inner1":1,"inner2":2}})");
+    auto parsed_nested = json::parse(R"({"outer":{"inner1":1,"inner2":2}})");
     if (parsed_nested.has_value()) {
         M_ASSERT_EQ( parsed_nested->type(), json::Type::eObject );
         M_ASSERT_EQ( parsed_nested->size(), 1 );
@@ -157,7 +157,7 @@ M_TEST(Value, Object) {
     }
     
     // Test mixed type parsing
-    auto parsed_mixed = json::read(R"({"number":42,"string":"test","boolean":true,"null_val":null})");
+    auto parsed_mixed = json::parse(R"({"number":42,"string":"test","boolean":true,"null_val":null})");
     if (parsed_mixed.has_value()) {
         M_ASSERT_EQ( parsed_mixed->type(), json::Type::eObject );
         M_ASSERT_EQ( parsed_mixed->size(), 4 );
@@ -189,7 +189,7 @@ M_TEST(Value, Object) {
         }}
     }};
     auto serialized_obj = original_obj.dump();
-    auto parsed_back_obj = json::read(serialized_obj);
+    auto parsed_back_obj = json::parse(serialized_obj);
     if (parsed_back_obj.has_value()) {
         M_ASSERT_TRUE( *parsed_back_obj == original_obj );
     } else {

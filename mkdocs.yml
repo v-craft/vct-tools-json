@@ -1,0 +1,86 @@
+site_name: vct-tools-json
+site_author: Mysvac
+site_url: https://v-craft.github.io/vct-tools-json/
+repo_url: https://github.com/v-craft/vct-tools-json
+repo_name: v-craft/vct-tools-json
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: "to dark mode"
+    - scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: "to light mode"
+  features:
+    - content.code.annotate
+    - content.code.copy
+
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+
+nav:
+  - Home: index.md
+  - "API Docs":
+    - "namespace": api/namespace.md
+    - "Type": api/Type.md
+    - "define":
+        - "Null": api/define/Null.md
+        - "Bool": api/define/Bool.md
+        - "Number": api/define/Number.md
+        - "String": api/define/String.md
+        - "Array": api/define/Array.md
+        - "Object": api/define/Object.md
+        - "json_type": api/define/json_type.md
+        - "constructible": api/define/constructible.md
+        - "constructible_array": api/define/constructible_array.md
+        - "constructible_map": api/define/constructible_map.md
+        - "convertible": api/define/convertible.md
+        - "convertible_array": api/define/convertible_array.md
+        - "convertible_map": api/define/convertible_map.md
+    - "Value":
+        - "Value": api/value/Value.md
+        - "constructor": api/value/constructor.md
+        - "destructor": api/value/destructor.md
+        - "operator=": api/value/operator_assign.md
+        - "type": api/value/type.md
+        - "type_name": api/value/type_name.md
+        - "reset": api/value/reset.md
+        - "is_nul": api/value/is_nul.md
+        - "is_bol": api/value/is_bol.md
+        - "is_num": api/value/is_num.md
+        - "is_str": api/value/is_str.md
+        - "is_arr": api/value/is_arr.md
+        - "is_obj": api/value/is_obj.md
+        - "nul": api/value/get_nul.md
+        - "bol": api/value/get_bol.md
+        - "num": api/value/get_num.md
+        - "str": api/value/get_str.md
+        - "arr": api/value/get_arr.md
+        - "obj": api/value/get_obj.md
+        - "operator[]": api/value/operator_bracket.md
+        - "at": api/value/at.md
+        - "dump": api/value/dump.md
+        - "write": api/value/write.md
+        - "dumpf": api/value/dumpf.md
+        - "writef": api/value/writef.md
+        - "to": api/value/to.md
+        - "to_if": api/value/to_if.md
+        - "to_or": api/value/to_or.md
+        - "move": api/value/move.md
+        - "move_if": api/value/move_if.md
+        - "move_or": api/value/move_or.md
+        - "operator==": api/value/operator_eq.md
+    - "parse": api/parse.md
+    - "ParseError": api/ParseError.md
+    - "error_name": api/error_name.md
+
+

@@ -114,57 +114,57 @@ M_TEST(Value, String) {
     M_ASSERT_EQ(json::Value{"path\\to\\file"}.dump(), "\"path\\\\to\\\\file\"");
 
     // --- Parsing tests ---
-    auto parsed_hello = json::read("\"hello world\"");
+    auto parsed_hello = json::parse("\"hello world\"");
     if (parsed_hello.has_value()) {
         M_ASSERT_EQ(parsed_hello->type(), json::Type::eString);
         M_ASSERT_EQ(parsed_hello->str(), "hello world");
     }
 
-    auto parsed_empty = json::read("\"\"");
+    auto parsed_empty = json::parse("\"\"");
     if (parsed_empty.has_value()) {
         M_ASSERT_EQ(parsed_empty->type(), json::Type::eString);
         M_ASSERT_EQ(parsed_empty->str(), "");
     }
 
     // Escape sequence parsing
-    auto parsed_newline = json::read(R"("line1\nline2")");
+    auto parsed_newline = json::parse(R"("line1\nline2")");
     if (parsed_newline.has_value()) {
         M_ASSERT_EQ(parsed_newline->str(), "line1\nline2");
     }
 
-    auto parsed_tab = json::read(R"("col1\tcol2")");
+    auto parsed_tab = json::parse(R"("col1\tcol2")");
     if (parsed_tab.has_value()) {
         M_ASSERT_EQ(parsed_tab->str(), "col1\tcol2");
     }
 
-    auto parsed_quote = json::read(R"("say \"hello\"")");
+    auto parsed_quote = json::parse(R"("say \"hello\"")");
     if (parsed_quote.has_value()) {
         M_ASSERT_EQ(parsed_quote->str(), "say \"hello\"");
     }
 
-    auto parsed_backslash = json::read(R"("path\\to\\file")");
+    auto parsed_backslash = json::parse(R"("path\\to\\file")");
     if (parsed_backslash.has_value()) {
         M_ASSERT_EQ(parsed_backslash->str(), "path\\to\\file");
     }
 
     // --- Unicode escape sequence parsing ---
-    auto parsed_unicode_a = json::read(R"("\u0041")");
+    auto parsed_unicode_a = json::parse(R"("\u0041")");
     if (parsed_unicode_a.has_value()) {
         M_ASSERT_EQ(parsed_unicode_a->str(), "A");
     }
 
-    auto parsed_unicode_chinese = json::read(R"("\u4e2d\u6587")");
+    auto parsed_unicode_chinese = json::parse(R"("\u4e2d\u6587")");
     if (parsed_unicode_chinese.has_value()) {
         M_ASSERT_EQ(parsed_unicode_chinese->str(), "中文");
     }
 
-    auto parsed_unicode_mixed = json::read(R"("Hello \u4e16\u754c!")");
+    auto parsed_unicode_mixed = json::parse(R"("Hello \u4e16\u754c!")");
     if (parsed_unicode_mixed.has_value()) {
         M_ASSERT_EQ(parsed_unicode_mixed->str(), "Hello 世界!");
     }
 
     // Unicode round-trip: parse then serialize
-    auto unicode_roundtrip = json::read(R"("\u4e16\u754c")");
+    auto unicode_roundtrip = json::parse(R"("\u4e16\u754c")");
     if (unicode_roundtrip.has_value()) {
         auto roundtrip_serialized = unicode_roundtrip->dump();
         M_ASSERT_EQ(roundtrip_serialized, "\"世界\"");

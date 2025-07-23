@@ -106,12 +106,12 @@ M_TEST(Value, Bool) {
     M_ASSERT_EQ(json::Value{false}.dumpf(), "false");
 
     // --- Parsing tests ---
-    auto parsed_true = json::read("true");
+    auto parsed_true = json::parse("true");
     M_ASSERT_TRUE(parsed_true.has_value());
     M_ASSERT_EQ(parsed_true->type(), json::Type::eBool);
     M_ASSERT_EQ(parsed_true->bol(), true);
 
-    auto parsed_false = json::read("false");
+    auto parsed_false = json::parse("false");
     M_ASSERT_TRUE(parsed_false.has_value());
     M_ASSERT_EQ(parsed_false->type(), json::Type::eBool);
     M_ASSERT_EQ(parsed_false->bol(), false);
@@ -139,13 +139,13 @@ M_TEST(Value, Bool) {
 
     // --- Round-trip serialization/parsing ---
     auto serialized_true = json::Value{true}.dump();
-    auto parsed_back_true = json::read(serialized_true);
+    auto parsed_back_true = json::parse(serialized_true);
     M_ASSERT_TRUE(parsed_back_true.has_value());
     M_ASSERT_EQ(parsed_back_true->type(), json::Type::eBool);
     M_ASSERT_EQ(parsed_back_true->bol(), true);
 
     auto serialized_false = json::Value{false}.dump();
-    auto parsed_back_false = json::read(serialized_false);
+    auto parsed_back_false = json::parse(serialized_false);
     M_ASSERT_TRUE(parsed_back_false.has_value());
     M_ASSERT_EQ(parsed_back_false->type(), json::Type::eBool);
     M_ASSERT_EQ(parsed_back_false->bol(), false);

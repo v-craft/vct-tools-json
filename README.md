@@ -21,29 +21,6 @@ vct-tools-json 是一个 C++23 的 JSON 库，它提供简洁、高效的 JSON �
 
 ## **导入库**
 
-本库使用 CMake 构建，需要 C++23 标准库模块支持。你可以直接下载源代码并将其添加到你的项目中，或者使用 CMake 的 `FetchContent` 模块来自动下载。
-
-```cmake
-include(FetchContent)   # 引入 FetchContent 模块
-FetchContent_Declare(
-    vct-tools-json      # 声明 vct-tools-json 库，SHA 验证请自行添加，tags 版本号请自行选择
-    URL  https://github.com/v-craft/vct-tools-json/archive/refs/tags/xxxx.tar.gz
-)
-FetchContent_MakeAvailable(vct-tools-json) # 下载并添加到项目中
-```
-
-如果你选用源码的方式，别忘了通过 `add_subdirectory` 将其显式添加到你的 CMake 项目中。`FetchContent` 会自动处理依赖关系。
-
-> 目前暂不支持 vcpkg ，因为标准库模块仍属于实验性支持，实验性 UUID 与 CMake 版本相关，无法通用。
-
-然后可以使用简单的链接库，这会自动处理所有依赖：
-
-```cmake
-target_link_libraries(main PRIVATE vct::tools-json)
-```
-
-最后，在你的文件中导入 JSON 模块：
-
 ```cpp
 import std; // 建议启用 C++23 的 std 模块支持
 import vct.tools.json; // 导入 vct-tools-json 库
@@ -195,12 +172,12 @@ std::string or_str = smp_val["key1"].to_or<std::string>("default"); // 如果转
 
 本库的序列化和反序列化非常高效且容易使用。
 
-首先是反序列化，将字符串转换为 `Value` 对象，使用 `json::read()` 函数。
+首先是反序列化，将字符串转换为 `Value` 对象，使用 `json::parse()` 函数。
 
 ```cpp
 std::string json_str1 = R"( [ 1, false, null, { "Hello": "World" } ] )";
 std::string json_str2 = R"( false )"; // 允许顶层类型是任一 JSON 类型
-json::Value val1 = json::read(json_str1).value_or( nullptr ); // 解析 JSON 字符串
+json::Value val1 = json::parse(json_str1).value_or( nullptr ); // 解析 JSON 字符串
 std::cout << val1[1].to<bool>() << std::endl; // 输出 0 （没有指定 boolaplha）
 ```
 
@@ -664,12 +641,12 @@ As long as a type satisfies any of the three concepts, you can use the `to` and 
 
 Serialization and deserialization in this library are very efficient and easy to use.
 
-First is deserialization, converting strings to `Value` objects, using `json::read()` functions.
+First is deserialization, converting strings to `Value` objects, using `json::parse()` functions.
 
 ```cpp
 std::string json_str1 = R"( [ 1, false, null, { "Hello": "World" } ] )";
 std::string json_str2 = R"( false )"; // Top-level type can be any JSON type
-json::Value val1 = json::read(json_str1).value_or( nullptr ); // Parse JSON string
+json::Value val1 = json::parse(json_str1).value_or( nullptr ); // Parse JSON string
 std::cout << val1[1].to<bool>() << std::endl; // Output 0 (no boolaplha specified)
 ```
 

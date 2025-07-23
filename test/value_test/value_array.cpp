@@ -203,7 +203,7 @@ M_TEST(Value, Array) {
 
 
 // Array9: 解析与序列化回环
-    auto parsed_simple = json::read("[1,2,3]");
+    auto parsed_simple = json::parse("[1,2,3]");
     if (parsed_simple.has_value()) {
         M_ASSERT_EQ(parsed_simple->type(), json::Type::eArray);
         M_ASSERT_EQ(parsed_simple->size(), 3);
@@ -215,7 +215,7 @@ M_TEST(Value, Array) {
 
     json::Value simple2_arr{json::Array{{1, 2, 3}}};
     auto serialized_arr = simple2_arr.dump();
-    auto parsed_back_arr = json::read(serialized_arr);
+    auto parsed_back_arr = json::parse(serialized_arr);
     if (parsed_back_arr.has_value()) {
         M_ASSERT_TRUE(*parsed_back_arr == simple2_arr);
     } else {

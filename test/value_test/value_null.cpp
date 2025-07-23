@@ -70,7 +70,7 @@ M_TEST(Value, Null) {
     M_ASSERT_EQ(json::Value{nullptr}.dumpf(), "null");
 
     // --- Parsing tests ---
-    auto parsed_null = json::read("null");
+    auto parsed_null = json::parse("null");
     if (parsed_null.has_value()) {
         M_ASSERT_EQ(parsed_null->type(), json::Type::eNull);
         M_ASSERT_EQ(parsed_null->nul(), nullptr);
@@ -80,7 +80,7 @@ M_TEST(Value, Null) {
 
     // Round-trip serialization/parsing
     auto serialized_null = json::Value{nullptr}.dump();
-    auto parsed_back_null = json::read(serialized_null);
+    auto parsed_back_null = json::parse(serialized_null);
     if (parsed_back_null.has_value()) {
         M_ASSERT_EQ(parsed_back_null->type(), json::Type::eNull);
         M_ASSERT_EQ(parsed_back_null->nul(), nullptr);
