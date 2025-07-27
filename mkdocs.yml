@@ -28,59 +28,52 @@ markdown_extensions:
 
 
 nav:
-  - Home: index.md
-  - "API Docs":
-    - "namespace": api/namespace.md
-    - "Type": api/Type.md
-    - "define":
-        - "Null": api/define/Null.md
-        - "Bool": api/define/Bool.md
-        - "Number": api/define/Number.md
-        - "String": api/define/String.md
-        - "Array": api/define/Array.md
-        - "Object": api/define/Object.md
-        - "json_type": api/define/json_type.md
-        - "constructible": api/define/constructible.md
-        - "constructible_array": api/define/constructible_array.md
-        - "constructible_map": api/define/constructible_map.md
-        - "convertible": api/define/convertible.md
-        - "convertible_array": api/define/convertible_array.md
-        - "convertible_map": api/define/convertible_map.md
-    - "Value":
-        - "Value": api/value/Value.md
-        - "constructor": api/value/constructor.md
-        - "destructor": api/value/destructor.md
-        - "operator=": api/value/operator_assign.md
-        - "type": api/value/type.md
-        - "type_name": api/value/type_name.md
-        - "reset": api/value/reset.md
-        - "is_nul": api/value/is_nul.md
-        - "is_bol": api/value/is_bol.md
-        - "is_num": api/value/is_num.md
-        - "is_str": api/value/is_str.md
-        - "is_arr": api/value/is_arr.md
-        - "is_obj": api/value/is_obj.md
-        - "nul": api/value/get_nul.md
-        - "bol": api/value/get_bol.md
-        - "num": api/value/get_num.md
-        - "str": api/value/get_str.md
-        - "arr": api/value/get_arr.md
-        - "obj": api/value/get_obj.md
-        - "operator[]": api/value/operator_bracket.md
-        - "at": api/value/at.md
-        - "dump": api/value/dump.md
-        - "write": api/value/write.md
-        - "dumpf": api/value/dumpf.md
-        - "writef": api/value/writef.md
-        - "to": api/value/to.md
-        - "to_if": api/value/to_if.md
-        - "to_or": api/value/to_or.md
-        - "move": api/value/move.md
-        - "move_if": api/value/move_if.md
-        - "move_or": api/value/move_or.md
-        - "operator==": api/value/operator_eq.md
-    - "parse": api/parse.md
-    - "ParseError": api/ParseError.md
-    - "error_name": api/error_name.md
-
+  - 首页: index.md
+  - 接口文档:
+    - 命名空间: zh/命名空间.md
+    - concept:
+      - json_type: zh/concept/json_type.md
+      - constructible: zh/concept/constructible.md
+      - constructible_array: zh/concept/constructible_array.md
+      - constructible_map: zh/concept/constructible_map.md
+      - convertible: zh/concept/convertible.md
+      - convertible_array: zh/concept/convertible_array.md
+      - convertible_map: zh/concept/convertible_map.md
+    - Type: zh/Type.md
+    - ParseError: zh/ParseError.md
+    - Json:
+      - Json: zh/Json/Json.md
+      - constructor: zh/Json/constructor.md
+      - destructor: zh/Json/destructor.md
+      - operator_assign: zh/Json/operator_assign.md
+      - type: zh/Json/type.md
+      - reset: zh/Json/reset.md
+      - is_nul: zh/Json/is_nul.md
+      - is_bol: zh/Json/is_bol.md
+      - is_num: zh/Json/is_num.md
+      - is_str: zh/Json/is_str.md
+      - is_arr: zh/Json/is_arr.md
+      - is_obj: zh/Json/is_obj.md
+      - nul: zh/Json/get_nul.md
+      - bol: zh/Json/get_bol.md
+      - num: zh/Json/get_num.md
+      - str: zh/Json/get_str.md
+      - arr: zh/Json/get_arr.md
+      - obj: zh/Json/get_obj.md
+      - "operator[]": zh/Json/operator_bracket.md
+      - at: zh/Json/at.md
+      - to: zh/Json/to.md
+      - to_if: zh/Json/to_if.md
+      - to_or: zh/Json/to_or.md
+      - move: zh/Json/move.md
+      - move_if: zh/Json/move_if.md
+      - move_or: zh/Json/move_or.md
+      - operator==: zh/Json/operator_eq.md
+      - parse: zh/Json/parse.md
+      - dump: zh/Json/dump.md
+      - dumpf: zh/Json/dumpf.md
+      - write: zh/Json/write.md
+      - writef: zh/Json/writef.md
+    - type_name: zh/type_name.md
+    - error_name: zh/error_name.md
 

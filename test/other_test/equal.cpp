@@ -8,8 +8,8 @@ using namespace vct::tools;
 
 // --- Null type tests ---
 M_TEST(Equal, Null) {
-    json::Value null_val{};
-    json::Value another_null{nullptr};
+    Json null_val{};
+    Json another_null{nullptr};
     M_ASSERT_TRUE(null_val == nullptr);
     M_ASSERT_TRUE(another_null == nullptr);
     M_ASSERT_TRUE(null_val == another_null);
@@ -22,8 +22,8 @@ M_TEST(Equal, Null) {
 // --- Boolean equality tests ---
 // Covers strict type comparison. No implicit conversion between bool and number.
 M_TEST(Equal, Bool) {
-    json::Value true_val{json::Bool(true)};
-    json::Value false_val{json::Bool(false)};
+    Json true_val{Json::Bool(true)};
+    Json false_val{Json::Bool(false)};
     M_ASSERT_TRUE(true_val == true);      // True matches true
     M_ASSERT_FALSE(true_val == false);    // True does not match false
     M_ASSERT_TRUE(false_val == false);    // False matches false
@@ -56,26 +56,26 @@ M_TEST(Equal, Bool) {
 
 // --- Number type tests ---
 M_TEST(Equal, Number) {
-    json::Value num_val{json::Number(42)};
+    Json num_val{Json::Number(42)};
     M_ASSERT_TRUE(num_val == 42);
     M_ASSERT_TRUE(num_val == 42.0);
     M_ASSERT_FALSE(num_val == 43);
     M_ASSERT_FALSE(num_val == 41);
 
-    json::Value float_val{json::Number(3.14)};
+    Json float_val{Json::Number(3.14)};
     M_ASSERT_TRUE(float_val == 3.14);
     M_ASSERT_TRUE(float_val == 3);  // 3.14 rounds to 3
     M_ASSERT_FALSE(float_val == 4);
     M_ASSERT_FALSE(float_val == 2);
 
-    json::Value negative_val{json::Number(-100)};
+    Json negative_val{Json::Number(-100)};
     M_ASSERT_TRUE(negative_val == -100);
     M_ASSERT_FALSE(negative_val == 100);
     M_ASSERT_FALSE(negative_val == -99);
 
     // Boundary numbers
-    json::Value max_val{std::numeric_limits<double>::max()};
-    json::Value min_val{std::numeric_limits<double>::lowest()};
+    Json max_val{std::numeric_limits<double>::max()};
+    Json min_val{std::numeric_limits<double>::lowest()};
     M_ASSERT_TRUE(max_val == std::numeric_limits<double>::max());
     M_ASSERT_TRUE(min_val == std::numeric_limits<double>::lowest());
     M_ASSERT_FALSE(max_val == min_val);
@@ -85,8 +85,8 @@ M_TEST(Equal, Number) {
     M_ASSERT_FALSE(num_val == false);
 
     // No implicit conversion with bool for number values
-    json::Value num_true{json::Number(1)};
-    json::Value num_false{json::Number(0)};
+    Json num_true{Json::Number(1)};
+    Json num_false{Json::Number(0)};
     M_ASSERT_FALSE(num_true == true);
     M_ASSERT_FALSE(num_false == false);
     M_ASSERT_FALSE(num_true == false);
@@ -95,26 +95,26 @@ M_TEST(Equal, Number) {
 
 // --- String type tests ---
 M_TEST(Equal, String) {
-    json::Value str_val{json::String("hello")};
+    Json str_val{Json::String("hello")};
     M_ASSERT_TRUE(str_val == "hello");
     M_ASSERT_TRUE(str_val == std::string("hello"));
     M_ASSERT_FALSE(str_val == "Hello");
     M_ASSERT_FALSE(str_val == "world");
     M_ASSERT_FALSE(str_val == std::string("HELLO"));
 
-    json::Value empty_str_val{json::String("")};
+    Json empty_str_val{Json::String("")};
     M_ASSERT_TRUE(empty_str_val == "");
     M_ASSERT_TRUE(empty_str_val == std::string(""));
     M_ASSERT_FALSE(empty_str_val == " ");
     M_ASSERT_FALSE(empty_str_val == "empty");
 
     // 特殊字符
-    json::Value unicode_val{json::String("你好世界")};
+    Json unicode_val{Json::String("你好世界")};
     M_ASSERT_TRUE(unicode_val == "你好世界");
     M_ASSERT_TRUE(unicode_val == std::string("你好世界"));
     M_ASSERT_FALSE(unicode_val == "Hello World");
 
-    json::Value special_str{json::String("Hello\nWorld\t!")};
+    Json special_str{Json::String("Hello\nWorld\t!")};
     M_ASSERT_TRUE(special_str == "Hello\nWorld\t!");
     M_ASSERT_TRUE(special_str == std::string("Hello\nWorld\t!"));
     M_ASSERT_FALSE(special_str == "Hello World !");
@@ -122,12 +122,12 @@ M_TEST(Equal, String) {
 
 // --- Array type tests ---
 M_TEST(Equal, Array) {
-    json::Value arr1{json::Array{1, 2, 3}};
-    json::Value arr2{json::Array{1, 2, 3}};
-    json::Value arr3{json::Array{1, 2, 4}};
-    json::Value arr4{json::Array{1, 2}};
-    json::Value empty_arr1{json::Array{}};
-    json::Value empty_arr2{json::Array{}};
+    Json arr1{Json::Array{1, 2, 3}};
+    Json arr2{Json::Array{1, 2, 3}};
+    Json arr3{Json::Array{1, 2, 4}};
+    Json arr4{Json::Array{1, 2}};
+    Json empty_arr1{Json::Array{}};
+    Json empty_arr2{Json::Array{}};
 
     M_ASSERT_TRUE(arr1 == arr2);
     M_ASSERT_FALSE(arr1 == arr3);
@@ -147,13 +147,13 @@ M_TEST(Equal, Array) {
 
 // --- Object type tests ---
 M_TEST(Equal, Object) {
-    json::Value obj1{json::Object{{"name", "John"}, {"age", 30}}};
-    json::Value obj2{json::Object{{"name", "John"}, {"age", 30}}};
-    json::Value obj3{json::Object{{"name", "Jane"}, {"age", 30}}};
-    json::Value obj4{json::Object{{"name", "John"}, {"age", 31}}};
-    json::Value obj5{json::Object{{"name", "John"}}};
-    json::Value empty_obj1{json::Object{}};
-    json::Value empty_obj2{json::Object{}};
+    Json obj1{Json::Object{{"name", "John"}, {"age", 30}}};
+    Json obj2{Json::Object{{"name", "John"}, {"age", 30}}};
+    Json obj3{Json::Object{{"name", "Jane"}, {"age", 30}}};
+    Json obj4{Json::Object{{"name", "John"}, {"age", 31}}};
+    Json obj5{Json::Object{{"name", "John"}}};
+    Json empty_obj1{Json::Object{}};
+    Json empty_obj2{Json::Object{}};
 
     M_ASSERT_TRUE(obj1 == obj2);
     M_ASSERT_FALSE(obj1 == obj3);
@@ -175,54 +175,54 @@ M_TEST(Equal, Object) {
 // --- Mixed type and nested structure tests ---
 M_TEST(Equal, MixedAndNested) {
     // 混合数组
-    json::Value mixed1{json::Array{
-        json::Number(42),
-        json::String("hello"),
-        json::Bool(true),
-        json::Value{nullptr},
-        json::Array{1, 2},
-        json::Object{{"key", "value"}}
+    Json mixed1{Json::Array{
+        Json::Number(42),
+        Json::String("hello"),
+        Json::Bool(true),
+        Json{nullptr},
+        Json::Array{1, 2},
+        Json::Object{{"key", "value"}}
     }};
-    json::Value mixed2{json::Array{
-        json::Number(42),
-        json::String("hello"),
-        json::Bool(true),
-        json::Value{nullptr},
-        json::Array{1, 2},
-        json::Object{{"key", "value"}}
+    Json mixed2{Json::Array{
+        Json::Number(42),
+        Json::String("hello"),
+        Json::Bool(true),
+        Json{nullptr},
+        Json::Array{1, 2},
+        Json::Object{{"key", "value"}}
     }};
-    json::Value mixed3{json::Array{
-        json::Number(42),
-        json::String("hello"),
-        json::Bool(false),
-        json::Value{nullptr},
-        json::Array{1, 2},
-        json::Object{{"key", "value"}}
+    Json mixed3{Json::Array{
+        Json::Number(42),
+        Json::String("hello"),
+        Json::Bool(false),
+        Json{nullptr},
+        Json::Array{1, 2},
+        Json::Object{{"key", "value"}}
     }};
     M_ASSERT_TRUE(mixed1 == mixed2);
     M_ASSERT_FALSE(mixed1 == mixed3);
 
     // 嵌套对象
-    json::Value nested1{json::Object{
-        {"user", json::Object{
+    Json nested1{Json::Object{
+        {"user", Json::Object{
             {"name", "Alice"},
-            {"profile", json::Object{
+            {"profile", Json::Object{
                 {"age", 25},
                 {"active", true}
             }}
         }},
-        {"data", json::Array{1, 2, 3}}
+        {"data", Json::Array{1, 2, 3}}
     }};
-    json::Value nested2 = nested1;
-    json::Value nested3{json::Object{
-        {"user", json::Object{
+    Json nested2 = nested1;
+    Json nested3{Json::Object{
+        {"user", Json::Object{
             {"name", "Alice"},
-            {"profile", json::Object{
+            {"profile", Json::Object{
                 {"age", 26},
                 {"active", true}
             }}
         }},
-        {"data", json::Array{1, 2, 3}}
+        {"data", Json::Array{1, 2, 3}}
     }};
     M_ASSERT_TRUE(nested1 == nested2);
     M_ASSERT_FALSE(nested1 == nested3);
@@ -231,52 +231,52 @@ M_TEST(Equal, MixedAndNested) {
 // --- Strict type and edge case tests ---
 M_TEST(Equal, StrictTypeAndEdge) {
     // No implicit conversion between bool and number
-    json::Value num_one{json::Number(1)};
-    json::Value bool_true{json::Bool(true)};
+    Json num_one{Json::Number(1)};
+    Json bool_true{Json::Bool(true)};
     M_ASSERT_FALSE(num_one == bool_true);
     M_ASSERT_FALSE(bool_true == num_one);
-    json::Value num_zero{json::Number(0)};
-    json::Value bool_false{json::Bool(false)};
+    Json num_zero{Json::Number(0)};
+    Json bool_false{Json::Bool(false)};
     M_ASSERT_FALSE(num_zero == bool_false);
     M_ASSERT_FALSE(bool_false == num_zero);
 
     // Strict type comparison between different types
-    json::Value str_val{json::String("test")};
-    json::Value arr_val{json::Array{1, 2, 3}};
-    json::Value obj_val{json::Object{{"key", "value"}}};
-    json::Value null_val{nullptr};
+    Json str_val{Json::String("test")};
+    Json arr_val{Json::Array{1, 2, 3}};
+    Json obj_val{Json::Object{{"key", "value"}}};
+    Json null_val{nullptr};
 
     M_ASSERT_FALSE(str_val == arr_val);      // String vs Array
     M_ASSERT_FALSE(arr_val == obj_val);      // Array vs Object
     M_ASSERT_FALSE(obj_val == null_val);     // Object vs Null
 
     // Reverse comparison
-    M_ASSERT_TRUE(42 == json::Value{42});
-    M_ASSERT_TRUE("hello" == json::Value{"hello"});
-    M_ASSERT_TRUE(true == json::Value{true});
-    M_ASSERT_FALSE(1 == json::Value{true});
-    M_ASSERT_FALSE(0 == json::Value{false});
-    M_ASSERT_FALSE(false == json::Value{0});
-    M_ASSERT_FALSE(true == json::Value{1});
+    M_ASSERT_TRUE(42 == Json{42});
+    M_ASSERT_TRUE("hello" == Json{"hello"});
+    M_ASSERT_TRUE(true == Json{true});
+    M_ASSERT_FALSE(1 == Json{true});
+    M_ASSERT_FALSE(0 == Json{false});
+    M_ASSERT_FALSE(false == Json{0});
+    M_ASSERT_FALSE(true == Json{1});
 }
 
 // --- Symmetry and reflexivity tests ---
 M_TEST(Equal, SymmetryAndReflexivity) {
-    json::Value val{json::Number(42)};
+    Json val{Json::Number(42)};
     M_ASSERT_TRUE(val == 42);
     M_ASSERT_TRUE(42 == val);
 
-    json::Value str_val{json::String("hello")};
+    Json str_val{Json::String("hello")};
     M_ASSERT_TRUE(str_val == "hello");
     M_ASSERT_TRUE("hello" == str_val);
 
-    json::Value bool_val{json::Bool(true)};
+    Json bool_val{Json::Bool(true)};
     M_ASSERT_TRUE(bool_val == true);
     M_ASSERT_TRUE(true == bool_val);
     M_ASSERT_FALSE(bool_val == 1);
     M_ASSERT_FALSE(1 == bool_val);
 
-    json::Value false_val{json::Bool(false)};
+    Json false_val{Json::Bool(false)};
     M_ASSERT_TRUE(false_val == false);
     M_ASSERT_TRUE(false == false_val);
     M_ASSERT_FALSE(false_val == 0);
@@ -289,8 +289,8 @@ M_TEST(Equal, SymmetryAndReflexivity) {
     M_ASSERT_TRUE(false_val == false_val);
 
     // No implicit conversion between bool and number
-    json::Value bool_true{json::Bool(true)};
-    json::Value bool_false{json::Bool(false)};
+    Json bool_true{Json::Bool(true)};
+    Json bool_false{Json::Bool(false)};
     M_ASSERT_FALSE(bool_true == 1);
     M_ASSERT_FALSE(1 == bool_true);
     M_ASSERT_FALSE(bool_false == 0);
@@ -303,16 +303,16 @@ M_TEST(Equal, SymmetryAndReflexivity) {
 
 // --- Transitivity tests ---
 M_TEST(Equal, Transitivity) {
-    json::Value val1{static_cast<json::Number>(42)};
-    json::Value val2{json::Number(42)};
-    json::Value val3{json::Number(42)};
+    Json val1{static_cast<Json::Number>(42)};
+    Json val2{Json::Number(42)};
+    Json val3{Json::Number(42)};
     M_ASSERT_TRUE(val1 == val2);
     M_ASSERT_TRUE(val2 == val3);
     M_ASSERT_TRUE(val1 == val3);
 
-    json::Value str1{json::String("test")};
-    json::Value str2{json::String("test")};
-    json::Value str3{json::String("test")};
+    Json str1{Json::String("test")};
+    Json str2{Json::String("test")};
+    Json str3{Json::String("test")};
     M_ASSERT_TRUE(str1 == str2);
     M_ASSERT_TRUE(str2 == str3);
     M_ASSERT_TRUE(str1 == str3);

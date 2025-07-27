@@ -33,7 +33,7 @@ struct MyData{
 M_TEST(Macros, Simple) {
 
     {
-        json::Value v_null;
+        Json v_null;
         MyData d_null{ v_null };
         M_ASSERT_EQ(d_null.id, 0);
         M_ASSERT_EQ(d_null.m_name, "");
@@ -42,7 +42,7 @@ M_TEST(Macros, Simple) {
     }
 
     {
-        json::Value v_object{ json::Object{} };
+        Json v_object{ Json::Object{} };
         v_object["id"] = 42;
         v_object["name"] = "Test User";
         v_object["active"] = false;
@@ -60,7 +60,7 @@ M_TEST(Macros, Simple) {
         d_out.m_name = "Output User";
         d_out.active = true;
         d_out.m_value = 256.0;
-        const auto v_out = json::Value{ d_out };
+        const auto v_out = Json{ d_out };
         M_ASSERT_EQ(v_out["id"].to<int>(), 23);
         M_ASSERT_EQ(v_out["name"].to<std::string>(), "Output User");
         M_ASSERT_EQ(v_out["active"].to<bool>(), true);
@@ -68,7 +68,7 @@ M_TEST(Macros, Simple) {
     }
 
     {
-        json::Value v_mover{ json::Object{} };
+        Json v_mover{ Json::Object{} };
         v_mover["name"] = "Test move xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
         MyData d_recipient{ std::move(v_mover) };
         M_ASSERT_EQ(d_recipient.m_name, "Test move xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");

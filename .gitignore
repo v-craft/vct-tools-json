@@ -6,5 +6,6 @@
 /test/files/out*.json
 /build/
 /html/
+/site/
 CMakeUserPresets.json
 

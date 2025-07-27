@@ -20,7 +20,7 @@
  * @defgroup JSON_CONVERSION_MACROS JSON Conversion Macros
  * @brief Macros for converting C++ objects to JSON Values
  * @details These macros provide automatic serialization of C++ class members to JSON format.
- *          They generate operator::vct::tools::json::Value() with perfect forwarding support.
+ *          They generate operator::vct::tools::Json() with perfect forwarding support.
  * @{
  */
 
@@ -34,7 +34,7 @@
  *          Includes compile-time type checking to ensure the member type is JSON-convertible.
  *
  * @note Requirements:
- *       - The member type must be constructible to ::vct::tools::json::Value
+ *       - The member type must be constructible to ::vct::tools::Json
  *       - Must be used within M_VCT_TOOLS_JSON_CONVERSION_FUNCTION
  *
  * @example
@@ -52,8 +52,8 @@
  */
 #define M_VCT_TOOLS_JSON_CONVERSION_FIELD( member_name ) \
     do {    \
-        static_assert( std::is_constructible_v< ::vct::tools::json::Value, decltype(this->member_name) >, "VCT_TOOLS_JSON: " #member_name " use macros CONVERSION_FILED, json::Value must be constructible from it. " );  \
-        macro_result[ #member_name ] = ::vct::tools::json::Value{ _move_if_rvalue(this->member_name) };  \
+        static_assert( std::is_constructible_v< ::vct::tools::Json, decltype(this->member_name) >, "VCT_TOOLS_JSON: " #member_name " use macros CONVERSION_FILED, Json must be constructible from it. " );  \
+        _json_value[ #member_name ] = ::vct::tools::Json{ _move_if_rvalue(this->member_name) };  \
     }while(false);
     
 /**
@@ -67,7 +67,7 @@
  *          or when following specific JSON naming conventions.
  *
  * @note Requirements:
- *       - The member type must be constructible to ::vct::tools::json::Value
+ *       - The member type must be constructible to ::vct::tools::Json
  *       - Must be used within M_VCT_TOOLS_JSON_CONVERSION_FUNCTION
  *
  * @example
@@ -85,8 +85,8 @@
  */
 #define M_VCT_TOOLS_JSON_CONVERSION_MAP_FIELD( field_name, member_name ) \
     do {    \
-        static_assert( std::is_constructible_v< ::vct::tools::json::Value, decltype(this->member_name) >, "VCT_TOOLS_JSON: " #member_name " use macros CONVERSION_FILED, json::Value must be constructible from it. " );  \
-        macro_result[ #field_name ] = ::vct::tools::json::Value{ _move_if_rvalue(this->member_name) };  \
+        static_assert( std::is_constructible_v< ::vct::tools::Json, decltype(this->member_name) >, "VCT_TOOLS_JSON: " #member_name " use macros CONVERSION_FILED, Json must be constructible from it. " );  \
+        _json_value[ #field_name ] = ::vct::tools::Json{ _move_if_rvalue(this->member_name) };  \
     }while(false);
 
 /**
@@ -95,7 +95,7 @@
  * @param class_name The name of the class being converted
  * @param ... Variable arguments containing conversion field macros
  *
- * @details This macro generates three overloads of operator::vct::tools::json::Value():
+ * @details This macro generates three overloads of operator::vct::tools::Json():
  *          - const& version: for const lvalue references (copies values)
  *          - && version: for rvalue references (moves values for optimization)
  *          - & version: for non-const lvalue references (returns references)
@@ -119,23 +119,23 @@
  * @endcode
  */
 #define M_VCT_TOOLS_JSON_CONVERSION_FUNCTION( class_name, ... )   \
-    explicit operator ::vct::tools::json::Value() const & { \
-        ::vct::tools::json::Value macro_result{ ::vct::tools::json::Object{} }; \
+    explicit operator ::vct::tools::Json() const & { \
+        ::vct::tools::Json _json_value{ ::vct::tools::Json::Object{} }; \
         auto _move_if_rvalue = [](const auto& val) -> const auto& { return val; }; \
         __VA_ARGS__ \
-        return macro_result; \
+        return _json_value; \
     } \
-    explicit operator ::vct::tools::json::Value() && { \
-    ::vct::tools::json::Value macro_result{ ::vct::tools::json::Object{} }; \
+    explicit operator ::vct::tools::Json() && { \
+    ::vct::tools::Json _json_value{ ::vct::tools::Json::Object{} }; \
     auto _move_if_rvalue = [](auto& val) -> auto&& { return std::move(val); }; \
     __VA_ARGS__ \
-    return macro_result; \
+    return _json_value; \
     } \
-    explicit operator ::vct::tools::json::Value() & { \
-        ::vct::tools::json::Value macro_result{ ::vct::tools::json::Object{} }; \
+    explicit operator ::vct::tools::Json() & { \
+        ::vct::tools::Json _json_value{ ::vct::tools::Json::Object{} }; \
         auto _move_if_rvalue = [](auto& val) -> auto& { return val; }; \
         __VA_ARGS__ \
-        return macro_result; \
+        return _json_value; \
     } \
 
 /** @} */ // end of JSON_CONVERSION_MACROS
@@ -144,7 +144,7 @@
  * @defgroup JSON_CONSTRUCTOR_MACROS JSON Constructor Macros
  * @brief Macros for constructing C++ objects from JSON Values
  * @details These macros provide automatic deserialization from JSON to C++ class instances.
- *          They generate constructors that accept ::vct::tools::json::Value parameters.
+ *          They generate constructors that accept ::vct::tools::Json parameters.
  * @{
  */
 
@@ -182,7 +182,7 @@
     do{ \
         static_assert( std::is_convertible_v<decltype(default_result), std::remove_cvref_t<decltype(member_name)>>, "VCT_TOOLS_JSON: " #member_name " use macros FIELD_OR, default_result must be convertible to member_type. "  );  \
         this->member_name = ( \
-            _json_value.contains( #member_name ) ? \
+            (_json_value.is_obj() && _json_value.obj().contains( #member_name )) ? \
             _json_value[ #member_name ].template move_or<std::remove_cvref_t<decltype(member_name)>,std::remove_cvref_t<decltype(default_range_value)>>( default_result, default_range_value ) : \
             default_result \
         );  \
@@ -220,7 +220,7 @@
     do {    \
         static_assert( std::is_default_constructible_v<std::remove_cvref_t<decltype(member_name)>>, "VCT_TOOLS_JSON: " #member_name " use macros FIELD_DEFAULT, must is_default_constructible. "    );  \
         this->member_name = ( \
-            _json_value.contains( #member_name ) ? \
+            (_json_value.is_obj() && _json_value.obj().contains( #member_name )) ? \
             _json_value[ #member_name ].template move_or<std::remove_cvref_t<decltype(member_name)>>( std::remove_cvref_t<decltype(member_name)>{} ) : \
             std::remove_cvref_t<decltype(member_name)>{} \
         );  \
@@ -260,7 +260,7 @@
     do{ \
         static_assert( std::is_convertible_v<decltype(default_result), std::remove_cvref_t<decltype(member_name)>>, "VCT_TOOLS_JSON: " #member_name " use macros FIELD_OR, default_result must be convertible to member_type. " );  \
         this->member_name = ( \
-            _json_value.contains( #field_name ) ? \
+            (_json_value.is_obj() && _json_value.obj().contains( #field_name )) ? \
             _json_value[ #field_name ].template move_or<std::remove_cvref_t<decltype(member_name)>,std::remove_cvref_t<decltype(default_range_value)>>( default_result, default_range_value ) : \
             default_result \
         );  \
@@ -298,7 +298,7 @@
     do {    \
         static_assert( std::is_default_constructible_v<std::remove_cvref_t<decltype(member_name)>>, "VCT_TOOLS_JSON: " #member_name " use macros FIELD_DEFAULT, must is_default_constructible. "    );  \
         this->member_name = ( \
-            _json_value.contains( #field_name ) ? \
+            (_json_value.is_obj() && _json_value.obj().contains( #field_name )) ? \
             _json_value[ #field_name ].template move_or<std::remove_cvref_t<decltype(member_name)>>( std::remove_cvref_t<decltype(member_name)>{} ) : \
             std::remove_cvref_t<decltype(member_name)>{} \
         );  \
@@ -310,7 +310,7 @@
  * @param class_name The name of the class being constructed
  * @param ... Variable arguments containing constructor field macros
  *
- * @details This macro generates an explicit constructor that takes a ::vct::tools::json::Value
+ * @details This macro generates an explicit constructor that takes a ::vct::tools::Json
  *          and initializes class members based on the JSON content. The constructor is noexcept
  *          and uses move semantics for optimal performance.
  *
@@ -335,7 +335,7 @@
  * @endcode
  */
 #define M_VCT_TOOLS_JSON_CONSTRUCTOR_FUNCTION( class_name, ... ) \
-    explicit class_name ( ::vct::tools::json::Value _json_value ) noexcept {  \
+    explicit class_name ( ::vct::tools::Json _json_value ) {  \
         __VA_ARGS__     \
     }
 

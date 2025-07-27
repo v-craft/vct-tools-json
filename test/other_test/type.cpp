@@ -27,62 +27,63 @@ M_TEST(Type, enum) {
     M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedObject), 7 ) );
     M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnclosedArray),  8 ) );
     M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnknownFormat),  9 ) );
+    M_EXPECT_NO_THROW( M_EXPECT_EQ( static_cast<int>(json::ParseError::eUnknownError),   10) );
 }
 
 // Test the Object type
 M_TEST(Type, Object) {
 
-    M_ASSERT_TRUE( (std::is_same_v<json::Object, std::map<json::String, json::Value>>) );
-    M_ASSERT_EQ( json::Object{}, (std::map<json::String, json::Value> {} ));
-    M_ASSERT_EQ( json::Object(), (std::map<json::String, json::Value> {} ));
+    M_ASSERT_TRUE( (std::is_same_v<Json::Object, std::map<Json::String, Json>>) );
+    M_ASSERT_EQ( Json::Object{}, (std::map<Json::String, Json> {} ));
+    M_ASSERT_EQ( Json::Object(), (std::map<Json::String, Json> {} ));
 }
 
 // Test the Number type
 M_TEST(Type, Number) {
-    M_ASSERT_TRUE( (std::is_same_v<json::Number, double>) );
-    M_ASSERT_EQ( 0.0 , json::Number{} );
-    M_ASSERT_EQ( 0.0 , json::Number() );
+    M_ASSERT_TRUE( (std::is_same_v<Json::Number, double>) );
+    M_ASSERT_EQ( 0.0 , Json::Number{} );
+    M_ASSERT_EQ( 0.0 , Json::Number() );
 }
 
 // Test the String type
 M_TEST(Type, Array) {
-    M_ASSERT_TRUE( (std::is_same_v<json::Array, std::vector<json::Value>>) );
-    M_ASSERT_EQ( std::vector<json::Value>{} , json::Array{} );
-    M_ASSERT_EQ( std::vector<json::Value>{} , json::Array() );
+    M_ASSERT_TRUE( (std::is_same_v<Json::Array, std::vector<Json>>) );
+    M_ASSERT_EQ( std::vector<Json>{} , Json::Array{} );
+    M_ASSERT_EQ( std::vector<Json>{} , Json::Array() );
 }
 
 // Test the String type
 M_TEST(Type, String) {
-    M_ASSERT_TRUE( (std::is_same_v<json::String, std::string>) );
-    M_ASSERT_EQ( "" , json::String{} );
-    M_ASSERT_EQ( "" , json::String() );
+    M_ASSERT_TRUE( (std::is_same_v<Json::String, std::string>) );
+    M_ASSERT_EQ( "" , Json::String{} );
+    M_ASSERT_EQ( "" , Json::String() );
 }
 
 // Test the Bool type
 M_TEST(Type, Bool) {
-    M_ASSERT_TRUE( (std::is_same_v<json::Bool, bool>) );
-    M_ASSERT_EQ( false , json::Bool{} );
-    M_ASSERT_EQ( false , json::Bool() );
+    M_ASSERT_TRUE( (std::is_same_v<Json::Bool, bool>) );
+    M_ASSERT_EQ( false , Json::Bool{} );
+    M_ASSERT_EQ( false , Json::Bool() );
 }
 
 // Test the Null type
 M_TEST(Type, Null) {
-    M_ASSERT_TRUE( (std::is_same_v<json::Null, std::nullptr_t>) );
-    M_ASSERT_EQ( nullptr , json::Null{} );
-    M_ASSERT_EQ( nullptr , json::Null() );
+    M_ASSERT_TRUE( (std::is_same_v<Json::Null, std::nullptr_t>) );
+    M_ASSERT_EQ( nullptr , Json::Null{} );
+    M_ASSERT_EQ( nullptr , Json::Null() );
 }
 
 // Test the json_types concept
 M_TEST(Type, concept) {
-    M_ASSERT_TRUE( requires { requires json::json_type<json::Object>; } );
-    M_ASSERT_TRUE( requires { requires json::json_type<json::Array>; }  );
-    M_ASSERT_TRUE( requires { requires json::json_type<json::Number>; } );
-    M_ASSERT_TRUE( requires { requires json::json_type<json::String>; } );
-    M_ASSERT_TRUE( requires { requires json::json_type<json::Bool>; }   );
-    M_ASSERT_TRUE( requires { requires json::json_type<json::Null>; }   );
+    M_ASSERT_TRUE( (requires { requires json::json_type<Json, Json::Object>; } ));
+    M_ASSERT_TRUE( (requires { requires json::json_type<Json, Json::Array>; }  ));
+    M_ASSERT_TRUE( (requires { requires json::json_type<Json, Json::Number>; } ));
+    M_ASSERT_TRUE( (requires { requires json::json_type<Json, Json::String>; } ));
+    M_ASSERT_TRUE( (requires { requires json::json_type<Json, Json::Bool>; }   ));
+    M_ASSERT_TRUE( (requires { requires json::json_type<Json, Json::Null>; }   ));
 }
 
 M_TEST(Type, value) {
-    M_ASSERT_NO_THROW( std::ignore = json::Value{} );
+    M_ASSERT_NO_THROW( std::ignore = Json{} );
 }
 

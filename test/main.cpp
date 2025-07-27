@@ -29,12 +29,12 @@ int main() {
     // val.writef(out);
     // out.close();
 
-    std::println("Null size: {}", sizeof(json::Null));
-    std::println("Number size: {}", sizeof(json::Number));
-    std::println("String size: {}", sizeof(json::String));
-    std::println("Bool size: {}", sizeof(json::Bool));
-    std::println("Object size: {}", sizeof(json::Object));
-    std::println("Array size: {}", sizeof(json::Array));
+    std::println("Null size: {}", sizeof(Json::Null));
+    std::println("Number size: {}", sizeof(Json::Number));
+    std::println("String size: {}", sizeof(Json::String));
+    std::println("Bool size: {}", sizeof(Json::Bool));
+    std::println("Object size: {}", sizeof(Json::Object));
+    std::println("Array size: {}", sizeof(Json::Array));
 
 
     return vct::test::unit::start();

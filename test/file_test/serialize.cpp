@@ -9,7 +9,7 @@ using namespace vct::tools;
 
 M_TEST(File, Serial_Unicode) {
     std::ifstream file( CURRENT_PATH "/files/all_unicode.json" );
-    const auto json = json::parse(file).value_or( nullptr );
+    const auto json = Json::parse(file).value_or( nullptr );
     M_EXPECT_FALSE( json.is_nul() );
 
     const auto bein = std::chrono::system_clock::now();
@@ -26,7 +26,7 @@ M_TEST(File, Serial_Unicode) {
 
 M_TEST(File, Serial_Number) {
     std::ifstream file( CURRENT_PATH "/files/many_number.json" );
-    const auto json = json::parse(file).value_or( nullptr );
+    const auto json = Json::parse(file).value_or( nullptr );
     M_EXPECT_FALSE( json.is_nul() );
 
     const auto bein = std::chrono::system_clock::now();
@@ -43,7 +43,7 @@ M_TEST(File, Serial_Number) {
 
 M_TEST(File, Serial_Complex) {
     std::ifstream file( CURRENT_PATH "/files/many_complex.json" );
-    const auto json = json::parse(file).value_or( nullptr );
+    const auto json = Json::parse(file).value_or( nullptr );
     M_EXPECT_FALSE( json.is_nul() );
 
     const auto bein = std::chrono::system_clock::now();
@@ -59,7 +59,7 @@ M_TEST(File, Serial_Complex) {
 
 M_TEST(File, Serial_All) {
     std::ifstream file( CURRENT_PATH "/files/many_all.json" );
-    const auto json = json::parse(file).value_or( nullptr );
+    const auto json = Json::parse(file).value_or( nullptr );
     M_EXPECT_FALSE( json.is_nul() );
 
     const auto bein = std::chrono::system_clock::now();
@@ -75,7 +75,7 @@ M_TEST(File, Serial_All) {
 
 // M_TEST(File, Serial_String) {
 //     std::ifstream file( CURRENT_PATH "/files/many_string.json" );
-//     const auto json = json::parse(file, 1024).value_or( nullptr );
+//     const auto json = Json::parse(file, 1024).value_or( nullptr );
 //     M_EXPECT_FALSE( json.is_nul() );
 //
 //     const auto bein = std::chrono::system_clock::now();

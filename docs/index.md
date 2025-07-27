@@ -1,5 +1,3 @@
 # **vct::tools-json**
 
-A JSON library for C++23.
-
-Easy to use, good performace, and lightweight.
+一个 C++23 的 JSON 库，提供高效、易用、轻便的 JSON 处理接口。
