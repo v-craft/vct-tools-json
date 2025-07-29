@@ -80,7 +80,6 @@ std::variant<
 ### 2. 基础操作
 
 - [type](type.md)：获取当前 JSON 数据的类型。
-- [reset](reset.md)：重置当前 JSON 数据。
 - [is_nul](is_nul.md)：检查当前 JSON 数据是否为 `Null`。
 - [is_bol](is_bol.md)：检查当前 JSON 数据是否为 `Bool`。
 - [is_num](is_num.md)：检查当前 JSON 数据是否为 `Number`。
@@ -113,6 +112,17 @@ std::variant<
 - [dumpf](dumpf.md)：将当前 JSON 对象序列化为字符串，可指定缩进。
 - [write](write.md)：将当前 JSON 对象序列化写入字符串或输出流，去除无效字符。
 - [writef](writef.md)：将当前 JSON 对象序列化写入字符串或输出流，可指定缩进。
+
+### 5. 容器操作简化函数
+
+- [reset](reset.md)：重置当前 JSON 数据。
+- [size](size.md)：获取内部子元素个数。
+- [contains](contains.md)：检查当前 JSON 是否包含指定键或索引。
+- [empty](empty.md)：检查当前 JSON 是否存在子元素。
+- [erase](erase.md)：删除指定键或索引的元素。
+- [insert](insert.md)：插入新的键值对或元素到 JSON 中。
+- [push_back](push_back.md)：向数组中添加新元素。
+- [pop_back](pop_back.md)：从数组中移除最后一个元素。
 
 ## 版本
 

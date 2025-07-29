@@ -47,7 +47,6 @@ nav:
       - destructor: zh/Json/destructor.md
       - operator_assign: zh/Json/operator_assign.md
       - type: zh/Json/type.md
-      - reset: zh/Json/reset.md
       - is_nul: zh/Json/is_nul.md
       - is_bol: zh/Json/is_bol.md
       - is_num: zh/Json/is_num.md
@@ -74,6 +73,14 @@ nav:
       - dumpf: zh/Json/dumpf.md
       - write: zh/Json/write.md
       - writef: zh/Json/writef.md
+      - reset: zh/Json/reset.md
+      - size: zh/Json/size.md
+      - empty: zh/Json/empty.md
+      - contains: zh/Json/contains.md
+      - erase: zh/Json/erase.md
+      - insert: zh/Json/insert.md
+      - push_back: zh/Json/push_back.md
+      - pop_back: zh/Json/pop_back.md
     - type_name: zh/type_name.md
     - error_name: zh/error_name.md
 

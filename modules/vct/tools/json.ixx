@@ -1653,6 +1653,121 @@ export namespace vct::tools::json {
             return false;
         }
 
+        /**
+         * @brief Get inner container size.
+         * @return The size of the inner container(Array or Object), or 0 for Null, Bool, Number, String.
+         */
+        [[nodiscard]]
+        std::size_t size() const noexcept {
+            if (type() == Type::eObject)  return std::get<Object>(m_data).size();
+            if (type() == Type::eArray) return std::get<Array>(m_data).size();
+            return 0; // Null, Bool, Number, String are considered to have size 0
+        }
+
+        /**
+         * @brief Check if the JSON object is empty.
+         * @return False if it contains any elements (Object or Array), true otherwise.
+         */
+        [[nodiscard]]
+        bool empty() const noexcept {
+            if (type() == Type::eObject)  return std::get<Object>(m_data).empty();
+            if (type() == Type::eArray) return std::get<Array>(m_data).empty();
+            return true; // Null, Bool, Number, String are considered empty
+        }
+
+        /**
+         * @brief Check if the JSON object contains a key.
+         * @param key The key to check in the JSON object.
+         * @return True if the key exists in the JSON object, false if the JSON is not an object or the key does not exist.
+         */
+        [[nodiscard]]
+        bool contains(const String& key) const {
+            if (type() == Type::eObject) return std::get<Object>(m_data).contains(key);
+            return false; // Not an object
+        }
+
+        /**
+         * @brief Erase a key from the JSON object or an index from the JSON array.
+         * @param key The key to erase from the JSON object.
+         * @return True if the key was erased, false if the JSON is not an object or the key does not exist.
+         */
+        bool erase(const String& key) {
+            if (type() == Type::eObject) return std::get<Object>(m_data).erase(key);
+            return false;
+        }
+
+        /**
+         * @brief Erase an element at the specified index from the JSON array.
+         * @param index The index of the element to erase from the JSON array.
+         * @return True if the element was erased, false if the JSON is not an array or the index is out of bounds.
+         */
+        bool erase(const std::size_t index) {
+            if (type() == Type::eArray && index < std::get<Array>(m_data).size()) {
+                std::get<Array>(m_data).erase(std::get<Array>(m_data).begin() + index);
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * @brief Insert a key-value pair into the JSON object.
+         * @param key The key to insert into the JSON object.
+         * @param value The value to insert into the JSON object.
+         * @return True if the key-value pair was inserted, false if the JSON is not an object.
+         */
+        template<typename  K, typename V>
+        requires std::convertible_to<K, String> && std::convertible_to<V, Json>
+        bool insert(K&& key, V&& value) {
+            if (type() == Type::eObject) {
+                std::get<Object>(m_data).emplace(static_cast<String>(std::forward<K>(key)), static_cast<Json>(std::forward<V>(value)));
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * @brief Insert a value at the specified index into the JSON array.
+         * @param index The index at which to insert the value into the JSON array.
+         * @param value The value to insert into the JSON array.
+         * @return True if the value was inserted, false if the JSON is not an array or the index is out of bounds.
+         */
+        template<typename V>
+        requires std::convertible_to<V, Json>
+        bool insert(const std::size_t index, V&& value) {
+            if (type() == Type::eArray && index <= std::get<Array>(m_data).size()) {
+                std::get<Array>(m_data).emplace(std::get<Array>(m_data).begin() + index, static_cast<Json>(std::forward<V>(value)));
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * @brief Push a value to the end of the JSON array.
+         * @param value The value to push to the end of the JSON array.
+         * @return True if the value was pushed, false if the JSON is not an array.
+         */
+        template<typename V>
+        requires std::convertible_to<V, Json>
+        bool push_back(V&& value) {
+            if (type() == Type::eArray) {
+                std::get<Array>(m_data).emplace_back( static_cast<Json>(std::forward<V>(value)) );
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * @brief Pop the last value from the JSON array.
+         * @return True if the value was popped, false if the JSON is not an array or is empty.
+         */
+        bool pop_back() {
+            if (type() == Type::eArray && !std::get<Array>(m_data).empty()) {
+                std::get<Array>(m_data).pop_back();
+                return true;
+            }
+            return false;
+        }
+
     };
 
 }
