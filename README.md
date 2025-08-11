@@ -1,5 +1,9 @@
 <div align="center">
 
+**Project was moved to `mysvac-jsonlib`**: <https://github.com/Mysvac/cpp-jsonlib>
+
+---
+
 <h1>vct-tools-json</h1>
 
 <p>
